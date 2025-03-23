@@ -3,24 +3,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { contactTable } from '@/db/schema';
 import { cn } from '@/lib/utils';
-import { PlusCircle } from 'lucide-react';
-import { useTransitionRouter } from 'next-transition-router';
-import { useCallback, useState } from 'react';
+import { motion } from 'framer-motion';
+import { NotebookText, PlusCircle } from 'lucide-react';
+import { useState } from 'react';
 import { AddContactButton } from './add-contact-modal';
 
 type Props = {
   contacts: Array<typeof contactTable.$inferSelect>,
   onNewContactCreate: (newContact: typeof contactTable.$inferInsert) => void,
+  onContactClick: (contact: typeof contactTable.$inferSelect) => void,
+  onContactViewLogClick: (contact: typeof contactTable.$inferSelect) => void,
 }
 
-export function ContactList({ contacts, onNewContactCreate }: Props) {
+export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactViewLogClick }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const router = useTransitionRouter();
 
-  const handleAdd = useCallback<(newContact: typeof contactTable.$inferInsert) => void>((newContact) => {
-    onNewContactCreate(newContact);
-    router.refresh();
-  }, [onNewContactCreate, router]);
+  const handleViewLogClick = (event: React.MouseEvent<HTMLButtonElement>, contact: typeof contactTable.$inferSelect) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onContactViewLogClick(contact);
+    // Handle view log click
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -30,28 +33,38 @@ export function ContactList({ contacts, onNewContactCreate }: Props) {
           <PlusCircle className="w-5 h-5 mr-2" /> Add Contact
         </Button>
       </div>
-      <div className="space-y-4">
+      <ul className="space-y-4">
         {contacts.map((contact) => (
-          <Card key={contact.id} className="flex justify-center p-4 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}/transactions`)}>
-            <CardContent className="flex-1">
-              <h2 className="text-lg font-semibold">{contact.fullName}</h2>
-              <p
-                className={cn(
-                  'text-sm',
-                  {
-                    'text-green-600': contact.balance > 0,
-                    'text-red-600': contact.balance < 0,
-                    'text-gray-600': contact.balance === 0,
-                  }
-                )}
-              >
-                Balance: ${contact.balance.toFixed(2)}
-              </p>
-            </CardContent>
-          </Card>
+          <motion.li key={contact.id} layout
+            transition={{
+              type: 'spring',
+              damping: 25,
+              stiffness: 120
+            }}>
+            <Card key={contact.id} className="flex flex-row items-center justify-center p-4 cursor-pointer"  onClick={() => onContactClick(contact)}>
+              <CardContent className="flex-1">
+                <h2 className="text-lg font-semibold">{contact.fullName}</h2>
+                <p
+                  className={cn(
+                    'text-sm',
+                    {
+                      'text-green-600': contact.balance > 0,
+                      'text-red-600': contact.balance < 0,
+                      'text-gray-600': contact.balance === 0,
+                    }
+                  )}
+                >
+                  Balance: ${contact.balance.toFixed(2)}
+                </p>
+              </CardContent>
+              <Button variant="outline" size="icon" onClickCapture={(event) => handleViewLogClick(event, contact)}>
+                <NotebookText />
+              </Button>
+            </Card>
+          </motion.li>
         ))}
-      </div>
-      <AddContactButton open={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={handleAdd} />
+      </ul>
+      <AddContactButton open={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={onNewContactCreate} />
     </div>
   );
 }
