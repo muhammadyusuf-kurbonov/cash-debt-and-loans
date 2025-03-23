@@ -1,0 +1,2 @@
+ALTER TABLE `contact` DROP COLUMN `balance`;--> statement-breakpoint
+CREATE VIEW `contact_with_balance` AS select "contact"."id", "transactions"."contact", "transactions"."currencyId", "contact"."fullName", "contact"."email", "contact"."phone", "currency"."name", sum("transactions"."amount") as "balance" from "transactions" left join "contact" on "contact"."id" = "transactions"."contact" left join "currency" on "currency"."id" = "transactions"."currencyId" where "transactions"."cancelled" <> 1 group by "transactions"."contact", "transactions"."currencyId";

@@ -43,6 +43,41 @@
       "when": 1742663486297,
       "tag": "0005_seed-currency",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1742720734316,
+      "tag": "0006_numerous_lockheed",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1742722385120,
+      "tag": "0007_right_zuras",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1742722572900,
+      "tag": "0008_demonic_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1742722787773,
+      "tag": "0009_thankful_abomination",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1742723344590,
+      "tag": "0010_boring_ravenous",
+      "breakpoints": true
     }
   ]
 }

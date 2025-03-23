@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { contactTable } from '@/db/schema';
+import { contactsWithBalanceView, contactTable } from '@/db/schema';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { NotebookText, PlusCircle } from 'lucide-react';
@@ -9,16 +9,16 @@ import { useState } from 'react';
 import { AddContactButton } from './add-contact-modal';
 
 type Props = {
-  contacts: Array<typeof contactTable.$inferSelect>,
-  onNewContactCreate: (newContact: typeof contactTable.$inferInsert) => void,
-  onContactClick: (contact: typeof contactTable.$inferSelect) => void,
-  onContactViewLogClick: (contact: typeof contactTable.$inferSelect) => void,
+  contacts: Array<typeof contactsWithBalanceView.$inferSelect>,
+  onNewContactCreate: (newContact: typeof contactTable.$inferInsert & { balance: number }) => void,
+  onContactClick: (contact: typeof contactsWithBalanceView.$inferSelect) => void,
+  onContactViewLogClick: (contact: typeof contactsWithBalanceView.$inferSelect) => void,
 }
 
 export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactViewLogClick }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleViewLogClick = (event: React.MouseEvent<HTMLButtonElement>, contact: typeof contactTable.$inferSelect) => {
+  const handleViewLogClick = (event: React.MouseEvent<HTMLButtonElement>, contact: typeof contactsWithBalanceView.$inferSelect) => {
     event.preventDefault();
     event.stopPropagation();
     onContactViewLogClick(contact);

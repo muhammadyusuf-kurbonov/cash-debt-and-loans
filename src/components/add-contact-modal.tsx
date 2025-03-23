@@ -7,7 +7,7 @@ import { Input } from './ui/input';
 type Props = {
   open: boolean;
   onClose: () => void;
-  onAdd: (newContact: typeof contactTable.$inferInsert) => void;
+  onAdd: (newContact: typeof contactTable.$inferInsert & { balance: number }) => void;
 };
 
 export function AddContactButton({ open, onClose, onAdd }: Props) {
