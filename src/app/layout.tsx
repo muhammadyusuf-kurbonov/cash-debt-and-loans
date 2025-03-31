@@ -1,5 +1,7 @@
+import { CurrenciesProvider } from '@/providers/currencies-provider';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { getCurrencies } from './actions';
 import './globals.css';
 import { Providers } from './providers';
 
@@ -23,13 +25,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const currencies = await getCurrencies();
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          {children}
+          <CurrenciesProvider currencies={currencies}>
+            {children}
+          </CurrenciesProvider>
         </Providers>
       </body>
     </html>

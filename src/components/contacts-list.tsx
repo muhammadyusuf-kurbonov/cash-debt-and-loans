@@ -34,6 +34,11 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
         </Button>
       </div>
       <ul className="space-y-4">
+        {!contacts.length && (<div>
+          <div className="w-full h-[300px flex items-center justify-center">
+            <div>No contacts found. Add a new one!</div>
+          </div>
+        </div>)}
         {contacts.map((contact) => (
           <motion.li key={contact.id} layout
             transition={{
@@ -54,7 +59,11 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
                     }
                   )}
                 >
-                  Balance: ${contact.balance.toFixed(2)}
+                  Balance: {contact.balance.toLocaleString('ru', {
+                    maximumFractionDigits: 2,
+                    signDisplay: 'always',                    
+                    useGrouping: true,
+                  })} {contact.currencySymbol}
                 </p>
               </CardContent>
               <Button variant="outline" size="icon" onClickCapture={(event) => handleViewLogClick(event, contact)}>

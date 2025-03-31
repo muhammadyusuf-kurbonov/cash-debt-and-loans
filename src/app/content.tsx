@@ -2,7 +2,7 @@
 
 import { AddTransactionModal } from '@/components/add-transaction-modal';
 import { ContactList } from '@/components/contacts-list';
-import { contactTable, transactionsTable } from '@/db/schema';
+import { contactsWithBalanceView, contactTable, transactionsTable } from '@/db/schema';
 import { useTransitionRouter } from 'next-transition-router';
 import { useCallback, useState } from 'react';
 import { addNewContact, addTransaction } from './actions';
@@ -10,10 +10,10 @@ import { addNewContact, addTransaction } from './actions';
 export default function HomePageContent({
   contacts,
 }: {
-  contacts: Array<typeof contactTable.$inferSelect>,
+  contacts: Array<typeof contactsWithBalanceView.$inferSelect>,
 }) {
   const router = useTransitionRouter();
-  const handleAddNewContact = useCallback(async (newContact: typeof contactTable.$inferInsert) => {
+  const handleAddNewContact = useCallback(async (newContact: typeof contactTable.$inferInsert & { balance: number }) => {
     await addNewContact(newContact);
     router.refresh();
   }, [router]);

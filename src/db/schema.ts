@@ -44,11 +44,12 @@ export const contactsWithBalanceView = view('contact_with_balance').as((qb) => q
   deleted: contactTable.deleted,
   createdAt: contactTable.createdAt,
   updatedAt: contactTable.updatedAt,
-  currencyName: sql`${currencyTable.name}`.as('currencyName'),
+  currencyName: sql`${currencyTable.name}`.mapWith(String).as('currencyName'),
+  currencySymbol: sql`${currencyTable.symbol}`.mapWith(String).as('currencySymbol'),
   balance: sql<number>`sum(${transactionsTable.amount})`.mapWith(Number).as('balance'),
 }).from(transactionsTable)
   .where(ne(transactionsTable.cancelled, true))
   .orderBy(desc(transactionsTable.updatedAt))
   .groupBy(transactionsTable.contact, transactionsTable.currencyId)
-  .leftJoin(contactTable, eq(contactTable.id, transactionsTable.contact))
-  .leftJoin(currencyTable, eq(currencyTable.id, transactionsTable.currencyId)));
+  .rightJoin(contactTable, eq(contactTable.id, transactionsTable.contact))
+  .rightJoin(currencyTable, eq(currencyTable.id, transactionsTable.currencyId)));
