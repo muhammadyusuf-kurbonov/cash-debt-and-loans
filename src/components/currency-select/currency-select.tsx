@@ -11,7 +11,7 @@ export function CurrencySelect({ currency, onChange }: {
 
   useEffect(() => {
     onChange(currencies[0].id);
-  }, [currencies, onChange]);
+  }, [currencies]);
 
   return (
     <div className="flex items-center gap-2">

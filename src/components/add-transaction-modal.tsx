@@ -70,7 +70,7 @@ export function AddTransactionModal({ open, onClose, onAdd }: Props) {
                 'flex-grow'
               )}
               placeholder="Amount" value={amount} onValueChange={(value, name, values) => setAmount(values?.float ?? 0)} />
-            <CurrencySelect currency={currency} onChange={(currency) => setCurrency(currency)}></CurrencySelect>
+            <CurrencySelect currency={currency} onChange={(currency) => {console.log(currency); setCurrency(currency);}}></CurrencySelect>
           </div>
           <Input placeholder="Note" value={description} onChange={(e) => setDescription(e.target.value)} />
           <Button onClick={handleAdd} className="w-full">Save</Button>

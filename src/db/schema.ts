@@ -20,6 +20,7 @@ export const currencyTable = sqliteTable('currency', {
   id: integer().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
   symbol: text().notNull(),
+  enabled: integer({ mode: 'boolean' }).default(true).notNull(),
   createdAt: integer({ mode: 'timestamp_ms' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer({ mode: 'timestamp_ms' }).notNull().$onUpdateFn(() => new Date()),
 });
