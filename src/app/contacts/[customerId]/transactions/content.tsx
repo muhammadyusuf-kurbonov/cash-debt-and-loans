@@ -4,7 +4,7 @@ import { addTransaction } from '@/app/actions';
 import { AddTransactionModal } from '@/components/add-transaction-modal';
 import { TransactionsList } from '@/components/transactions-list';
 import { Button } from '@/components/ui/button';
-import { transactionsTable } from '@/db/schema';
+import { currencyTable, transactionsTable } from '@/db/schema';
 import { PlusCircle } from 'lucide-react';
 import { useTransitionRouter } from 'next-transition-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -14,7 +14,7 @@ export function TransactionsPageContent({
   transactions,
   contactId, 
 }: {
-  transactions: Array<typeof transactionsTable.$inferSelect>,
+  transactions: Array<typeof transactionsTable.$inferSelect & { currency: typeof currencyTable.$inferSelect }>,
   contactId: number,
 }) {
   const [open, setOpen] = useState(false);
