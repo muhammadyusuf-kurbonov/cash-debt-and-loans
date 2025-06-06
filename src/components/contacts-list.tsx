@@ -38,7 +38,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
       return acc;
     }, {} as Record<string, typeof contactsWithBalanceView.$inferSelect[]>);
 
-    return Object.entries(groups).map(([key, group]) => ({
+    return Object.values(groups).map((group) => ({
       contact: group[0],
       balances: group,
     }));
