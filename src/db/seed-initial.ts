@@ -1,6 +1,6 @@
-import { db } from "./db";
-import { currencyTable } from "./schema";
+import { db } from './db';
+import { currencyTable } from './schema';
 
 await db.insert(currencyTable).values([
-    { name: 'So\'m', symbol: 'UZS' },
+  { name: 'So\'m', symbol: 'UZS' },
 ]);
