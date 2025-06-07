@@ -21,7 +21,7 @@ type Props = {
 export function AddTransactionModal({ open, onClose, onAdd }: Props) {
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState<typeof currencyTable.$inferSelect['id']>();
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(0.0);
   const [type, setType] = useState<'debit' | 'credit'>('debit');
   const [transactionDate, setTransactionDate] = useState(format(new Date(), 'yyyy-MM-dd\'T\'hh:mm:ss'));
 
@@ -72,7 +72,11 @@ export function AddTransactionModal({ open, onClose, onAdd }: Props) {
                 'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                 'flex-grow'
               )}
-              placeholder="Amount" value={amount} onValueChange={(value, name, values) => setAmount(values?.float ?? 0)} />
+              placeholder="Amount"
+              name='amount'
+              id='amount'
+              onValueChange={(value, name, values) => setAmount(values?.float ?? 0)}
+            />
             <CurrencySelect currency={currency} onChange={(currency) => {console.log(currency); setCurrency(currency);}}></CurrencySelect>
           </div>
           <Input placeholder="Note" value={description} onChange={(e) => setDescription(e.target.value)} />
