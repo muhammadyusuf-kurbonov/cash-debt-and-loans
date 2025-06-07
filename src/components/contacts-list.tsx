@@ -20,6 +20,7 @@ type Props = {
 export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactViewLogClick }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleViewLogClick = (event: React.MouseEvent<HTMLButtonElement>, contact: typeof contactsWithBalanceView.$inferSelect) => {
     event.preventDefault();
@@ -44,6 +45,11 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
     }));
   }, [contacts]);
 
+  const handleCurrenciesMenuClick = () => {
+    setIsDropdownOpen(false);
+    setIsCurrencyModalOpen(true);
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="flex justify-between items-center mb-4">
@@ -52,7 +58,11 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
           <Button variant="outline" className="flex items-center" onClick={() => setIsModalOpen(true)}>
             <PlusCircle className="w-5 h-5 mr-2" /> Add Contact
           </Button>
-          <TopRightMenu openCurrencyList={() => setIsCurrencyModalOpen(true)} />
+          <TopRightMenu
+            dropdownOpen={isDropdownOpen}
+            onDropdownOpenChange={setIsDropdownOpen}
+            openCurrencyList={handleCurrenciesMenuClick}
+          />
         </div>
       </div>
       <ul className="space-y-4">
