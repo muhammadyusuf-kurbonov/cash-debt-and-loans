@@ -1,6 +1,6 @@
 'use client'
 
-import { addTransaction } from '@/app/actions';
+import { addTransaction, cancelTransaction } from '@/app/actions';
 import { AddTransactionModal } from '@/components/add-transaction-modal';
 import { TransactionsList } from '@/components/transactions-list';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,11 @@ export function TransactionsPageContent({
     setOpen(false);
     router.refresh();
   }, [contactId, router]);
+  const handleCancel = useCallback(async (id: number) => {
+    await cancelTransaction(id);
+    setOpen(false);
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
     setTopBarButtonRef(document.getElementById('topbar-button'));
@@ -42,7 +47,7 @@ export function TransactionsPageContent({
         )
       }
 
-      <TransactionsList transactions={transactions}/>
+      <TransactionsList transactions={transactions} onDeleteTransaction={handleCancel}/>
 
       <AddTransactionModal open={open} onClose={() => setOpen(false)} onAdd={handleAdd}/>
     </>

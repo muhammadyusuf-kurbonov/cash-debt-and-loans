@@ -42,6 +42,9 @@ export async function addTransaction(contactId: number, transaction: typeof tran
     
   return JSON.parse(JSON.stringify(transactionsResult));
 }
+export async function cancelTransaction(transactionId: number) {
+  await db.update(transactionsTable).set({cancelled: true}).where(eq(transactionsTable.id, transactionId)).execute();
+}
 
 export async function getCurrencies(): Promise<typeof currencyTable.$inferSelect[]> {
   const currencies = await db.select().from(currencyTable).where(eq(currencyTable.enabled, true));
@@ -49,7 +52,7 @@ export async function getCurrencies(): Promise<typeof currencyTable.$inferSelect
 }
 
 export async function addCurrency(name: string, symbol: string) {
-  await db.insert(currencyTable).values({ name, symbol });
+  await db.insert(currencyTable).values({ name, symbol }).execute();
 }
 
 export async function updateCurrency(id: number, name: string, symbol: string) {
