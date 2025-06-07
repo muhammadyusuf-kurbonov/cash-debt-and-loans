@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { CurrencySelect } from './currency-select/currency-select';
 import CurrencyInput from 'react-currency-input-field';
 import { cn } from '@/lib/utils';
+import { format, parse } from 'date-fns';
 
 
 type Props = {
@@ -22,6 +23,7 @@ export function AddTransactionModal({ open, onClose, onAdd }: Props) {
   const [currency, setCurrency] = useState<typeof currencyTable.$inferSelect['id']>();
   const [amount, setAmount] = useState(0);
   const [type, setType] = useState<'debit' | 'credit'>('debit');
+  const [transactionDate, setTransactionDate] = useState(format(new Date(), 'yyyy-MM-dd\'T\'hh:mm:ss'));
 
   const handleAdd = () => {
     if (currency === undefined) {
@@ -37,6 +39,7 @@ export function AddTransactionModal({ open, onClose, onAdd }: Props) {
         description,
         cancelled: false,
         currencyId: currency,
+        createdAt: parse(transactionDate, 'yyyy-MM-dd\'T\'hh:mm:ss', new Date()),
       });
     }
   };
@@ -73,6 +76,7 @@ export function AddTransactionModal({ open, onClose, onAdd }: Props) {
             <CurrencySelect currency={currency} onChange={(currency) => {console.log(currency); setCurrency(currency);}}></CurrencySelect>
           </div>
           <Input placeholder="Note" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <Input type="datetime-local" placeholder="Transaction date" value={transactionDate} onChange={(value) => setTransactionDate(value.target.value)} />
           <Button onClick={handleAdd} className="w-full">Save</Button>
         </div>
       </DialogContent>
