@@ -37,9 +37,9 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
     contacts.forEach(contact => {
       const key = contact.id;
       if (!idToIndexMap.has(key)) {
-          // If this ID is seen for the first time, create a new group and record its index
-          idToIndexMap.set(key, groupsAsArrays.length);
-          groupsAsArrays.push([]);
+        // If this ID is seen for the first time, create a new group and record its index
+        idToIndexMap.set(key, groupsAsArrays.length);
+        groupsAsArrays.push([]);
       }
       // Add the contact to the correct group
       groupsAsArrays[idToIndexMap.get(key)].push(contact);
