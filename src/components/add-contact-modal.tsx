@@ -17,12 +17,12 @@ export function AddContactButton({ open, onClose, onAdd }: Props) {
   const [balance, setBalance] = useState('');
     
   const handleAdd = () => {
-    if (fullName.trim() && balance.trim()) {
+    if (fullName.trim()) {
       onAdd({
         fullName,
         email,
         phone,
-        balance: parseFloat(balance),
+        balance: parseFloat(balance ?? '0'),
         deleted: false,
       });
       setFullName('');

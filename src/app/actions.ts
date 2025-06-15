@@ -1,10 +1,10 @@
 'use server'
 import { db } from '@/db/db';
 import { contactsWithBalanceView, contactTable, currencyTable, transactionsTable } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 export async function getContacts() {
-  return await db.select().from(contactsWithBalanceView).execute();
+  return await db.select().from(contactsWithBalanceView).orderBy(desc(contactsWithBalanceView.updatedAt)).execute();
 }
 
 export async function getContact(contactId: number) {
