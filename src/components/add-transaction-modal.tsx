@@ -73,6 +73,7 @@ export function AddTransactionModal({ open, onClose, onAdd }: Props) {
                 'flex-grow'
               )}
               placeholder="Amount"
+              autoComplete='off'
               name='amount'
               id='amount'
               onValueChange={(value, name, values) => setAmount(values?.float ?? 0)}
