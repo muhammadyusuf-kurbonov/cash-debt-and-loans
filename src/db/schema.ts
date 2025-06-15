@@ -44,7 +44,7 @@ export const contactsWithBalanceView = view('contact_with_balance').as((qb) => q
   phone: contactTable.phone,
   deleted: contactTable.deleted,
   createdAt: contactTable.createdAt,
-  updatedAt: transactionsTable.updatedAt,
+  updatedAt: sql<number>`max(${transactionsTable.updatedAt})`.mapWith(Number).as('updatedAt'),
   currencyName: sql`${currencyTable.name}`.mapWith(String).as('currencyName'),
   currencySymbol: sql`${currencyTable.symbol}`.mapWith(String).as('currencySymbol'),
   balance: sql<number>`sum(${transactionsTable.amount})`.mapWith(Number).as('balance'),

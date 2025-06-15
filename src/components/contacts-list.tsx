@@ -30,6 +30,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
   }
 
   const groupByContacts = useMemo(() => {
+    console.log('contacts', contacts); // Log the contacts array to check if it's being passed correctly
     const groupsAsArrays: Array<typeof contactsWithBalanceView.$inferSelect[]> = [];
     const idToIndexMap = new Map();
 
@@ -43,8 +44,6 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
       // Add the contact to the correct group
       groupsAsArrays[idToIndexMap.get(key)].push(contact);
     });
-
-    console.log('groupByContacts', groupsAsArrays); // Log the grouped contacts to check if it's being passed correctly
 
     return groupsAsArrays.map((group) => ({
       contact: group[0],
