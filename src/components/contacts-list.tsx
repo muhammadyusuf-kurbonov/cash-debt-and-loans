@@ -2,12 +2,12 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { contactsWithBalanceView, contactTable } from '@/db/schema';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { NotebookText, PlusCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AddContactButton } from './add-contact-modal';
 import { CurrenciesModal } from './currencies-modal';
+import { Money } from './money';
 import { TopRightMenu } from './top-right-menu';
 
 type Props = {
@@ -87,23 +87,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
             <Card key={group.contact.id} className="flex flex-row items-center justify-center p-4 cursor-pointer" onClick={() => onContactClick(group.contact)}>
               <CardContent className="flex-1">
                 <h2 className="text-lg font-semibold">{group.contact.fullName}</h2>
-                {group.balances.map(account => (<p
-                  className={cn(
-                    'text-sm',
-                    {
-                      'text-green-600': account.balance > 0,
-                      'text-red-600': account.balance < 0,
-                      'text-gray-600': account.balance === 0,
-                    }
-                  )}
-                  key={account.currencyId}
-                >
-                  Balance: {account.balance.toLocaleString('ru', {
-                    maximumFractionDigits: 2,
-                    signDisplay: 'always',
-                    useGrouping: true,
-                  })} {account.currencySymbol}
-                </p>))}
+                {group.balances.map(account => (<Money label='Balance:' value={account.balance} symbol={account.currencySymbol} key={account.currencyId} />))}
               </CardContent>
               <Button variant="outline" size="icon" onClickCapture={(event) => handleViewLogClick(event, group.contact)}>
                 <NotebookText />

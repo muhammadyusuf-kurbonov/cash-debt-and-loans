@@ -2,12 +2,14 @@
 
 import { addTransaction, cancelTransaction } from '@/app/actions';
 import { AddTransactionModal } from '@/components/add-transaction-modal';
+import { Money } from '@/components/money';
+import { StickyFooter } from '@/components/sticky-footer';
 import { TransactionsList } from '@/components/transactions-list';
 import { Button } from '@/components/ui/button';
 import { currencyTable, transactionsTable } from '@/db/schema';
 import { PlusCircle } from 'lucide-react';
 import { useTransitionRouter } from 'next-transition-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 export function TransactionsPageContent({
@@ -36,6 +38,16 @@ export function TransactionsPageContent({
     setTopBarButtonRef(document.getElementById('topbar-button'));
   }, []);
 
+  const totalBalances = useMemo<Record<string, number>>(() => {
+    return transactions.reduce((acc, transaction) => {
+      if (!acc[transaction.currency.symbol]) {
+        acc[transaction.currency.symbol] = 0
+      }
+      acc[transaction.currency.symbol] += transaction.amount;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [transactions]);
+
   return (
     <>
       { topBarButtonRef &&
@@ -48,6 +60,15 @@ export function TransactionsPageContent({
       }
 
       <TransactionsList transactions={transactions} onDeleteTransaction={handleCancel}/>
+
+      <StickyFooter>
+        <div className='flex flex-row w-xl justify-between items-center gap-2'>
+          <span className="text-gray-600 font-semibold">Total Balance:</span>
+          <div className="text-right">
+            { Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />)) }
+          </div>
+        </div>
+      </StickyFooter>
 
       <AddTransactionModal open={open} onClose={() => setOpen(false)} onAdd={handleAdd}/>
     </>

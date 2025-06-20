@@ -13,7 +13,7 @@ type Props = {
 
 export function TransactionsList({ transactions, onDeleteTransaction }: Props) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-4">
       {transactions.map((transaction) => (
         <Card key={transaction.id} className={cn('p-4')}>
           <CardContent className={cn({ 'opacity-25': transaction.cancelled })}>
