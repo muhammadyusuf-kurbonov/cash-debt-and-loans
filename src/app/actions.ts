@@ -31,6 +31,7 @@ export async function getTransactions(contactId: number) {
     with: {
       currency: true,
     },
+    orderBy: [desc(transactionsTable.createdAt)],
   }).execute();
   return JSON.parse(JSON.stringify(transactionsResult));
 }

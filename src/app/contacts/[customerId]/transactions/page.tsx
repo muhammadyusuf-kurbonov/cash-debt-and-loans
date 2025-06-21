@@ -10,7 +10,6 @@ export default async function CustomerTransactionsPage({
 }) {
   const customerId = parseInt((await params).customerId);
   const transactions = await getTransactions(customerId);
-  console.log('🚀 ~ transactions:', transactions, customerId);
 
   return (
     <TransactionsPageContent transactions={transactions} contactId={customerId} />
