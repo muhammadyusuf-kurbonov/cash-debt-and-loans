@@ -42,7 +42,7 @@ export default function HomePageContent({
       <ContactList contacts={contacts} onNewContactCreate={handleAddNewContact} onContactClick={(contact) => setActiveContact(contact.id)} onContactViewLogClick={(contact) => router.push(`/contacts/${contact.id}/transactions`)} />
 
       <StickyFooter className='max-w-2xl mx-auto'>
-        <div className='flex flex-row w-xl justify-between items-center gap-2'>
+        <div className='flex flex-row w-full justify-between items-center gap-2'>
           <span className="text-gray-600 font-semibold">Total Balance:</span>
           <div className="text-right">
             { Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />)) }

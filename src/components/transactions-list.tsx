@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { CircleX } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
+import { Money } from './money';
 
 type Props = {
   transactions: Array<typeof transactionsTable.$inferSelect & { currency: typeof currencyTable.$inferSelect }>;
@@ -19,11 +20,7 @@ export function TransactionsList({ transactions, onDeleteTransaction }: Props) {
           <CardContent className={cn({ 'opacity-25': transaction.cancelled })}>
             <div className='flex flex-row justify-between'>
               <div>
-                <h2 className={cn('text-lg font-semibold', {
-                  'text-green-600': transaction.amount >= 0,
-                  'text-red-600': transaction.amount < 0
-                }
-                )}>{transaction.amount > 0 ? '+' : ''}{transaction.amount.toFixed(2)} {transaction.currency.symbol}</h2>
+                <h2 className="text-lg font-semibold"><Money value={transaction.amount} symbol={transaction.currency.symbol}/></h2>
                 <p className="text-sm text-gray-600">Description: {transaction.description || 'N/A'}</p>
                 <p className="text-sm text-gray-600">Date: {format(new Date(transaction.createdAt), 'Pp')}</p>
 

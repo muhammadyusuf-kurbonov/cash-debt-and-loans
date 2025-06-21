@@ -62,7 +62,7 @@ export function TransactionsPageContent({
       <TransactionsList transactions={transactions} onDeleteTransaction={handleCancel}/>
 
       <StickyFooter>
-        <div className='flex flex-row w-xl justify-between items-center gap-2'>
+        <div className='w-full flex flex-row justify-between items-center gap-2'>
           <span className="text-gray-600 font-semibold">Total Balance:</span>
           <div className="text-right">
             { Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />)) }
