@@ -26,12 +26,16 @@ model User {
   verification_code String?
   is_verified       Boolean @default(false)
 
-  balances     Balance[]
-  transactions Transaction[]
+  currencies   Currency[]
+  contacts   Contact[] 
+
+  isContactFor Contact[] @relation(name: "refUser")
 }
 
 model Currency {
   id        Int      @id @default(autoincrement())
+  user_id     Int
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   name      String   @unique
   symbol    String
   createdAt DateTime @default(now())
@@ -41,20 +45,33 @@ model Currency {
 }
 
 model Balance {
-  user_id     Int
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   currency_id Int
   currency    Currency @relation(fields: [currency_id], references: [id], onDelete: Cascade)
   amount      Float    @default(0)
 
-  @@id([user_id, currency_id])
+  contact_id   Int
+  contact    Contact   @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+
+  @@id([currency_id, contact_id])
 }
 
 model Transaction {
   id          Int      @id @default(autoincrement())
-  user_id     Int
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  contact_id     Int
+  contact        Contact     @relation(fields: [contact_id], references: [id], onDelete: Cascade)
   currency_id Int
   currency    Currency @relation(fields: [currency_id], references: [id], onDelete: Cascade)
   amount      Float
+}
+
+model Contact {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name       String?
+  ref_user_id  Int?
+  ref_user    User?   @relation( name: "refUser", fields: [ref_user_id], references: [id])
+
+  Transaction Transaction[]
+  Balance Balance[]
 }
