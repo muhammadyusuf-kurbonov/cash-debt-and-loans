@@ -3,8 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
-import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { CurrencyModule } from './currency/currency.module';
+import { ContactsModule } from './contacts/contacts.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -12,8 +14,10 @@ import { CurrencyModule } from './currency/currency.module';
       isGlobal: true,
     }),
     PrismaModule,
-    UsersModule,
+    AuthModule,
     CurrencyModule,
+    ContactsModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
