@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiProperty,
   ApiPropertyOptional,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -142,6 +143,11 @@ export class ContactsController {
     type: [ContactDto],
   })
   @ApiResponse({ status: 404, description: 'Contact not found' })
+  @ApiQuery({
+    name: 'currencyId',
+    required: false,
+    description: 'Optional currency ID to filter balances',
+  })
   async getBalance(
     @Request() req: RequestWithUser,
     @Param('id') contactId: string,
