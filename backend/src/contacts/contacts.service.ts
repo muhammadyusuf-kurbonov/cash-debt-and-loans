@@ -104,4 +104,25 @@ export class ContactsService {
 
     return balances;
   }
+
+  async getContactForUserId(userId: number, ownerId: number, name?: string) {
+    let contact = await this.prisma.contact.findFirst({
+      where: {
+        ref_user_id: userId,
+        user_id: ownerId,
+      },
+    });
+
+    if (!contact) {
+      contact = await this.prisma.contact.create({
+        data: {
+          user_id: ownerId,
+          ref_user_id: userId,
+          name,
+        },
+      });
+    }
+
+    return contact;
+  }
 }

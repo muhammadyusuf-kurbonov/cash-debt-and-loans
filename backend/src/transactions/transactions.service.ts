@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ContactsService } from 'src/contacts/contacts.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private contacts: ContactsService,
+  ) {}
 
   async create(contactId: number, currencyId: number, amount: number) {
     // Create the transaction and update balance in a transaction
@@ -62,29 +66,10 @@ export class TransactionsService {
       // If contact has ref_user_id, create reverse transaction for referenced user
       if (contact.ref_user_id) {
         // Find or create a reverse contact for the referenced user
-        let reverseContact = await prisma.contact.findFirst({
-          where: {
-            user_id: contact.ref_user_id,
-            ref_user_id: contact.user_id,
-          },
-        });
-
-        if (!reverseContact) {
-          const currentUser = await prisma.user.findFirst({
-            where: {
-              id: contact.user_id,
-            },
-          });
-
-          // Create a new contact for the referenced user
-          reverseContact = await prisma.contact.create({
-            data: {
-              user_id: contact.ref_user_id,
-              ref_user_id: contact.user_id,
-              name: `Reverse Contact for ${contact.name} from ${currentUser?.name}`, // Use a descriptive name for reverse contact
-            },
-          });
-        }
+        const reverseContact = await this.contacts.getContactForUserId(
+          contact.user_id,
+          contact.ref_user_id,
+        );
 
         // Create reverse transaction
         await prisma.transaction.create({
