@@ -10,6 +10,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
+import { sessionMiddleware } from './telegram-bot/session-middleware';
 
 @Module({
   imports: [
@@ -23,9 +24,11 @@ import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
     TransactionsModule,
     UsersModule,
     TelegrafModule.forRoot({
-      token: process.env.BOT_TOKEN!,
+      token: process.env.TELEGRAM_BOT_API_KEY!,
       include: [TelegramBotModule],
+      middlewares: [sessionMiddleware],
     }),
+    TelegramBotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

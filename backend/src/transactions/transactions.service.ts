@@ -10,17 +10,17 @@ export class TransactionsService {
   ) {}
 
   async create(contactId: number, currencyId: number, amount: number) {
+    // Get contact to check for ref_user_id
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contactId },
+    });
+
+    if (!contact) {
+      throw new NotFoundException(`Contact with ID ${contactId} not found`);
+    }
+
     // Create the transaction and update balance in a transaction
-    return this.prisma.$transaction(async (prisma) => {
-      // Get contact to check for ref_user_id
-      const contact = await prisma.contact.findUnique({
-        where: { id: contactId },
-      });
-
-      if (!contact) {
-        throw new NotFoundException(`Contact with ID ${contactId} not found`);
-      }
-
+    const transaction = await this.prisma.$transaction(async (prisma) => {
       // Create the main transaction
       const transaction = await prisma.transaction.create({
         data: {
@@ -63,14 +63,18 @@ export class TransactionsService {
         },
       });
 
-      // If contact has ref_user_id, create reverse transaction for referenced user
-      if (contact.ref_user_id) {
-        // Find or create a reverse contact for the referenced user
-        const reverseContact = await this.contacts.getContactForUserId(
-          contact.user_id,
-          contact.ref_user_id,
-        );
+      return transaction;
+    });
 
+    // If contact has ref_user_id, create reverse transaction for referenced user
+    if (contact.ref_user_id) {
+      // Find or create a reverse contact for the referenced user
+      const reverseContact = await this.contacts.getContactForUserId(
+        contact.user_id,
+        contact.ref_user_id,
+      );
+
+      await this.prisma.$transaction(async (prisma) => {
         // Create reverse transaction
         await prisma.transaction.create({
           data: {
@@ -112,10 +116,10 @@ export class TransactionsService {
             amount: reverseBalance.amount - amount, // Subtract amount for reverse contact
           },
         });
-      }
+      });
+    }
 
-      return transaction;
-    });
+    return transaction;
   }
 
   async findAll(userId: number) {
