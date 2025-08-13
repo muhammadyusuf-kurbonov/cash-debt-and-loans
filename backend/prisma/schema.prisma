@@ -26,7 +26,6 @@ model User {
   verification_code String?
   is_verified       Boolean @default(false)
 
-  currencies   Currency[]
   contacts   Contact[] 
 
   isContactFor Contact[] @relation(name: "refUser")
@@ -34,9 +33,7 @@ model User {
 
 model Currency {
   id        Int      @id @default(autoincrement())
-  user_id     Int
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  name      String
+  name      String  @unique
   symbol    String
   createdAt DateTime @default(now())
 

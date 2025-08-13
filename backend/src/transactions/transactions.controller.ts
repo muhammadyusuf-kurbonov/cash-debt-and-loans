@@ -57,18 +57,6 @@ export class TransactionsController {
       throw new NotFoundException('Contact not found');
     }
 
-    // Verify that currency belongs to user
-    const currency = await this.prisma.currency.findFirst({
-      where: {
-        id: dto.currency_id,
-        user_id: req.user.id,
-      },
-    });
-
-    if (!currency) {
-      throw new NotFoundException('Currency not found');
-    }
-
     return this.transactionsService.create(
       dto.contact_id,
       dto.currency_id,
@@ -92,18 +80,6 @@ export class TransactionsController {
 
     if (!contact) {
       throw new NotFoundException('Contact not found');
-    }
-
-    // Verify that currency belongs to user
-    const currency = await this.prisma.currency.findFirst({
-      where: {
-        id: dto.currency_id,
-        user_id: req.user.id,
-      },
-    });
-
-    if (!currency) {
-      throw new NotFoundException('Currency not found');
     }
 
     return this.transactionsService.create(

@@ -54,12 +54,8 @@ export class CurrencyController {
     description: 'Currency created successfully',
     type: CurrencyDto,
   })
-  create(
-    @Request() req: RequestWithUser,
-    @Body() createCurrencyDto: CreateCurrencyDto,
-  ) {
+  create(@Body() createCurrencyDto: CreateCurrencyDto) {
     return this.currencyService.create(
-      req.user.id,
       createCurrencyDto.name,
       createCurrencyDto.symbol,
     );
@@ -72,8 +68,8 @@ export class CurrencyController {
     description: 'List of currencies',
     type: [CurrencyDto],
   })
-  findAll(@Request() req: RequestWithUser) {
-    return this.currencyService.findAll(req.user.id);
+  findAll() {
+    return this.currencyService.findAll();
   }
 
   @Get(':id')
@@ -85,7 +81,7 @@ export class CurrencyController {
   })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.currencyService.findOne(+id, req.user.id);
+    return this.currencyService.findOne(+id);
   }
 
   @Patch(':id')
@@ -103,7 +99,6 @@ export class CurrencyController {
   ) {
     return this.currencyService.update(
       +id,
-      req.user.id,
       updateCurrencyDto.name,
       updateCurrencyDto.symbol,
     );
@@ -114,6 +109,6 @@ export class CurrencyController {
   @ApiResponse({ status: 200, description: 'Currency deleted successfully' })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.currencyService.remove(+id, req.user.id);
+    return this.currencyService.remove(+id);
   }
 }

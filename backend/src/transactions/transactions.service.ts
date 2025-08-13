@@ -9,7 +9,12 @@ export class TransactionsService {
     private contacts: ContactsService,
   ) {}
 
-  async create(contactId: number, currencyId: number, amount: number) {
+  async create(
+    contactId: number,
+    currencyId: number,
+    amount: number,
+    internal?: boolean,
+  ) {
     // Get contact to check for ref_user_id
     const contact = await this.prisma.contact.findUnique({
       where: { id: contactId },
@@ -59,7 +64,9 @@ export class TransactionsService {
           },
         },
         data: {
-          amount: balance.amount + amount,
+          amount: {
+            increment: amount,
+          },
         },
       });
 
@@ -67,56 +74,14 @@ export class TransactionsService {
     });
 
     // If contact has ref_user_id, create reverse transaction for referenced user
-    if (contact.ref_user_id) {
+    if (contact.ref_user_id && !internal) {
       // Find or create a reverse contact for the referenced user
       const reverseContact = await this.contacts.getContactForUserId(
         contact.user_id,
         contact.ref_user_id,
       );
 
-      await this.prisma.$transaction(async (prisma) => {
-        // Create reverse transaction
-        await prisma.transaction.create({
-          data: {
-            contact_id: reverseContact.id,
-            currency_id: currencyId,
-            amount: -amount, // Negative amount for reverse transaction
-          },
-        });
-
-        // Get or create balance for reverse contact
-        let reverseBalance = await prisma.balance.findUnique({
-          where: {
-            currency_id_contact_id: {
-              currency_id: currencyId,
-              contact_id: reverseContact.id,
-            },
-          },
-        });
-
-        if (!reverseBalance) {
-          reverseBalance = await prisma.balance.create({
-            data: {
-              currency_id: currencyId,
-              contact_id: reverseContact.id,
-              amount: 0,
-            },
-          });
-        }
-
-        // Update balance for reverse contact
-        await prisma.balance.update({
-          where: {
-            currency_id_contact_id: {
-              currency_id: currencyId,
-              contact_id: reverseContact.id,
-            },
-          },
-          data: {
-            amount: reverseBalance.amount - amount, // Subtract amount for reverse contact
-          },
-        });
-      });
+      await this.create(reverseContact.id, currencyId, -amount, true);
     }
 
     return transaction;

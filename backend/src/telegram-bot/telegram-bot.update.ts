@@ -3,7 +3,7 @@ import {
   InlineQueryResultArticle,
   Update as TelegramUpdate,
 } from '@telegraf/types';
-import { Action, Ctx, InlineQuery, On, Start, Update } from 'nestjs-telegraf';
+import { Action, Ctx, InlineQuery, Start, Update } from 'nestjs-telegraf';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { CurrencyService } from 'src/currency/currency.service';
 import { TransactionsService } from 'src/transactions/transactions.service';
@@ -34,17 +34,14 @@ export class TelegramBotUpdate {
     }
 
     const amount = context.inlineQuery.query;
+    const formatted = Intl.NumberFormat('ru', { style: 'decimal' }).format(
+      parseFloat(amount),
+    );
 
-    const user = await this.usersService.getUserByTGId(inlineQuery.from.id);
-
-    const currencies = await this.currencyService.findAll(user.id);
+    const currencies = await this.currencyService.findAll();
 
     if (currencies.length === 0) {
-      const defaultCurrency = await this.currencyService.create(
-        user.id,
-        'UZS',
-        "So'm",
-      );
+      const defaultCurrency = await this.currencyService.create('UZS', "So'm");
       currencies.push(defaultCurrency);
     }
 
@@ -56,9 +53,9 @@ export class TelegramBotUpdate {
               {
                 id: `topup_${currency.id}_${amount}`,
                 type: 'article',
-                title: `Принял ${amount} ${currency.name}`,
+                title: `Принял ${formatted} ${currency.name}`,
                 input_message_content: {
-                  message_text: `Принял ${amount} ${currency.name}. Пожалуйста, подтвердите операцию.`,
+                  message_text: `Принял ${formatted} ${currency.name}. Пожалуйста, подтвердите операцию.`,
                 },
                 reply_markup: {
                   inline_keyboard: [
@@ -78,9 +75,9 @@ export class TelegramBotUpdate {
               {
                 id: `widraw_${currency.id}_${amount}`,
                 type: 'article',
-                title: `Отправил ${amount} ${currency.name}`,
+                title: `Отправил ${formatted} ${currency.name}`,
                 input_message_content: {
-                  message_text: `Отправил ${amount} ${currency.name}. Пожалуйста, подтвердите операцию.`,
+                  message_text: `Отправил ${formatted} ${currency.name} к ${context.inlineQuery?.id}. Пожалуйста, подтвердите операцию.`,
                 },
                 reply_markup: {
                   inline_keyboard: [
@@ -103,8 +100,8 @@ export class TelegramBotUpdate {
     );
   }
 
-  @Action(/cr_.*/)
-  async onConfirmReceive(
+  @Action(/c[r|s]_.*/)
+  async onConfirm(
     @Ctx()
     context: SceneContext & { update: TelegramUpdate.CallbackQueryUpdate },
   ) {
@@ -116,7 +113,7 @@ export class TelegramBotUpdate {
       return;
     }
 
-    const [userId, amount, currencyId] = userAnswer.split('_').slice(1);
+    const [action, userId, amount, currencyId] = userAnswer.split('_');
 
     if (context.from?.id === parseInt(userId)) {
       await context.answerCbQuery(
@@ -124,48 +121,6 @@ export class TelegramBotUpdate {
       );
       return;
     }
-
-    const receiver = await this.usersService.getUserByTGId(parseInt(userId));
-    const sender = await this.usersService.getUserByTGId(context.from!.id);
-
-    const receiverPartyContact = await this.contactsService.getContactForUserId(
-      sender.id,
-      receiver.id,
-      sender.name ?? context.from?.first_name ?? 'Unknown',
-    );
-
-    await this.transactionsService.create(
-      receiverPartyContact.id,
-      parseInt(currencyId),
-      -parseFloat(amount),
-    );
-    await context.answerCbQuery('Транзакция успешно проведена');
-    await context.editMessageReplyMarkup({
-      inline_keyboard: [],
-    });
-    const currency = await this.currencyService.findOne(
-      parseInt(currencyId),
-      receiver.id,
-    );
-    await context.editMessageText(
-      `✅ Получил сумму: ${amount} ${currency?.symbol ?? 'у.е.'}\n\n\nПодтверждено`,
-      { parse_mode: 'MarkdownV2' },
-    );
-  }
-  @Action(/cs_*/g)
-  async onConfirmSend(
-    @Ctx()
-    context: SceneContext & { update: TelegramUpdate.CallbackQueryUpdate },
-  ) {
-    const cbQuery = context.update.callback_query;
-    const userAnswer = 'data' in cbQuery ? cbQuery.data : null;
-
-    if (!userAnswer) {
-      await context.answerCbQuery('Некорректный ответ');
-      return;
-    }
-
-    const [userId, amount, currencyId] = userAnswer.split('_').slice(1);
 
     const currentUser = await this.usersService.getUserByTGId(parseInt(userId));
     const partyUser = await this.usersService.getUserByTGId(context.from!.id);
@@ -179,24 +134,20 @@ export class TelegramBotUpdate {
     await this.transactionsService.create(
       partyContact.id,
       parseInt(currencyId),
-      parseFloat(amount),
+      parseFloat(amount) * (action === 'cr' ? -1 : 1),
     );
     await context.answerCbQuery('Транзакция успешно проведена');
     await context.editMessageReplyMarkup({
       inline_keyboard: [],
     });
-    const currency = await this.currencyService.findOne(
-      parseInt(currencyId),
-      currentUser.id,
-    );
+    const currency = await this.currencyService.findOne(parseInt(currencyId));
     await context.editMessageText(
-      `✅ Отправил сумму: ${amount} ${currency?.symbol ?? 'у.е.'}\n\n\nПодтверждено`,
-      { parse_mode: 'MarkdownV2' },
-    );
-  }
+      `
+✅ ${action === 'cr' ? 'Получил' : 'Отправил'} сумму: ${amount} ${currency?.symbol ?? 'у.е.'}
 
-  @On('callback_query')
-  onCallbackQuery(@Ctx() ctx: Scenes.SceneContext) {
-    console.log(ctx.callbackQuery?.from, ctx.scene.current?.id);
+Текущий баланс: ${(await this.contactsService.getBalance(partyContact.id, currentUser.id, parseInt(currencyId)))[0].amount}
+
+Подтверждено`,
+    );
   }
 }
