@@ -21,4 +21,20 @@ export class UsersService {
 
     return user;
   }
+
+  async getNetBalanceOfUser(userId: number) {
+    const balances = await this.prisma.balance.groupBy({
+      by: ['currency_id'],
+      _sum: {
+        amount: true,
+      },
+      where: {
+        contact: {
+          user_id: userId,
+        },
+      },
+    });
+
+    return balances;
+  }
 }

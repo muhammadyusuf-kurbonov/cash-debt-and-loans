@@ -125,4 +125,33 @@ export class ContactsService {
 
     return contact;
   }
+
+  async getRecentContacts(userId: number, limit: number, offset: number) {
+    return await this.prisma.transaction
+      .findMany({
+        distinct: ['contact_id'],
+        take: limit,
+        where: {
+          contact: {
+            user_id: userId,
+          },
+        },
+        skip: offset,
+        include: {
+          contact: {
+            include: {
+              Balance: {
+                include: {
+                  currency: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      })
+      .then((transactions) => transactions.map((item) => item.contact));
+  }
 }

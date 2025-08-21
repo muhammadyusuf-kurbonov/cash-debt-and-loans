@@ -3,7 +3,7 @@ import {
   InlineQueryResultArticle,
   Update as TelegramUpdate,
 } from '@telegraf/types';
-import { Action, Ctx, InlineQuery, Start, Update } from 'nestjs-telegraf';
+import { Action, Command, Ctx, InlineQuery, Update } from 'nestjs-telegraf';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { CurrencyService } from 'src/currency/currency.service';
 import { TransactionsService } from 'src/transactions/transactions.service';
@@ -20,10 +20,9 @@ export class TelegramBotUpdate {
     @Inject() private transactionsService: TransactionsService,
   ) {}
 
-  @Start()
-  onStart(@Ctx() ctx: Scenes.SceneContext) {
-    console.log('Hello, I am a Telegram bot!');
-    return ctx.reply('Say hello to me');
+  @Command('balance')
+  async balance(@Ctx() context: Scenes.SceneContext) {
+    await context.scene.enter('balance_scene');
   }
 
   @InlineQuery(/^-?\d+(\.\d+)?$/)
