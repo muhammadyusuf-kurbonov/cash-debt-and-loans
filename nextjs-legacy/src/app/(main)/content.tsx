@@ -5,7 +5,7 @@ import { ContactList } from '@/components/contacts-list';
 import { contactsWithBalanceView, contactTable, transactionsTable } from '@/db/schema';
 import { useTransitionRouter } from 'next-transition-router';
 import { useCallback, useMemo, useState } from 'react';
-import { addNewContact, addTransaction } from './actions';
+import { addNewContact, addTransaction } from '../actions';
 import { StickyFooter } from '@/components/sticky-footer';
 import { Money } from '@/components/money';
 

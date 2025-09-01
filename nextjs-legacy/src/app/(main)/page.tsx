@@ -1,4 +1,4 @@
-import { getContacts } from './actions';
+import { getContacts } from '../actions';
 import HomePageContent from './content';
 
 export const dynamic = 'force-dynamic';
