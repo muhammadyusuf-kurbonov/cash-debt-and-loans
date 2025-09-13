@@ -59,6 +59,7 @@ model Transaction {
   currency_id Int
   currency    Currency @relation(fields: [currency_id], references: [id], onDelete: Cascade)
   amount      Float
+  note        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?

@@ -1,6 +1,7 @@
 import { BadRequestException, Inject } from '@nestjs/common';
 import {
   InlineQueryResultArticle,
+  Message,
   Update as TelegramUpdate,
 } from '@telegraf/types';
 import { Action, Command, Ctx, InlineQuery, Update } from 'nestjs-telegraf';
@@ -8,8 +9,9 @@ import { ContactsService } from 'src/contacts/contacts.service';
 import { CurrencyService } from 'src/currency/currency.service';
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { UsersService } from 'src/users/users.service';
-import { Scenes } from 'telegraf';
+import { Context, Scenes } from 'telegraf';
 import { SceneContext } from 'telegraf/typings/scenes';
+import { TelegramBotService } from './telegram-bot.service';
 
 @Update()
 export class TelegramBotUpdate {
@@ -18,11 +20,42 @@ export class TelegramBotUpdate {
     @Inject() private usersService: UsersService,
     @Inject() private contactsService: ContactsService,
     @Inject() private transactionsService: TransactionsService,
+    @Inject() private telegramBotService: TelegramBotService,
   ) {}
 
   @Command('balance')
   async balance(@Ctx() context: Scenes.SceneContext) {
-    await context.scene.enter('balance_scene');
+    const result = await this.telegramBotService
+      .getBalancesTotal(context.from!.id)
+      .then((msg) => msg.asKwargs());
+    await context.reply(result.text, {
+      // @ts-expect-error Some TS errors
+      entities: result.entities,
+    });
+  }
+
+  @Command('contact')
+  async contact(
+    @Ctx() context: Context<TelegramUpdate.MessageUpdate<Message.TextMessage>>,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, contactName] = context.update.message.text.split(' ');
+
+    if (!contactName) {
+      void context.reply(
+        'Команда имеет такой формат `/contact [имя_контакта]`',
+        { parse_mode: 'Markdown' },
+      );
+      return;
+    }
+
+    const result = await this.telegramBotService
+      .getCustomerDetailsByName(context.from.id, contactName)
+      .then((msg) => msg.asKwargs());
+    await context.reply(result.text, {
+      // @ts-expect-error Some TS errors
+      entities: result.entities,
+    });
   }
 
   @InlineQuery(/^-?\d+(\.\d+)?$/)

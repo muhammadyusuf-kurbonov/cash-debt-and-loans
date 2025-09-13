@@ -126,6 +126,17 @@ export class ContactsService {
     return contact;
   }
 
+  async getContactByName(ownerId: number, name?: string) {
+    const contact = await this.prisma.contact.findFirst({
+      where: {
+        user_id: ownerId,
+        name: { contains: name },
+      },
+    });
+
+    return contact;
+  }
+
   async getRecentContacts(userId: number, limit: number, offset: number) {
     return await this.prisma.transaction
       .findMany({

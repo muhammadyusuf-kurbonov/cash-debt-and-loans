@@ -212,4 +212,29 @@ export class TransactionsService {
       return deletedTransaction;
     });
   }
+
+  async getRecentOperations(
+    contactId: number,
+    userId: number,
+    limit: number,
+    offset?: number,
+  ) {
+    return await this.prisma.transaction.findMany({
+      take: limit,
+      where: {
+        contact: {
+          user_id: userId,
+          id: contactId,
+        },
+        deletedAt: null,
+      },
+      skip: offset,
+      include: {
+        currency: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+  }
 }

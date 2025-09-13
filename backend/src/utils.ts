@@ -1,3 +1,5 @@
+import { Balance, Currency } from 'generated/prisma';
+
 export function formatCurrency(number: number): string {
   return number.toLocaleString('ru', {
     style: 'decimal',
@@ -5,4 +7,8 @@ export function formatCurrency(number: number): string {
     maximumFractionDigits: 2,
     signDisplay: 'always',
   });
+}
+
+export function formatBalance(balance: Balance & { currency: Currency }) {
+  return `${formatCurrency(balance.amount)} ${balance.currency.symbol}`;
 }
