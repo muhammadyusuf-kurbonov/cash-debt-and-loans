@@ -9,6 +9,13 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator prismaClassGenerator {
+  provider = "prisma-class-generator"
+  dryRun   = false
+  separateRelationFields  = true
+  output   = "../src/types/prisma"
+}
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")

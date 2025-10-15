@@ -1,0 +1,628 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": { "200": { "description": "" } },
+        "tags": ["App"]
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signUp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignUpDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          }
+        },
+        "summary": "Sign up a new user with email and password",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/signin": {
+      "post": {
+        "operationId": "AuthController_signIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignInDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" }
+        },
+        "summary": "Sign in with email and password",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/telegram_sigin": {
+      "post": {
+        "operationId": "AuthController_telegramSignUp",
+        "parameters": [
+          {
+            "name": "x-telegram-bot-api-key",
+            "required": true,
+            "in": "header",
+            "description": "Telegram bot API key for authentication",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TelegramAuthDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "Invalid API key" }
+        },
+        "summary": "Sign up a new user through Telegram",
+        "tags": ["auth"]
+      }
+    },
+    "/currencies": {
+      "post": {
+        "operationId": "CurrencyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCurrencyDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Currency created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Currency" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Create a new currency",
+        "tags": ["currencies"]
+      },
+      "get": {
+        "operationId": "CurrencyController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of currencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Currency" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Get all currencies for current user",
+        "tags": ["currencies"]
+      }
+    },
+    "/currencies/{id}": {
+      "get": {
+        "operationId": "CurrencyController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Currency details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Currency" }
+              }
+            }
+          },
+          "404": { "description": "Currency not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Get a specific currency",
+        "tags": ["currencies"]
+      },
+      "patch": {
+        "operationId": "CurrencyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCurrencyDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Currency updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Currency" }
+              }
+            }
+          },
+          "404": { "description": "Currency not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Update a currency",
+        "tags": ["currencies"]
+      },
+      "delete": {
+        "operationId": "CurrencyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Currency deleted successfully" },
+          "404": { "description": "Currency not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Delete a currency",
+        "tags": ["currencies"]
+      }
+    },
+    "/contacts": {
+      "post": {
+        "operationId": "ContactsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateContactDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contact created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Contact" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Create a new contact",
+        "tags": ["contacts"]
+      },
+      "get": {
+        "operationId": "ContactsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of contacts with their balances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Contact" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Get all contacts for current user",
+        "tags": ["contacts"]
+      }
+    },
+    "/contacts/{id}": {
+      "get": {
+        "operationId": "ContactsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact details with balances",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Contact" }
+              }
+            }
+          },
+          "404": { "description": "Contact not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Get a specific contact",
+        "tags": ["contacts"]
+      },
+      "patch": {
+        "operationId": "ContactsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateContactDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Contact" }
+              }
+            }
+          },
+          "404": { "description": "Contact not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Update a contact",
+        "tags": ["contacts"]
+      },
+      "delete": {
+        "operationId": "ContactsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Contact deleted successfully" },
+          "404": { "description": "Contact not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Delete a contact",
+        "tags": ["contacts"]
+      }
+    },
+    "/contacts/{id}/balance": {
+      "get": {
+        "operationId": "ContactsController_getBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "currencyId",
+            "required": false,
+            "in": "query",
+            "description": "Optional currency ID to filter balances",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact balances per currency",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Contact" }
+                }
+              }
+            }
+          },
+          "404": { "description": "Contact not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Get balances for a specific contact",
+        "tags": ["contacts"]
+      }
+    },
+    "/transactions/topup": {
+      "post": {
+        "operationId": "TransactionsController_topup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Transaction" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Balance topped up successfully" },
+          "404": { "description": "Contact or currency not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Top up balance for a contact",
+        "tags": ["transactions"]
+      }
+    },
+    "/transactions/withdraw": {
+      "post": {
+        "operationId": "TransactionsController_withdraw",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Transaction" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Balance withdrawn successfully" },
+          "404": { "description": "Contact or currency not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Withdraw balance from a contact",
+        "tags": ["transactions"]
+      }
+    },
+    "/transactions/{id}/cancel": {
+      "post": {
+        "operationId": "TransactionsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Transaction cancelled successfully" },
+          "404": { "description": "Transaction not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Cancel a transaction",
+        "tags": ["transactions"]
+      }
+    }
+  },
+  "info": {
+    "title": "Qarz.uz backend",
+    "description": "API for managing debts and loans",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
+    },
+    "schemas": {
+      "SignUpDto": { "type": "object", "properties": {} },
+      "AuthResponseDto": { "type": "object", "properties": {} },
+      "SignInDto": { "type": "object", "properties": {} },
+      "TelegramAuthDto": {
+        "type": "object",
+        "properties": {
+          "telegram_id": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "required": ["telegram_id"]
+      },
+      "CreateCurrencyDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "symbol": { "type": "string" }
+        },
+        "required": ["name", "symbol"]
+      },
+      "Currency": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "createdAt": { "format": "date-time", "type": "string" }
+        },
+        "required": ["id", "name", "symbol", "createdAt"]
+      },
+      "UpdateCurrencyDto": { "type": "object", "properties": {} },
+      "CreateContactDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "ref_user_id": { "type": "number" }
+        },
+        "required": ["name"]
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "user_id": { "type": "number" },
+          "name": { "type": "string" },
+          "ref_user_id": { "type": "number" }
+        },
+        "required": ["id", "user_id"]
+      },
+      "UpdateContactDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "New name for contact" },
+          "ref_user_id": {
+            "type": "number",
+            "description": "New reference for user_id"
+          }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "contact_id": { "type": "number" },
+          "currency_id": { "type": "number" },
+          "amount": { "type": "number" },
+          "note": { "type": "string" },
+          "createdAt": { "format": "date-time", "type": "string" },
+          "updatedAt": { "format": "date-time", "type": "string" },
+          "deletedAt": { "format": "date-time", "type": "string" }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "currency_id",
+          "amount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UserRelations": {
+        "type": "object",
+        "properties": {
+          "contacts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Contact" }
+          },
+          "isContactFor": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Contact" }
+          }
+        },
+        "required": ["contacts", "isContactFor"]
+      },
+      "Balance": {
+        "type": "object",
+        "properties": {
+          "currency_id": { "type": "number" },
+          "amount": { "type": "number" },
+          "contact_id": { "type": "number" }
+        },
+        "required": ["currency_id", "amount", "contact_id"]
+      },
+      "CurrencyRelations": {
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Balance" }
+          },
+          "transactions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Transaction" }
+          }
+        },
+        "required": ["balances", "transactions"]
+      },
+      "BalanceRelations": {
+        "type": "object",
+        "properties": {
+          "currency": { "$ref": "#/components/schemas/Currency" },
+          "contact": { "$ref": "#/components/schemas/Contact" }
+        },
+        "required": ["currency", "contact"]
+      },
+      "TransactionRelations": {
+        "type": "object",
+        "properties": {
+          "contact": { "$ref": "#/components/schemas/Contact" },
+          "currency": { "$ref": "#/components/schemas/Currency" }
+        },
+        "required": ["contact", "currency"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "createdAt": { "format": "date-time", "type": "string" },
+          "updatedAt": { "format": "date-time", "type": "string" },
+          "telegram_id": { "type": "string" },
+          "verification_code": { "type": "string" },
+          "is_verified": { "type": "boolean" }
+        },
+        "required": ["id", "createdAt", "updatedAt", "is_verified"]
+      },
+      "ContactRelations": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/User" },
+          "ref_user": { "$ref": "#/components/schemas/User" },
+          "Transaction": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Transaction" }
+          },
+          "Balance": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Balance" }
+          }
+        },
+        "required": ["user", "Transaction", "Balance"]
+      }
+    }
+  }
+}

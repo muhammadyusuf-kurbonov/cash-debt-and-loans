@@ -22,6 +22,7 @@ import {
 import { RequestWithUser } from 'src/types/request';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ContactsService } from './contacts.service';
+import { Contact as ContactDto } from 'src/types/prisma/contact';
 
 class CreateContactDto {
   @ApiProperty()
@@ -32,30 +33,10 @@ class CreateContactDto {
 }
 
 class UpdateContactDto {
+  @ApiPropertyOptional({ description: 'New name for contact' })
   name?: string;
+  @ApiPropertyOptional({ description: 'New reference for user_id' })
   ref_user_id?: number;
-}
-
-class ContactDto {
-  id: number;
-  user_id: number;
-  name?: string;
-  ref_user_id?: number;
-  ref_user?: {
-    id: number;
-    name?: string;
-    email?: string;
-    telegram_id?: string;
-  };
-  Balance: Array<{
-    currency_id: number;
-    amount: number;
-    currency: {
-      id: number;
-      name: string;
-      symbol: string;
-    };
-  }>;
 }
 
 @ApiTags('contacts')

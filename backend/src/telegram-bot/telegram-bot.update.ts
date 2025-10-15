@@ -3,7 +3,7 @@ import {
   InlineQueryResultArticle,
   Message,
   Update as TelegramUpdate,
-} from '@telegraf/types';
+} from 'telegraf/types';
 import { Action, Command, Ctx, InlineQuery, Update } from 'nestjs-telegraf';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { CurrencyService } from 'src/currency/currency.service';

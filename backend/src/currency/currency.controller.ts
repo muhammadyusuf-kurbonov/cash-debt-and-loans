@@ -19,6 +19,7 @@ import {
   ApiProperty,
 } from '@nestjs/swagger';
 import { RequestWithUser } from '../types/request';
+import { Currency as CurrencyDto } from 'src/types/prisma/currency';
 
 class CreateCurrencyDto {
   @ApiProperty()
@@ -30,14 +31,6 @@ class CreateCurrencyDto {
 class UpdateCurrencyDto {
   name?: string;
   symbol?: string;
-}
-
-class CurrencyDto {
-  id: number;
-  user_id: number;
-  name: string;
-  symbol: string;
-  createdAt: Date;
 }
 
 @ApiTags('currencies')

@@ -1,3 +1,3 @@
-import { MessageEntity } from '@telegraf/types';
+import { MessageEntity } from 'telegraf/types';
 
 export type MessageEntityType = MessageEntity['type'];

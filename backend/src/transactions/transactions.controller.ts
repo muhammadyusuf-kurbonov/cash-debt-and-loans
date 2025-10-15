@@ -1,33 +1,24 @@
 import {
-  Controller,
-  Post,
   Body,
-  UseGuards,
-  Request,
+  Controller,
   NotFoundException,
   Param,
+  Post,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
-import { TransactionsService } from './transactions.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PrismaService } from '../prisma/prisma.service';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiBody,
-  ApiProperty,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
+import { Transaction as TransactionDto } from 'src/types/prisma/transaction';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PrismaService } from '../prisma/prisma.service';
 import { RequestWithUser } from '../types/request';
-
-class TransactionDto {
-  @ApiProperty()
-  contact_id: number;
-  @ApiProperty()
-  currency_id: number;
-  @ApiProperty()
-  amount: number;
-}
+import { TransactionsService } from './transactions.service';
 
 @ApiTags('transactions')
 @Controller('transactions')
