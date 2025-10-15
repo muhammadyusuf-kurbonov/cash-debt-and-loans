@@ -1,5 +1,6 @@
 // api/client.ts
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+// Use a placeholder that will be replaced at runtime by the Docker container
+const BACKEND_URL = '__VITE_BACKEND_URL__';
 
 class ApiClient {
   private baseUrl: string;

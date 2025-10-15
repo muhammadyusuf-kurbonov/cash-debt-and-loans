@@ -1,15 +1,7 @@
+import { Body, Controller, Post } from '@nestjs/common';
 import {
-  Body,
-  Controller,
-  Headers,
-  Post,
-  UnauthorizedException,
-} from '@nestjs/common';
-import {
-  ApiHeader,
   ApiOperation,
   ApiProperty,
-  ApiPropertyOptional,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -27,10 +19,8 @@ class SignInDto {
 }
 
 class TelegramAuthDto {
-  @ApiProperty()
-  telegram_id: string;
-  @ApiPropertyOptional()
-  name?: string;
+  @ApiProperty({ description: 'Telegram Web App init data string' })
+  initData: string;
 }
 
 class AuthResponseDto {
@@ -77,27 +67,13 @@ export class AuthController {
 
   @Post('telegram_sigin')
   @ApiOperation({ summary: 'Sign up a new user through Telegram' })
-  @ApiHeader({
-    name: 'x-telegram-bot-api-key',
-    description: 'Telegram bot API key for authentication',
-  })
   @ApiResponse({
     status: 201,
-    description: 'User successfully created',
+    description: 'User successfully authenticated via Telegram',
     type: AuthResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Invalid API key' })
-  async telegramSignUp(
-    @Headers('x-telegram-bot-api-key') apiKey: string,
-    @Body() telegramSignUpDto: TelegramAuthDto,
-  ) {
-    if (!apiKey || apiKey !== process.env.TELEGRAM_BOT_API_KEY) {
-      throw new UnauthorizedException('Invalid API key');
-    }
-
-    return this.authService.authWithTelegram(
-      telegramSignUpDto.telegram_id,
-      telegramSignUpDto.name,
-    );
+  @ApiResponse({ status: 401, description: 'Invalid Telegram auth data' })
+  async telegramSignUp(@Body() telegramSignUpDto: TelegramAuthDto) {
+    return this.authService.authWithTelegram(telegramSignUpDto.initData);
   }
 }

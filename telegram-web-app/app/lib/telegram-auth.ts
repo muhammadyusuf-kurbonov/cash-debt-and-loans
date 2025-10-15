@@ -1,7 +1,7 @@
 // lib/telegram-auth.ts
 import { apiClient } from './api-client';
 
-interface TelegramUser {
+interface TelegramAuthData {
   id: number;
   first_name: string;
   last_name?: string;
@@ -21,41 +21,16 @@ interface TelegramAuthResponse {
 }
 
 /**
- * Verify the Telegram authentication data
+ * Authenticate with Telegram through the backend using initData
  */
-function verifyTelegramAuth(data: TelegramUser, botToken: string): boolean {
-  const { hash, ...authData } = data;
-  const authString = Object.entries(authData)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('\n');
-
-  // In a real implementation, you would verify the hash using Telegram's secret
-  // However, for security reasons, this should be done on the backend
-  // The frontend should just send the data to the backend for verification
-  return true;
-}
-
-/**
- * Authenticate with Telegram through the backend
- */
-export async function authenticateWithTelegram(telegramData: TelegramUser): Promise<TelegramAuthResponse> {
-  // Verify the data integrity - in practice, this should be done on the backend
-  const isValid = verifyTelegramAuth(telegramData, process.env.TELEGRAM_BOT_TOKEN || '');
-  
-  if (!isValid) {
-    throw new Error('Invalid Telegram auth data');
-  }
-
+export async function authenticateWithTelegram(initData: string): Promise<TelegramAuthResponse> {
   const response = await fetch(`${apiClient.baseUrl}/auth/telegram_sigin`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-telegram-bot-api-key': process.env.TELEGRAM_BOT_API_KEY || '',
     },
     body: JSON.stringify({
-      telegram_id: telegramData.id.toString(),
-      name: telegramData.first_name + (telegramData.last_name ? ` ${telegramData.last_name}` : ''),
+      initData,
     }),
   });
 

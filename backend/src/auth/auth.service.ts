@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +26,25 @@ export class AuthService {
     return { token, user: { id: user.id, email: user.email, name: user.name } };
   }
 
-  async authWithTelegram(telegramId: string, name?: string) {
+  async authWithTelegram(initData: string) {
+    // Parse the initData
+    const urlParams = new URLSearchParams(initData);
+    const authData: Record<string, string> = {};
+    
+    for (const [key, value] of urlParams) {
+      authData[key] = value;
+    }
+
+    // Verify the authentication data
+    if (!this.validateTelegramAuthData(authData)) {
+      throw new UnauthorizedException('Invalid Telegram auth data');
+    }
+
+    const telegramId = authData['id'];
+    const firstName = authData['first_name'];
+    const lastName = authData['last_name'];
+    const username = authData['username'];
+    
     let user = await this.prisma.user.findUnique({
       where: { telegram_id: telegramId },
     });
@@ -34,7 +53,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           telegram_id: telegramId,
-          name,
+          name: firstName + (lastName ? ` ${lastName}` : ''),
         },
       });
     }
@@ -44,6 +63,41 @@ export class AuthService {
       token,
       user: { id: user.id, telegram_id: telegramId, name: user.name },
     };
+  }
+
+  private validateTelegramAuthData(authData: Record<string, string>): boolean {
+    const { hash, auth_date, ...requiredData } = authData;
+
+    if (!hash) {
+      return false;
+    }
+
+    // Check if the auth date is not too old (within 1 hour)
+    const authTime = parseInt(authData.auth_date, 10);
+    const now = Math.floor(Date.now() / 1000);
+    if (now - authTime > 3600) {  // 1 hour
+      return false;
+    }
+
+    // Create the data string to verify the hash
+    const dataToCheck = Object.entries(requiredData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    // Calculate the secret key (SHA256 of bot token)
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(process.env.TELEGRAM_BOT_TOKEN || '')
+      .digest();
+
+    // Calculate the hash
+    const calculatedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataToCheck)
+      .digest('hex');
+
+    return calculatedHash === hash;
   }
 
   async signIn(email: string, password: string) {

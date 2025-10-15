@@ -5,6 +5,9 @@ import { StickyFooter } from "~/components/sticky-footer";
 import { Money } from "~/components/money";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Api } from "~/api/api-client";
+import TelegramLoginButton from "~/components/telegram-login-button";
+import { isAuthenticated, authenticateWithTelegram } from "~/lib/telegram-auth";
+import { useLaunchParams } from '@telegram-apps/sdk-react';
 
 // Define types for our application
 type AppContact = {
@@ -34,6 +37,51 @@ export default function Home() {
   const [contacts, setContacts] = useState<AppContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
+  const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
+  const [authenticating, setAuthenticating] = useState<boolean>(false);
+  const { initData } = useLaunchParams();
+  
+  // Check authentication status on mount and auto-authenticate if in Telegram Web App
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      // If already authenticated, just update the state
+      if (isAuthenticated()) {
+        setIsAuthenticated(true);
+        return;
+      }
+      
+      // Auto-authenticate if in Telegram Web App
+      if (initData) {
+        setAuthenticating(true);
+        
+        try {
+          // Convert initData to the format expected by backend
+          // Extract raw data from initData
+          const initDataString = Object.entries(initData)
+            .filter(([key]) => key !== 'hash' && key !== 'user') // Exclude hash and user from params string
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&');
+          
+          // Include the hash in the final string
+          const hash = initData.hash;
+          const finalInitData = `${initDataString}${hash ? `&hash=${hash}` : ''}`;
+
+          // Authenticate with our backend
+          await authenticateWithTelegram(finalInitData);
+          
+          // Update authentication state
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Auto-authentication failed:', error);
+          // Still show login button if auto-auth fails
+        } finally {
+          setAuthenticating(false);
+        }
+      }
+    };
+
+    checkAuthStatus();
+  }, [initData]);
   
   // Initialize API client
   const api = new Api({
@@ -47,8 +95,13 @@ export default function Home() {
       api.setSecurityData(`Bearer ${token}`);
     }
     
-    // Load contacts from backend
+    // Load contacts from backend if authenticated
     const fetchContacts = async () => {
+      if (!isAuthenticated()) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         const backendContacts = await api.contacts.contactsControllerFindAll();
@@ -58,7 +111,7 @@ export default function Home() {
           id: contact.id,
           fullName: contact.name || `Contact ${contact.id}`,
           balance: 0, // Backend doesn't return balance directly, need to fetch separately
-          currencySymbol: '$', // Default placeholder
+          currencySymbol: ', // Default placeholder
           currencyId: 1, // Default placeholder
         }));
         
@@ -73,6 +126,34 @@ export default function Home() {
     fetchContacts();
   }, []);
 
+  const handleAuthSuccess = useCallback(() => {
+    setIsAuthenticated(true);
+    // Reload contacts after authentication
+    const fetchContacts = async () => {
+      try {
+        setLoading(true);
+        const backendContacts = await api.contacts.contactsControllerFindAll();
+        
+        // Transform backend contacts to our app format
+        const appContacts = backendContacts.data.map(contact => ({
+          id: contact.id,
+          fullName: contact.name || `Contact ${contact.id}`,
+          balance: 0, // Backend doesn't return balance directly, need to fetch separately
+          currencySymbol: ', // Default placeholder
+          currencyId: 1, // Default placeholder
+        }));
+        
+        setContacts(appContacts);
+      } catch (error) {
+        console.error('Error fetching contacts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContacts();
+  }, [api]);
+
   const handleAddNewContact = useCallback(async (newContact: Omit<AppContact, 'id'>) => {
     try {
       // Create the contact in the backend
@@ -85,7 +166,7 @@ export default function Home() {
         id: backendResult.data.id,
         fullName: newContact.fullName,
         balance: newContact.balance || 0,
-        currencySymbol: newContact.currencySymbol || '$',
+        currencySymbol: newContact.currencySymbol || ',
         currencyId: newContact.currencyId || 1,
       };
       
@@ -140,6 +221,20 @@ export default function Home() {
       return acc;
     }, {} as Record<string, number>);
   }, [contacts]);
+
+  // Show login button if not authenticated
+  if (!isAuthenticatedState) {
+    // Show loading indicator if auto-authenticating
+    if (authenticating) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+        </div>
+      );
+    }
+    
+    return <TelegramLoginButton onAuthSuccess={handleAuthSuccess} />;
+  }
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;

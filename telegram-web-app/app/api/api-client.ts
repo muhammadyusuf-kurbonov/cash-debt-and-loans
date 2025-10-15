@@ -17,8 +17,7 @@ export type AuthResponseDto = object;
 export type SignInDto = object;
 
 export interface TelegramAuthDto {
-  telegram_id: string;
-  name?: string;
+  initData: string;
 }
 
 export interface CreateCurrencyDto {

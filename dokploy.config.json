@@ -1,0 +1,21 @@
+{
+  "id": "qarzuz-app",
+  "name": "Qarz.uz - Debt Tracker",
+  "description": "A cash, debt and loans management application with Telegram integration",
+  "type": "docker-compose",
+  "repository": {
+    "url": "",
+    "branch": "main"
+  },
+  "dockerCompose": {
+    "path": "docker-compose.yml"
+  },
+  "envFile": ".env",
+  "volumes": [
+    {
+      "name": "postgres_data",
+      "mountPath": "/var/lib/postgresql/data",
+      "type": "volume"
+    }
+  ]
+}
