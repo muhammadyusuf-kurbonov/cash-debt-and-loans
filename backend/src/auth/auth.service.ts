@@ -2,7 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { validate, parse, type User as TelegramUser } from '@tma.js/init-data-node';
+import {
+  validate,
+  parse,
+  type User as TelegramUser,
+} from '@tma.js/init-data-node';
 
 @Injectable()
 export class AuthService {
