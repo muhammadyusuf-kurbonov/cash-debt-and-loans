@@ -35,6 +35,9 @@ importers:
       '@prisma/client':
         specifier: ^6.13.0
         version: 6.17.1(prisma@6.17.1(typescript@5.9.3))(typescript@5.9.3)
+      '@tma.js/init-data-node':
+        specifier: ^2.0.2
+        version: 2.0.2(typescript@5.9.3)
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
@@ -1099,6 +1102,18 @@ packages:
   '@telegraf/types@7.1.0':
     resolution: {integrity: sha512-kGevOIbpMcIlCDeorKGpwZmdH7kHbqlk/Yj6dEpJMKEQw5lk0KVQY0OLXaCswy8GqlIVLd5625OB+rAntP9xVw==}
 
+  '@tma.js/init-data-node@2.0.2':
+    resolution: {integrity: sha512-TlXwHzFRj3EYMWl80D30s9o3jUz5gw2PhgkED8T/DSPUxGGzk2dr+8Q9GQT65zVkRdvLsFkKgL3njQ6OvYJaww==}
+
+  '@tma.js/toolkit@1.0.1':
+    resolution: {integrity: sha512-ihXOY4YscLL1Z1JcAoR0W1u3ANWCm8G+oq+cC491WEHX80O9i/ojYYSM3GX8o2yDBBGQXqHo70tsf1nxXvv7dg==}
+
+  '@tma.js/transformers@1.1.0':
+    resolution: {integrity: sha512-hh6pwVAsVrLKZmiHfi5pNXKa8wlhSDK+lKpW/uG3qmzQAFrvqmNdY3Z78VClqmgOWAwz4ej0/X1ge7VkfTqh+g==}
+
+  '@tma.js/types@1.0.1':
+    resolution: {integrity: sha512-A847UR4mf+wM1ptIdxbSw5VDc7bL/pANMOwVF4fFKfv3Uo6dAoNjklg3RuE1DoIZK7+xozyX77AkQ9ZfRGe14A==}
+
   '@tokenizer/inflate@0.2.7':
     resolution: {integrity: sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==}
     engines: {node: '>=18'}
@@ -1566,6 +1581,9 @@ packages:
     resolution: {integrity: sha512-cU8v/EGSrnH+HnxV2z0J7/blxH8gq7Xh2JFT6Aroax7UohdmiJJlxApMxtKfuI7z68NvvVcmR78k2LbT6efhRg==}
     engines: {node: '>= 18'}
 
+  better-promises@1.0.0:
+    resolution: {integrity: sha512-gPgL2nRgeSbMIe3QpsYdKR3K0S9OZuphVuos60Eqsw8d/6GivOkyJ5D/zmnolJ6hzh7upnnflBUWUlQh4qpU2A==}
+
   bin-version-check@5.1.0:
     resolution: {integrity: sha512-bYsvMqJ8yNGILLz1KP9zKLzQ6YpljV3ln1gqhuLkUtyfGi3qXKGuK2p+U4NAvjVFzDFiBBtOpCOSFNuYYEGZ5g==}
     engines: {node: '>=12'}
@@ -1981,6 +1999,9 @@ packages:
   error-ex@1.3.4:
     resolution: {integrity: sha512-sqQamAnR14VgCr1A618A3sGrygcpK+HEbenA/HiEAkkUwcZIIB/tgWqHFxWgOyDh4nB4JCRimh79dR5Ywc9MDQ==}
 
+  error-kid@1.0.2:
+    resolution: {integrity: sha512-Xvq0ZrY/azCbREWKt9E/3mXDF0MkuEVVvHnOKutUhtq2O8pyneEixQ4nSFkA19Xfn+/OVSg//iVG0dxIDj7DIA==}
+
   es-define-property@1.0.1:
     resolution: {integrity: sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==}
     engines: {node: '>= 0.4'}
@@ -2243,6 +2264,9 @@ packages:
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
     engines: {node: '>= 0.6'}
+
+  fp-ts@2.16.11:
+    resolution: {integrity: sha512-LaI+KaX2NFkfn1ZGHoKCmcfv7yrZsC3b8NtWsTVQeHkq4F27vI5igUuO53sxqDEa2gNQMHFPmpojDw/1zmUK7w==}
 
   fresh@2.0.0:
     resolution: {integrity: sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A==}
@@ -3743,6 +3767,14 @@ packages:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
 
+  valibot@1.1.0:
+    resolution: {integrity: sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   validator@13.15.15:
     resolution: {integrity: sha512-BgWVbCI72aIQy937xbawcs+hrVaN/CZ2UwutgaJ36hGqRrLNM+f5LUT/YPRbo8IV/ASeFzXszezV+y2+rq3l8A==}
     engines: {node: '>= 0.10'}
@@ -4937,6 +4969,32 @@ snapshots:
 
   '@telegraf/types@7.1.0': {}
 
+  '@tma.js/init-data-node@2.0.2(typescript@5.9.3)':
+    dependencies:
+      '@tma.js/toolkit': 1.0.1
+      '@tma.js/transformers': 1.1.0(typescript@5.9.3)
+      '@tma.js/types': 1.0.1
+      better-promises: 1.0.0
+      error-kid: 1.0.2
+      fp-ts: 2.16.11
+    transitivePeerDependencies:
+      - typescript
+
+  '@tma.js/toolkit@1.0.1':
+    dependencies:
+      fp-ts: 2.16.11
+
+  '@tma.js/transformers@1.1.0(typescript@5.9.3)':
+    dependencies:
+      '@tma.js/toolkit': 1.0.1
+      '@tma.js/types': 1.0.1
+      fp-ts: 2.16.11
+      valibot: 1.1.0(typescript@5.9.3)
+    transitivePeerDependencies:
+      - typescript
+
+  '@tma.js/types@1.0.1': {}
+
   '@tokenizer/inflate@0.2.7':
     dependencies:
       debug: 4.4.3
@@ -5548,6 +5606,10 @@ snapshots:
       node-addon-api: 8.5.0
       node-gyp-build: 4.8.4
 
+  better-promises@1.0.0:
+    dependencies:
+      error-kid: 1.0.2
+
   bin-version-check@5.1.0:
     dependencies:
       bin-version: 6.0.0
@@ -5960,6 +6022,8 @@ snapshots:
     dependencies:
       is-arrayish: 0.2.1
 
+  error-kid@1.0.2: {}
+
   es-define-property@1.0.1: {}
 
   es-errors@1.3.0: {}
@@ -6293,6 +6357,8 @@ snapshots:
       once: 1.4.0
 
   forwarded@0.2.0: {}
+
+  fp-ts@2.16.11: {}
 
   fresh@2.0.0: {}
 
@@ -7937,6 +8003,10 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
+
+  valibot@1.1.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   validator@13.15.15: {}
 
