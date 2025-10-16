@@ -237,4 +237,20 @@ export class TransactionsService {
       },
     });
   }
+
+  async getAllTransactionsOfContact(contact_id: number, currency_id?: number) {
+    return await this.prisma.transaction.findMany({
+      where: {
+        contact_id,
+        deletedAt: null,
+        currency_id,
+      },
+      include: {
+        currency: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+  }
 }

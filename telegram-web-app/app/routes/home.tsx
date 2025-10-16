@@ -4,7 +4,7 @@ import { AddTransactionModal } from "~/components/add-transaction-modal";
 import { StickyFooter } from "~/components/sticky-footer";
 import { Money } from "~/components/money";
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Api } from "~/api/api-client";
+import { Api, type Contact } from "~/api/api-client";
 import TelegramLoginButton from "~/components/telegram-login-button";
 import { isAuthenticated, authenticateWithTelegram } from "~/lib/telegram-auth";
 import { useLaunchParams } from '@telegram-apps/sdk-react';
@@ -34,12 +34,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const [contacts, setContacts] = useState<AppContact[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
   const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
   const [authenticating, setAuthenticating] = useState<boolean>(false);
-  const { initData } = useLaunchParams();
+  const { tgWebAppData: initData } = useLaunchParams();
   
   // Check authentication status on mount and auto-authenticate if in Telegram Web App
   useEffect(() => {
@@ -87,6 +87,21 @@ export default function Home() {
   const api = new Api({
     baseUrl: 'http://localhost:3001', // Backend URL
   });
+
+  async function fetchContacts() {
+    try {
+      setLoading(true);
+      const backendContactsResponse = await api.contacts.contactsControllerFindAll();
+      
+      const contacts = backendContactsResponse.data;
+
+      setContacts(contacts);
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
   
   // Set token if available
   useEffect(() => {
@@ -94,63 +109,18 @@ export default function Home() {
     if (token) {
       api.setSecurityData(`Bearer ${token}`);
     }
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
     
-    // Load contacts from backend if authenticated
-    const fetchContacts = async () => {
-      if (!isAuthenticated()) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        const backendContacts = await api.contacts.contactsControllerFindAll();
-        
-        // Transform backend contacts to our app format
-        const appContacts = backendContacts.data.map(contact => ({
-          id: contact.id,
-          fullName: contact.name || `Contact ${contact.id}`,
-          balance: 0, // Backend doesn't return balance directly, need to fetch separately
-          currencySymbol: ', // Default placeholder
-          currencyId: 1, // Default placeholder
-        }));
-        
-        setContacts(appContacts);
-      } catch (error) {
-        console.error('Error fetching contacts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchContacts();
   }, []);
 
   const handleAuthSuccess = useCallback(() => {
     setIsAuthenticated(true);
     // Reload contacts after authentication
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        const backendContacts = await api.contacts.contactsControllerFindAll();
-        
-        // Transform backend contacts to our app format
-        const appContacts = backendContacts.data.map(contact => ({
-          id: contact.id,
-          fullName: contact.name || `Contact ${contact.id}`,
-          balance: 0, // Backend doesn't return balance directly, need to fetch separately
-          currencySymbol: ', // Default placeholder
-          currencyId: 1, // Default placeholder
-        }));
-        
-        setContacts(appContacts);
-      } catch (error) {
-        console.error('Error fetching contacts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    
     fetchContacts();
   }, [api]);
 
@@ -162,13 +132,7 @@ export default function Home() {
       });
       
       // Add to our local state
-      const contactToAdd = {
-        id: backendResult.data.id,
-        fullName: newContact.fullName,
-        balance: newContact.balance || 0,
-        currencySymbol: newContact.currencySymbol || ',
-        currencyId: newContact.currencyId || 1,
-      };
+      const contactToAdd = backendResult.data;
       
       setContacts(prev => [...prev, contactToAdd]);
     } catch (error) {
@@ -177,13 +141,16 @@ export default function Home() {
   }, []);
 
   const handleAddNewTransaction = useCallback(async (newData: Transaction) => {
+    if (!activeContact) {
+      return;
+    }
     try {
       // In a real implementation, this would call the backend API
       // depending on the amount sign, we would call either topup or withdraw
       if (newData.amount > 0) {
         // This is a topup (received money)
         await api.transactions.transactionsControllerTopup({
-          contact_id: activeContact || 0,
+          contact_id: activeContact,
           currency_id: newData.currencyId,
           amount: newData.amount,
         });

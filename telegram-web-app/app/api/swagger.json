@@ -65,15 +65,7 @@
     "/auth/telegram_sigin": {
       "post": {
         "operationId": "AuthController_telegramSignUp",
-        "parameters": [
-          {
-            "name": "x-telegram-bot-api-key",
-            "required": true,
-            "in": "header",
-            "description": "Telegram bot API key for authentication",
-            "schema": { "type": "string" }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -84,14 +76,14 @@
         },
         "responses": {
           "201": {
-            "description": "User successfully created",
+            "description": "User successfully authenticated via Telegram",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
               }
             }
           },
-          "401": { "description": "Invalid API key" }
+          "401": { "description": "Invalid Telegram auth data" }
         },
         "summary": "Sign up a new user through Telegram",
         "tags": ["auth"]
@@ -372,7 +364,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Contact" }
+                  "items": {
+                    "$ref": "#/components/schemas/IntersectionBalancePickTypeClass"
+                  }
                 }
               }
             }
@@ -384,6 +378,45 @@
         "tags": ["contacts"]
       }
     },
+    "/contacts/{id}/transactions": {
+      "get": {
+        "operationId": "ContactsController_getTransactions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "currencyId",
+            "required": false,
+            "in": "query",
+            "description": "Optional currency ID to filter balances",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntersectionTransactionPickTypeClass"
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Contact not found" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Get transactions for a specific contact",
+        "tags": ["contacts"]
+      }
+    },
     "/transactions/topup": {
       "post": {
         "operationId": "TransactionsController_topup",
@@ -392,7 +425,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Transaction" }
+              "schema": { "$ref": "#/components/schemas/CreateTransactionDto" }
             }
           }
         },
@@ -413,7 +446,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Transaction" }
+              "schema": { "$ref": "#/components/schemas/CreateTransactionDto" }
             }
           }
         },
@@ -466,10 +499,12 @@
       "TelegramAuthDto": {
         "type": "object",
         "properties": {
-          "telegram_id": { "type": "string" },
-          "name": { "type": "string" }
+          "initData": {
+            "type": "string",
+            "description": "Telegram Web App init data string"
+          }
         },
-        "required": ["telegram_id"]
+        "required": ["initData"]
       },
       "CreateCurrencyDto": {
         "type": "object",
@@ -518,7 +553,17 @@
           }
         }
       },
-      "Transaction": {
+      "IntersectionBalancePickTypeClass": {
+        "type": "object",
+        "properties": {
+          "currency_id": { "type": "number" },
+          "amount": { "type": "number" },
+          "contact_id": { "type": "number" },
+          "currency": { "$ref": "#/components/schemas/Currency" }
+        },
+        "required": ["currency_id", "amount", "contact_id", "currency"]
+      },
+      "IntersectionTransactionPickTypeClass": {
         "type": "object",
         "properties": {
           "id": { "type": "number" },
@@ -528,7 +573,8 @@
           "note": { "type": "string" },
           "createdAt": { "format": "date-time", "type": "string" },
           "updatedAt": { "format": "date-time", "type": "string" },
-          "deletedAt": { "format": "date-time", "type": "string" }
+          "deletedAt": { "format": "date-time", "type": "string" },
+          "currency": { "$ref": "#/components/schemas/Currency" }
         },
         "required": [
           "id",
@@ -536,8 +582,19 @@
           "currency_id",
           "amount",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "currency"
         ]
+      },
+      "CreateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "contact_id": { "type": "number" },
+          "currency_id": { "type": "number" },
+          "amount": { "type": "number" },
+          "note": { "type": "string" }
+        },
+        "required": ["contact_id", "currency_id", "amount"]
       },
       "UserRelations": {
         "type": "object",
@@ -561,6 +618,27 @@
           "contact_id": { "type": "number" }
         },
         "required": ["currency_id", "amount", "contact_id"]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "contact_id": { "type": "number" },
+          "currency_id": { "type": "number" },
+          "amount": { "type": "number" },
+          "note": { "type": "string" },
+          "createdAt": { "format": "date-time", "type": "string" },
+          "updatedAt": { "format": "date-time", "type": "string" },
+          "deletedAt": { "format": "date-time", "type": "string" }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "currency_id",
+          "amount",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "CurrencyRelations": {
         "type": "object",

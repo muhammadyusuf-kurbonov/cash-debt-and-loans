@@ -18,11 +18,18 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  IntersectionType,
+  PickType,
 } from '@nestjs/swagger';
 import { RequestWithUser } from 'src/types/request';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ContactsService } from './contacts.service';
 import { Contact as ContactDto } from 'src/types/prisma/contact';
+import { TransactionsService } from 'src/transactions/transactions.service';
+import { Transaction } from 'src/types/prisma/transaction';
+import { TransactionRelations } from 'src/types/prisma/transaction_relations';
+import { Balance } from 'src/types/prisma/balance';
+import { BalanceRelations } from 'src/types/prisma/balance_relations';
 
 class CreateContactDto {
   @ApiProperty()
@@ -44,7 +51,10 @@ class UpdateContactDto {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ContactsController {
-  constructor(private readonly contactsService: ContactsService) {}
+  constructor(
+    private readonly contactsService: ContactsService,
+    private readonly transactionsService: TransactionsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new contact' })
@@ -121,7 +131,7 @@ export class ContactsController {
   @ApiResponse({
     status: 200,
     description: 'Contact balances per currency',
-    type: [ContactDto],
+    type: [IntersectionType(Balance, PickType(BalanceRelations, ['currency']))],
   })
   @ApiResponse({ status: 404, description: 'Contact not found' })
   @ApiQuery({
@@ -140,5 +150,38 @@ export class ContactsController {
       currencyId ? +currencyId : undefined,
     );
     return balances;
+  }
+  @Get(':id/transactions')
+  @ApiOperation({ summary: 'Get transactions for a specific contact' })
+  @ApiResponse({ status: 404, description: 'Contact not found' })
+  @ApiResponse({
+    status: 200,
+    type: [
+      IntersectionType(
+        Transaction,
+        PickType(TransactionRelations, ['currency'] as const),
+      ),
+    ],
+  })
+  @ApiQuery({
+    name: 'currencyId',
+    required: false,
+    description: 'Optional currency ID to filter balances',
+  })
+  async getTransactions(
+    @Request() req: RequestWithUser,
+    @Param('id') contactId: string,
+    @Query('currencyId') currencyId?: string,
+  ): Promise<Array<Transaction & Pick<TransactionRelations, 'currency'>>> {
+    const transactions =
+      await this.transactionsService.getAllTransactionsOfContact(
+        +contactId,
+        currencyId ? +currencyId : undefined,
+      );
+    return transactions.map((transaction) => ({
+      ...transaction,
+      note: transaction.note ?? undefined,
+      deletedAt: transaction.deletedAt ?? undefined,
+    }));
   }
 }

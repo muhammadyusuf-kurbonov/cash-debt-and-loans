@@ -17,6 +17,7 @@ export type AuthResponseDto = object;
 export type SignInDto = object;
 
 export interface TelegramAuthDto {
+  /** Telegram Web App init data string */
   initData: string;
 }
 
@@ -54,6 +55,46 @@ export interface UpdateContactDto {
   ref_user_id?: number;
 }
 
+export interface IntersectionBalancePickTypeClass {
+  currency_id: number;
+  amount: number;
+  contact_id: number;
+  currency: Currency;
+}
+
+export interface IntersectionTransactionPickTypeClass {
+  id: number;
+  contact_id: number;
+  currency_id: number;
+  amount: number;
+  note?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  updatedAt: string;
+  /** @format date-time */
+  deletedAt?: string;
+  currency: Currency;
+}
+
+export interface CreateTransactionDto {
+  contact_id: number;
+  currency_id: number;
+  amount: number;
+  note?: string;
+}
+
+export interface UserRelations {
+  contacts: Contact[];
+  isContactFor: Contact[];
+}
+
+export interface Balance {
+  currency_id: number;
+  amount: number;
+  contact_id: number;
+}
+
 export interface Transaction {
   id: number;
   contact_id: number;
@@ -66,17 +107,6 @@ export interface Transaction {
   updatedAt: string;
   /** @format date-time */
   deletedAt?: string;
-}
-
-export interface UserRelations {
-  contacts: Contact[];
-  isContactFor: Contact[];
-}
-
-export interface Balance {
-  currency_id: number;
-  amount: number;
-  contact_id: number;
 }
 
 export interface CurrencyRelations {
@@ -671,8 +701,34 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<Contact[], void>({
+      this.request<IntersectionBalancePickTypeClass[], void>({
         path: `/contacts/${id}/balance`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags contacts
+     * @name ContactsControllerGetTransactions
+     * @summary Get transactions for a specific contact
+     * @request GET:/contacts/{id}/transactions
+     * @secure
+     */
+    contactsControllerGetTransactions: (
+      id: string,
+      query?: {
+        /** Optional currency ID to filter balances */
+        currencyId?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<IntersectionTransactionPickTypeClass[], void>({
+        path: `/contacts/${id}/transactions`,
         method: "GET",
         query: query,
         secure: true,
@@ -691,7 +747,7 @@ export class Api<
      * @secure
      */
     transactionsControllerTopup: (
-      data: Transaction,
+      data: CreateTransactionDto,
       params: RequestParams = {},
     ) =>
       this.request<void, void>({
@@ -713,7 +769,7 @@ export class Api<
      * @secure
      */
     transactionsControllerWithdraw: (
-      data: Transaction,
+      data: CreateTransactionDto,
       params: RequestParams = {},
     ) =>
       this.request<void, void>({
