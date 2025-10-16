@@ -250,7 +250,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Contact" }
+                  "items": { "$ref": "#/components/schemas/ContactResponseDto" }
                 }
               }
             }
@@ -277,7 +277,7 @@
             "description": "Contact details with balances",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Contact" }
+                "schema": { "$ref": "#/components/schemas/ContactResponseDto" }
               }
             }
           },
@@ -530,8 +530,7 @@
         "properties": {
           "name": { "type": "string" },
           "ref_user_id": { "type": "number" }
-        },
-        "required": ["name"]
+        }
       },
       "Contact": {
         "type": "object",
@@ -543,16 +542,6 @@
         },
         "required": ["id", "user_id"]
       },
-      "UpdateContactDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string", "description": "New name for contact" },
-          "ref_user_id": {
-            "type": "number",
-            "description": "New reference for user_id"
-          }
-        }
-      },
       "IntersectionBalancePickTypeClass": {
         "type": "object",
         "properties": {
@@ -562,6 +551,29 @@
           "currency": { "$ref": "#/components/schemas/Currency" }
         },
         "required": ["currency_id", "amount", "contact_id", "currency"]
+      },
+      "ContactResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "user_id": { "type": "number" },
+          "name": { "type": "string" },
+          "ref_user_id": { "type": "number" },
+          "Balance": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntersectionBalancePickTypeClass"
+            }
+          }
+        },
+        "required": ["id", "user_id", "Balance"]
+      },
+      "UpdateContactDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "ref_user_id": { "type": "number" }
+        }
       },
       "IntersectionTransactionPickTypeClass": {
         "type": "object",

@@ -4,6 +4,6 @@ export default [
   index("routes/welcome.tsx"),  // Default route
   {
     path: "/home",
-    lazy: () => import("./routes/home.tsx"),
+    file: "./routes/home.tsx",
   }
 ] satisfies RouteConfig;

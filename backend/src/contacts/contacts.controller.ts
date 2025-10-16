@@ -13,38 +13,26 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiProperty,
-  ApiPropertyOptional,
   ApiQuery,
   ApiResponse,
   ApiTags,
   IntersectionType,
   PickType,
 } from '@nestjs/swagger';
+import { TransactionsService } from 'src/transactions/transactions.service';
+import { Balance } from 'src/types/prisma/balance';
+import { BalanceRelations } from 'src/types/prisma/balance_relations';
+import { Contact } from 'src/types/prisma/contact';
+import { Transaction } from 'src/types/prisma/transaction';
+import { TransactionRelations } from 'src/types/prisma/transaction_relations';
 import { RequestWithUser } from 'src/types/request';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ContactsService } from './contacts.service';
-import { Contact as ContactDto } from 'src/types/prisma/contact';
-import { TransactionsService } from 'src/transactions/transactions.service';
-import { Transaction } from 'src/types/prisma/transaction';
-import { TransactionRelations } from 'src/types/prisma/transaction_relations';
-import { Balance } from 'src/types/prisma/balance';
-import { BalanceRelations } from 'src/types/prisma/balance_relations';
+import { ContactResponseDto } from './dto/contact-response-dto';
 
-class CreateContactDto {
-  @ApiProperty()
-  name: string;
+class CreateContactDto extends PickType(Contact, ['name', 'ref_user_id']) {}
 
-  @ApiPropertyOptional()
-  ref_user_id?: number;
-}
-
-class UpdateContactDto {
-  @ApiPropertyOptional({ description: 'New name for contact' })
-  name?: string;
-  @ApiPropertyOptional({ description: 'New reference for user_id' })
-  ref_user_id?: number;
-}
+class UpdateContactDto extends PickType(Contact, ['name', 'ref_user_id']) {}
 
 @ApiTags('contacts')
 @Controller('contacts')
@@ -61,7 +49,7 @@ export class ContactsController {
   @ApiResponse({
     status: 201,
     description: 'Contact created successfully',
-    type: ContactDto,
+    type: Contact,
   })
   async create(
     @Request() req: RequestWithUser,
@@ -79,7 +67,7 @@ export class ContactsController {
   @ApiResponse({
     status: 200,
     description: 'List of contacts with their balances',
-    type: [ContactDto],
+    type: [ContactResponseDto],
   })
   findAll(@Request() req: RequestWithUser) {
     return this.contactsService.findAll(req.user.id);
@@ -90,7 +78,7 @@ export class ContactsController {
   @ApiResponse({
     status: 200,
     description: 'Contact details with balances',
-    type: ContactDto,
+    type: ContactResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Contact not found' })
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
@@ -102,7 +90,7 @@ export class ContactsController {
   @ApiResponse({
     status: 200,
     description: 'Contact updated successfully',
-    type: ContactDto,
+    type: Contact,
   })
   @ApiResponse({ status: 404, description: 'Contact not found' })
   update(

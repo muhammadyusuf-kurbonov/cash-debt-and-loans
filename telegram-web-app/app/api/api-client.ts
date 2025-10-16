@@ -37,7 +37,7 @@ export interface Currency {
 export type UpdateCurrencyDto = object;
 
 export interface CreateContactDto {
-  name: string;
+  name?: string;
   ref_user_id?: number;
 }
 
@@ -48,18 +48,24 @@ export interface Contact {
   ref_user_id?: number;
 }
 
-export interface UpdateContactDto {
-  /** New name for contact */
-  name?: string;
-  /** New reference for user_id */
-  ref_user_id?: number;
-}
-
 export interface IntersectionBalancePickTypeClass {
   currency_id: number;
   amount: number;
   contact_id: number;
   currency: Currency;
+}
+
+export interface ContactResponseDto {
+  id: number;
+  user_id: number;
+  name?: string;
+  ref_user_id?: number;
+  Balance: IntersectionBalancePickTypeClass[];
+}
+
+export interface UpdateContactDto {
+  name?: string;
+  ref_user_id?: number;
 }
 
 export interface IntersectionTransactionPickTypeClass {
@@ -617,7 +623,7 @@ export class Api<
      * @secure
      */
     contactsControllerFindAll: (params: RequestParams = {}) =>
-      this.request<Contact[], any>({
+      this.request<ContactResponseDto[], any>({
         path: `/contacts`,
         method: "GET",
         secure: true,
@@ -635,7 +641,7 @@ export class Api<
      * @secure
      */
     contactsControllerFindOne: (id: string, params: RequestParams = {}) =>
-      this.request<Contact, void>({
+      this.request<ContactResponseDto, void>({
         path: `/contacts/${id}`,
         method: "GET",
         secure: true,

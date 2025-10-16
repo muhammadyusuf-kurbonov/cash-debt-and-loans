@@ -8,7 +8,7 @@ export default function WelcomePage() {
   const navigate = useNavigate();
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const { initData } = useLaunchParams();
+  const { tgWebAppData: initData } = useLaunchParams();
 
   useEffect(() => {
     // If user is already authenticated, redirect to home

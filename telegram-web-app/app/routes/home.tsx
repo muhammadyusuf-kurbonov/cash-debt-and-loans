@@ -1,13 +1,13 @@
-import type { Route } from "./+types/home";
-import { ContactList } from "~/components/contacts-list";
-import { AddTransactionModal } from "~/components/add-transaction-modal";
-import { StickyFooter } from "~/components/sticky-footer";
-import { Money } from "~/components/money";
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { Api, type Contact } from "~/api/api-client";
-import TelegramLoginButton from "~/components/telegram-login-button";
-import { isAuthenticated, authenticateWithTelegram } from "~/lib/telegram-auth";
 import { useLaunchParams } from '@telegram-apps/sdk-react';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Api, type ContactResponseDto, type CreateContactDto } from "~/api/api-client";
+import { AddTransactionModal } from "~/components/add-transaction-modal";
+import { ContactList } from "~/components/contacts-list";
+import { Money } from "~/components/money";
+import { StickyFooter } from "~/components/sticky-footer";
+import TelegramLoginButton from "~/components/telegram-login-button";
+import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
+import type { Route } from "./+types/home";
 
 // Define types for our application
 type AppContact = {
@@ -34,7 +34,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<ContactResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
   const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
@@ -124,17 +124,19 @@ export default function Home() {
     fetchContacts();
   }, [api]);
 
-  const handleAddNewContact = useCallback(async (newContact: Omit<AppContact, 'id'>) => {
+  const handleAddNewContact = useCallback(async (newContact: CreateContactDto) => {
     try {
       // Create the contact in the backend
       const backendResult = await api.contacts.contactsControllerCreate({
-        name: newContact.fullName,
+        name: newContact.name,
       });
       
       // Add to our local state
       const contactToAdd = backendResult.data;
+
+      const justCreatedContact = await api.contacts.contactsControllerFindOne(contactToAdd.id.toString());
       
-      setContacts(prev => [...prev, contactToAdd]);
+      setContacts(prev => [...prev, justCreatedContact.data]);
     } catch (error) {
       console.error('Error creating contact:', error);
     }
@@ -157,17 +159,19 @@ export default function Home() {
       } else {
         // This is a withdrawal (given money)
         await api.transactions.transactionsControllerWithdraw({
-          contact_id: activeContact || 0,
+          contact_id: activeContact,
           currency_id: newData.currencyId,
           amount: Math.abs(newData.amount),
         });
       }
+
+      const updatedContact = await api.contacts.contactsControllerFindOne(activeContact.toString());
       
       // Update local state to reflect the transaction
       setContacts(prev => 
         prev.map(contact => 
           contact.id === activeContact
-            ? { ...contact, balance: contact.balance + newData.amount }
+            ? updatedContact.data
             : contact
         )
       );
@@ -180,11 +184,11 @@ export default function Home() {
 
   // Calculate total balances
   const totalBalances = useMemo<Record<string, number>>(() => {
-    return contacts.reduce((acc, contact) => {
-      if (!acc[contact.currencySymbol]) {
-        acc[contact.currencySymbol] = 0
+    return contacts.flatMap((contact) => contact.Balance).reduce((acc, balance) => {
+      if (!acc[balance.currency.symbol]) {
+        acc[balance.currency.symbol] = 0
       }
-      acc[contact.currencySymbol] += contact.balance;
+      acc[balance.currency.symbol] += balance.amount;
       return acc;
     }, {} as Record<string, number>);
   }, [contacts]);

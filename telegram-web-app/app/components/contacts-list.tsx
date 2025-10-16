@@ -7,11 +7,11 @@ import { AddContactButton } from './add-contact-modal';
 import { CurrenciesModal } from './currencies-modal';
 import { Money } from './money';
 import { TopRightMenu } from './top-right-menu';
-import type { Balance, BalanceRelations, Contact, ContactRelations } from '~/api/api-client';
+import type { Balance, BalanceRelations, Contact, ContactRelations, ContactResponseDto, CreateContactDto } from '~/api/api-client';
 
 type Props = {
-  contacts: Array<Contact & ContactRelations & { Balance: Array<Balance & BalanceRelations> }>;
-  onNewContactCreate: (newContact: Omit<Contact, 'id' | 'user_id'>) => void;
+  contacts: Array<ContactResponseDto>;
+  onNewContactCreate: (newContact: CreateContactDto) => void;
   onContactClick: (contact: Contact) => void;
   onContactViewLogClick: (contact: Contact) => void;
 }
@@ -72,7 +72,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
             >
               <CardContent className="flex-1">
                 <h2 className="text-lg font-semibold">{contact.name}</h2>
-                {contact.Balance.map((balance: Balance & BalanceRelations) => (
+                {contact.Balance.map((balance) => (
                   <Money 
                     label='Balance:' 
                     value={balance.amount}
