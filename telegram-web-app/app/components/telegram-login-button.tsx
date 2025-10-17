@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { authenticateWithTelegram, isAuthenticated } from '~/lib/telegram-auth';
-import { useLaunchParams, retrieveLaunchParams } from '@telegram-apps/sdk-react';
+import { useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
 
 interface TelegramLoginButtonProps {
   onAuthSuccess?: () => void;
@@ -11,7 +11,7 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
   onAuthSuccess,
   onAuthError,
 }) => {
-  const { initData } = useLaunchParams();
+  const initData = useRawInitData();
 
   const handleAuth = async () => {
     try {
@@ -20,19 +20,8 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
         throw new Error('No init data available');
       }
 
-      // Convert initData to the format expected by backend
-      // Extract raw data from initData
-      const initDataString = Object.entries(initData)
-        .filter(([key]) => key !== 'hash' && key !== 'user') // Exclude hash and user from params string
-        .map(([key, value]) => `${key}=${value}`)
-        .join('&');
-      
-      // Include the hash in the final string
-      const hash = initData.hash;
-      const finalInitData = `${initDataString}${hash ? `&hash=${hash}` : ''}`;
-
       // Authenticate with our backend
-      const result = await authenticateWithTelegram(finalInitData);
+      const result = await authenticateWithTelegram(initData);
       
       if (result.token) {
         if (onAuthSuccess) {
