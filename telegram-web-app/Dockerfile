@@ -8,7 +8,7 @@ COPY . /app
 WORKDIR /app
 ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 # Install dependencies with pnpm
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 FROM node:20-alpine AS production-dependencies-env
 RUN npm install -g pnpm
