@@ -1,7 +1,7 @@
 # Use pnpm for package management instead of npm
 FROM node:20-alpine
 # Install pnpm globally
-RUN npm install -g pnpm
+RUN npm install -g pnpm serve
 WORKDIR /app
 
 # Copy dependency files
