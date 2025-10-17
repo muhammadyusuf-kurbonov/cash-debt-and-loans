@@ -45,4 +45,4 @@ WORKDIR /app
 EXPOSE 3000
 
 # Start the application using serve
-CMD ["serve", "-s", "build", "-l", "3000"]
+CMD ["serve", "-s", "build/client", "-l", "3000"]
