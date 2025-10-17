@@ -48,10 +48,6 @@ dist/node_modules/
 ehthumbs.db
 Thumbs.db
 
-# Prisma
-prisma/migrations/
-prisma/schema.db
-
 # IDE
 .vscode
 .idea
