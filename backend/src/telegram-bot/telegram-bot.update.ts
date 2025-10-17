@@ -77,6 +77,11 @@ export class TelegramBotUpdate {
       currencies.push(defaultCurrency);
     }
 
+    await this.usersService.getUserByTGId(
+      inlineQuery.from.id,
+      `${inlineQuery.from.first_name} ${inlineQuery.from.last_name ?? ''}`,
+    );
+
     await context.answerInlineQuery(
       currencies
         .map(
@@ -155,7 +160,10 @@ export class TelegramBotUpdate {
     }
 
     const currentUser = await this.usersService.getUserByTGId(parseInt(userId));
-    const partyUser = await this.usersService.getUserByTGId(context.from!.id);
+    const partyUser = await this.usersService.getUserByTGId(
+      context.from!.id,
+      `${context.from!.first_name} ${context.from!.last_name ?? ''}`,
+    );
 
     const partyContact = await this.contactsService.getContactForUserId(
       partyUser.id,

@@ -6,7 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserByTGId(telegram_id: number): Promise<User> {
+  async getUserByTGId(telegram_id: number, name?: string): Promise<User> {
     let user = await this.prisma.user.findFirst({
       where: { telegram_id: telegram_id.toString() },
     });
@@ -15,6 +15,19 @@ export class UsersService {
       user = await this.prisma.user.create({
         data: {
           telegram_id: telegram_id.toString(),
+          name,
+        },
+      });
+    }
+
+    if (!user.name) {
+      user = await this.prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          telegram_id: telegram_id.toString(),
+          name,
         },
       });
     }

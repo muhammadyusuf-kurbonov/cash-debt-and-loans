@@ -7,6 +7,7 @@ import { AddContactButton } from './add-contact-modal';
 import { CurrenciesModal } from './currencies-modal';
 import { Money } from './money';
 import { TopRightMenu } from './top-right-menu';
+import { TelegramLinkButton } from './telegram-link-button';
 import type { Balance, BalanceRelations, Contact, ContactRelations, ContactResponseDto, CreateContactDto } from '~/api/api-client';
 
 type Props = {
@@ -81,9 +82,21 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
                   />
                 ))}
               </CardContent>
-              <Button variant="outline" size="icon" onClickCapture={(event) => handleViewLogClick(event, contact)}>
-                <NotebookText />
-              </Button>
+              <div className="flex space-x-2">
+                {contact.ref_user_id ? (
+                  <Button variant="outline" size="icon" disabled title="Already linked to Telegram">
+                    <span className="text-green-500">✓</span>
+                  </Button>
+                ) : (
+                  <TelegramLinkButton
+                    contactId={contact.id}
+                    contactName={contact.name || 'Unnamed Contact'}
+                  />
+                )}
+                <Button variant="outline" size="icon" onClickCapture={(event) => handleViewLogClick(event, contact)}>
+                  <NotebookText />
+                </Button>
+              </div>
             </Card>
           </motion.li>
         ))}

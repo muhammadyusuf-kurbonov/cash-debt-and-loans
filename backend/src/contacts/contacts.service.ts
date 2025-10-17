@@ -123,6 +123,36 @@ export class ContactsService {
       });
     }
 
+    if (!contact.name && name) {
+      contact = await this.prisma.contact.update({
+        where: {
+          id: contact.id,
+        },
+        data: {
+          name,
+        },
+      });
+    }
+
+    if (!contact.name && contact.ref_user_id) {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          telegram_id: contact.ref_user_id.toString(),
+        },
+      });
+
+      if (user?.name) {
+        contact = await this.prisma.contact.update({
+          where: {
+            id: contact.id,
+          },
+          data: {
+            name: user.name,
+          },
+        });
+      }
+    }
+
     return contact;
   }
 
