@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { useAPI } from "~/api/use-api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 type CurrencySelectProps = {
@@ -6,13 +8,12 @@ type CurrencySelectProps = {
 };
 
 export function CurrencySelect({ currency, onChange }: CurrencySelectProps) {
-  // Mock currencies data - in a real app, this would come from the backend
-  const currencies = [
-    { id: 1, name: "USD", symbol: "$" },
-    { id: 2, name: "EUR", symbol: "€" },
-    { id: 3, name: "UZS", symbol: "UZS" },
-    { id: 4, name: "GBP", symbol: "£" },
-  ];
+  const { api } = useAPI();
+  
+  const { data: currencies } = useQuery({ queryKey: ['currencies'], queryFn: async () => {
+    const response = await api?.currencies.currencyControllerFindAll();
+    return response?.data || [];
+  } });
 
   return (
     <Select value={currency?.toString()} onValueChange={(value) => onChange(parseInt(value))}>
@@ -20,7 +21,7 @@ export function CurrencySelect({ currency, onChange }: CurrencySelectProps) {
         <SelectValue placeholder="Currency" />
       </SelectTrigger>
       <SelectContent>
-        {currencies.map((curr) => (
+        {currencies?.map((curr) => (
           <SelectItem key={curr.id} value={curr.id.toString()}>
             {curr.symbol}
           </SelectItem>
