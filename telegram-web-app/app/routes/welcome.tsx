@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { isAuthenticated, authenticateWithTelegram } from "~/lib/telegram-auth";
 import TelegramLoginButton from "~/components/telegram-login-button";
-import { useLaunchParams } from '@telegram-apps/sdk-react';
+import { useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const { tgWebAppData: initData } = useLaunchParams();
+  const initData = useRawInitData();
 
   useEffect(() => {
     // If user is already authenticated, redirect to home
@@ -24,19 +24,8 @@ export default function WelcomePage() {
         setAuthError(null);
         
         try {
-          // Convert initData to the format expected by backend
-          // Extract raw data from initData
-          const initDataString = Object.entries(initData)
-            .filter(([key]) => key !== 'hash' && key !== 'user') // Exclude hash and user from params string
-            .map(([key, value]) => `${key}=${value}`)
-            .join('&');
-          
-          // Include the hash in the final string
-          const hash = initData.hash;
-          const finalInitData = `${initDataString}${hash ? `&hash=${hash}` : ''}`;
-
           // Authenticate with our backend
-          await authenticateWithTelegram(finalInitData);
+          await authenticateWithTelegram(initData);
           
           // Redirect to home after successful authentication
           navigate("/home");
