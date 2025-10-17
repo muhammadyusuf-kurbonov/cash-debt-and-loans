@@ -71,3 +71,4 @@ yarn-error.log*
 config/
 secrets/
 keys/
+swagger.json

@@ -427,14 +427,14 @@ export class Api<
      * @tags auth
      * @name AuthControllerTelegramSignUp
      * @summary Sign up a new user through Telegram
-     * @request POST:/auth/telegram_sigin
+     * @request POST:/auth/telegram_auth
      */
     authControllerTelegramSignUp: (
       data: TelegramAuthDto,
       params: RequestParams = {},
     ) =>
       this.request<AuthResponseDto, void>({
-        path: `/auth/telegram_sigin`,
+        path: `/auth/telegram_auth`,
         method: "POST",
         body: data,
         type: ContentType.Json,

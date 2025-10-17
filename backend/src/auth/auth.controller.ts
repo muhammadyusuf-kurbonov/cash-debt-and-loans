@@ -56,7 +56,7 @@ export class AuthController {
     return this.authService.signIn(signInDto.email, signInDto.password);
   }
 
-  @Post('telegram_sigin')
+  @Post('telegram_auth')
   @ApiOperation({ summary: 'Sign up a new user through Telegram' })
   @ApiResponse({
     status: 201,
