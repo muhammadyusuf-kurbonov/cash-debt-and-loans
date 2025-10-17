@@ -10,7 +10,7 @@ WORKDIR /usr/src/app
 
 # Copy package.json and pnpm-lock.yaml first to leverage Docker cache
 COPY package.json pnpm-lock.yaml ./
-
+ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 # Install all dependencies (including devDependencies for the build and Prisma)
 # pnpm is typically much faster here
 RUN pnpm install --frozen-lockfile
@@ -42,7 +42,7 @@ WORKDIR /usr/src/app
 
 # Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
-
+ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 # Install ONLY production dependencies
 # The --prod flag (or --production) is crucial for pnpm to keep the final image small
 RUN pnpm install --prod --frozen-lockfile

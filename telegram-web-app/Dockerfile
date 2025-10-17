@@ -6,7 +6,7 @@ RUN npm install -g pnpm
 # Copy project files
 COPY . /app
 WORKDIR /app
-
+ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 # Install dependencies with pnpm
 RUN pnpm install
 
@@ -17,7 +17,7 @@ RUN npm install -g pnpm
 COPY pnpm-lock.yaml /app/
 COPY package.json /app/
 WORKDIR /app
-
+ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 # Install production dependencies only
 RUN pnpm install --prod --frozen-lockfile
 
