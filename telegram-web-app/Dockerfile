@@ -19,7 +19,7 @@ COPY package.json /app/
 WORKDIR /app
 ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 # Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --dangerously-allow-all-builds
 
 FROM node:20-alpine AS build-env
 RUN npm install -g pnpm

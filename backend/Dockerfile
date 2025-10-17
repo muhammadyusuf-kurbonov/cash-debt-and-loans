@@ -12,7 +12,7 @@ COPY package.json pnpm-lock.yaml ./
 ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
 
 # Install all dependencies (for build + runtime)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 # Copy Prisma schema first (for generate)
 COPY prisma ./prisma
