@@ -52,7 +52,7 @@ COPY --from=builder /usr/src/app/dist ./dist
 
 # Crucial Step for Prisma: Copy the generated Prisma Client files
 # Note: pnpm typically creates a symlink structure, but copying the actual generated files works reliably.
-COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /usr/src/app/generated/prisma ./generated/prisma
 
 # Copy the Prisma schema file to the production image
 COPY prisma/schema.prisma ./prisma/
