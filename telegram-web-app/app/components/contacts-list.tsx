@@ -8,24 +8,25 @@ import { CurrenciesModal } from './currencies-modal';
 import { Money } from './money';
 import { TopRightMenu } from './top-right-menu';
 import { TelegramLinkButton } from './telegram-link-button';
+import { useNavigate } from 'react-router';
 import type { Balance, BalanceRelations, Contact, ContactRelations, ContactResponseDto, CreateContactDto } from '~/api/api-client';
 
 type Props = {
   contacts: Array<ContactResponseDto>;
   onNewContactCreate: (newContact: CreateContactDto) => void;
   onContactClick: (contact: Contact) => void;
-  onContactViewLogClick: (contact: Contact) => void;
 }
 
 export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactViewLogClick }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleViewLogClick = (event: React.MouseEvent<HTMLButtonElement>, contact: Contact) => {
     event.preventDefault();
     event.stopPropagation();
-    onContactViewLogClick(contact);
+    navigate(`/transactions?contactId=${contact.id}&contactName=${encodeURIComponent(contact.name || 'Contact')}`);
   }
 
   const handleCurrenciesMenuClick = () => {

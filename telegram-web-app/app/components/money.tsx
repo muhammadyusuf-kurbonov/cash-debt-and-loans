@@ -1,6 +1,7 @@
+import type { ClassValue } from "clsx";
 import { cn } from "~/lib/utils";
 
-export function Money({ value, symbol, label }: { value: number, symbol: string, label?: string }) {
+export function Money({ value, symbol, label, className }: { value: number, symbol: string, label?: string, className?: ClassValue }) {
   return (
     <p
       className={cn(
@@ -9,7 +10,8 @@ export function Money({ value, symbol, label }: { value: number, symbol: string,
           'text-green-600': value > 0,
           'text-red-600': value < 0,
           'text-gray-600': value === 0,
-        }
+        },
+        className,
       )}
     >
       {label ?? ''} {value.toLocaleString('ru', {

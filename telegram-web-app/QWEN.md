@@ -135,3 +135,6 @@ The application uses:
 - Responsive design following mobile-first approach
 
 This web application is designed to provide an intuitive interface for managing personal financial relationships, tracking debts and loans with friends, family, or business contacts. The overall system includes a backend API and potentially a Telegram bot for convenient access to financial data.
+
+## Qwen Added Memories
+- The project structure has both a backend (NestJS) and a frontend (Telegram Web App - React/Vite). The backend is located at /home/muhammadyusuf-kurbonov/Projects/MyProjects/cash-debt-and-loans/backend and the frontend is at /home/muhammadyusuf-kurbonov/Projects/MyProjects/cash-debt-and-loans/telegram-web-app

@@ -197,10 +197,6 @@ export default function Home() {
         contacts={contacts} 
         onNewContactCreate={handleAddNewContact} 
         onContactClick={(contact) => setActiveContact(contact.id)} 
-        onContactViewLogClick={(contact) => {
-          // In a real app, this would navigate to the contact's transaction log
-          console.log("View log for", contact);
-        }} 
       />
 
       <StickyFooter className='max-w-2xl mx-auto'>
