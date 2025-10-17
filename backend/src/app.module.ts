@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { CurrencyModule } from './currency/currency.module';
 import { ContactsModule } from './contacts/contacts.module';
+import { CurrencyModule } from './currency/currency.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
-import { TelegrafModule } from 'nestjs-telegraf';
-import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
-import { sessionMiddleware } from './telegram-bot/session-middleware';
 
 @Module({
   imports: [
@@ -23,12 +21,7 @@ import { sessionMiddleware } from './telegram-bot/session-middleware';
     ContactsModule,
     TransactionsModule,
     UsersModule,
-    TelegrafModule.forRoot({
-      token: process.env.TELEGRAM_BOT_API_KEY!,
-      include: [TelegramBotModule],
-      middlewares: [sessionMiddleware],
-    }),
-    TelegramBotModule,
+    TelegramBotModule.register(!process.env.TELEGRAM_DISABLED),
   ],
   controllers: [AppController],
   providers: [AppService],

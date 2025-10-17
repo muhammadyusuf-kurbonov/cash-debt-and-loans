@@ -7,8 +7,6 @@ services:
       dockerfile: Dockerfile
     container_name: qarzuz_backend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
     environment:
       - DATABASE_URL=${DATABASE_URL:-file:./dev.db}
       - PORT=${PORT:-3001}
@@ -24,8 +22,6 @@ services:
       dockerfile: Dockerfile
     container_name: qarzuz_frontend
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       - BACKEND_URL=${BACKEND_URL:-http://backend:3001}
       - NODE_ENV=production
