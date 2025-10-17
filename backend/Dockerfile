@@ -58,7 +58,7 @@ COPY --from=builder /usr/src/app/generated/prisma ./generated/prisma
 COPY prisma/schema.prisma ./prisma/
 
 # Expose the port the NestJS application listens on (default is 3000)
-EXPOSE 3000
+EXPOSE 3001
 
 # Command to run the application
 # Use 'node' directly on the compiled JavaScript file
