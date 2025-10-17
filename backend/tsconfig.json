@@ -19,6 +19,16 @@
     "noFallthroughCasesInSwitch": false,
   },
   "ts-node": {
-    "require": ["tsconfig-paths/register"]
+    "require": ["tsconfig-paths/register", "ts-patch"],
+    "compilerOptions": {
+      "plugins": [
+        {
+          "transform": "@nestjs/swagger/plugin",
+          "type": "program",
+          "classValidatorShim": true,
+          "introspectComments": true
+        }
+      ]
+    }
   }
 }

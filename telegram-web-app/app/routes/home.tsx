@@ -1,4 +1,4 @@
-import { useLaunchParams } from '@telegram-apps/sdk-react';
+import { useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Api, type ContactResponseDto, type CreateContactDto } from "~/api/api-client";
 import { AddTransactionModal } from "~/components/add-transaction-modal";
@@ -39,7 +39,7 @@ export default function Home() {
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
   const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
   const [authenticating, setAuthenticating] = useState<boolean>(false);
-  const { tgWebAppData: initData } = useLaunchParams();
+  const initData = useRawInitData();
   
   // Check authentication status on mount and auto-authenticate if in Telegram Web App
   useEffect(() => {
@@ -55,19 +55,8 @@ export default function Home() {
         setAuthenticating(true);
         
         try {
-          // Convert initData to the format expected by backend
-          // Extract raw data from initData
-          const initDataString = Object.entries(initData)
-            .filter(([key]) => key !== 'hash' && key !== 'user') // Exclude hash and user from params string
-            .map(([key, value]) => `${key}=${value}`)
-            .join('&');
-          
-          // Include the hash in the final string
-          const hash = initData.hash;
-          const finalInitData = `${initDataString}${hash ? `&hash=${hash}` : ''}`;
-
           // Authenticate with our backend
-          await authenticateWithTelegram(finalInitData);
+          await authenticateWithTelegram(initData);
           
           // Update authentication state
           setIsAuthenticated(true);
@@ -85,7 +74,7 @@ export default function Home() {
   
   // Initialize API client
   const api = new Api({
-    baseUrl: 'http://localhost:3001', // Backend URL
+    baseUrl: import.meta.env.VITE_BACKEND_URL, // Backend URL
   });
 
   async function fetchContacts() {

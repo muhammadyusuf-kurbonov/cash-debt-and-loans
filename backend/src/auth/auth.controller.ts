@@ -6,6 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { AuthResponseDto } from './dto/auth-response.dto';
 
 class SignUpDto {
   email: string;
@@ -21,16 +22,6 @@ class SignInDto {
 class TelegramAuthDto {
   @ApiProperty({ description: 'Telegram Web App init data string' })
   initData: string;
-}
-
-class AuthResponseDto {
-  token: string;
-  user: {
-    id: number;
-    email?: string;
-    telegram_id?: string;
-    name?: string;
-  };
 }
 
 @ApiTags('auth')

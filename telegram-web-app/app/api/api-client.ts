@@ -12,7 +12,15 @@
 
 export type SignUpDto = object;
 
-export type AuthResponseDto = object;
+export interface AuthResponseDto {
+  token: string;
+  user: {
+    id: number;
+    email?: string;
+    telegram_id?: string;
+    name?: string;
+  };
+}
 
 export type SignInDto = object;
 
@@ -449,9 +457,10 @@ export class Api<
    * @request GET:/
    */
   appControllerGetHello = (params: RequestParams = {}) =>
-    this.request<void, any>({
+    this.request<string, any>({
       path: `/`,
       method: "GET",
+      format: "json",
       ...params,
     });
 

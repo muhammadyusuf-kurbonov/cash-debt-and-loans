@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { isAuthenticated, authenticateWithTelegram } from "~/lib/telegram-auth";
 import TelegramLoginButton from "~/components/telegram-login-button";
-import { useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
+import { useRawInitData } from '@telegram-apps/sdk-react';
 
 export default function WelcomePage() {
   const navigate = useNavigate();

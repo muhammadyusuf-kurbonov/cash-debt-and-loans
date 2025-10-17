@@ -1,9 +1,23 @@
 // api/client.ts
-// Use a placeholder that will be replaced at runtime by the Docker container
-const BACKEND_URL = '__VITE_BACKEND_URL__';
 
-class ApiClient {
+import { Api } from "~/api/api-client";
+
+// Use a placeholder that will be replaced at runtime by the Docker container
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+export class ApiClient {
   private baseUrl: string;
+
+  private static openapiClient: Api<string>;
+
+  static getOpenAPIClient() {
+    if (!this.openapiClient) {
+      this.openapiClient = new Api({
+        baseUrl: BACKEND_URL,
+      });  
+    }
+    return this.openapiClient;
+  }
 
   constructor() {
     this.baseUrl = BACKEND_URL;

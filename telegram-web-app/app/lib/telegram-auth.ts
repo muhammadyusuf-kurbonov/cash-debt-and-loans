@@ -1,47 +1,21 @@
 // lib/telegram-auth.ts
-import { apiClient } from './api-client';
-
-interface TelegramAuthData {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-  auth_date: number;
-  hash: string;
-}
-
-interface TelegramAuthResponse {
-  token: string;
-  user: {
-    id: number;
-    telegram_id?: string;
-    name?: string;
-  };
-}
+import type { AuthResponseDto } from '~/api/api-client';
+import { ApiClient } from './api-client';
 
 /**
  * Authenticate with Telegram through the backend using initData
  */
-export async function authenticateWithTelegram(initData: string): Promise<TelegramAuthResponse> {
-  const response = await fetch(`${apiClient.baseUrl}/auth/telegram_sigin`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      initData,
-    }),
+export async function authenticateWithTelegram(initData: string): Promise<AuthResponseDto> {
+  const response = await ApiClient.getOpenAPIClient().auth.authControllerTelegramSignUp({
+    initData,
   });
 
   if (!response.ok) {
     throw new Error(`Telegram auth failed: ${response.statusText}`);
   }
-
-  const result = await response.json();
   // Store the token in localStorage for future API requests
-  localStorage.setItem('token', result.token);
-  return result;
+  localStorage.setItem('token', response.data.token);
+  return response.data;
 }
 
 /**
