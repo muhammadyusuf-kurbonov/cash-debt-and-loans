@@ -10,10 +10,14 @@ type CurrencySelectProps = {
 export function CurrencySelect({ currency, onChange }: CurrencySelectProps) {
   const { api } = useAPI();
   
-  const { data: currencies } = useQuery({ queryKey: ['currencies'], queryFn: async () => {
-    const response = await api?.currencies.currencyControllerFindAll();
-    return response?.data || [];
-  } });
+  const { data: currencies } = useQuery({
+    queryKey: ['currencies'],
+    queryFn: async () => {
+      const response = await api?.currencies.currencyControllerFindAll();
+      return response?.data || [];
+    },
+    initialData: [],
+  });
 
   return (
     <Select value={currency?.toString()} onValueChange={(value) => onChange(parseInt(value))}>

@@ -11,6 +11,9 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Pencil, Trash2, Check, X } from 'lucide-react'
 import { useState } from 'react'
+import { useAPI } from '~/api/use-api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { CreateCurrencyDto, CurrencyResponseDto, UpdateCurrencyDto } from '~/api/api-client'
 
 type Currency = {
   id: number;
@@ -25,19 +28,53 @@ export function CurrenciesModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const [currencies, setCurrencies] = useState<Currency[]>([
-    { id: 1, name: 'US Dollar', symbol: '$' },
-    { id: 2, name: 'Euro', symbol: '€' },
-    { id: 3, name: 'Uzbekistani Som', symbol: 'UZS' },
-  ]);
-
+    const { api } = useAPI();
+  
+  const { data: currencies } = useQuery({
+    queryKey: ['currencies'],
+    queryFn: async () => {
+      const response = await api?.currencies.currencyControllerFindAll();
+      return response?.data || [];
+    },
+    initialData: [],
+  });
+  
   const [newCurrencyName, setNewCurrencyName] = useState('')
   const [newCurrencySymbol, setNewCurrencySymbol] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editSymbolValue, setEditSymbolValue] = useState('')
 
-  const addCurrency = () => {
+  const queryClient = useQueryClient();
+  const saveNewCurrency = useMutation<void, Error, CreateCurrencyDto>({
+    mutationFn: async (newCurrency) => {
+      api?.currencies.currencyControllerCreate(newCurrency);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['currencies'] })
+    },
+  });
+  const deleteCurrencyMutation = useMutation<void, Error, number>({
+    mutationFn: async (newCurrencyId) => {
+      api?.currencies.currencyControllerRemove(newCurrencyId.toString());
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['currencies'] })
+    },
+  });
+  const saveEditCurrency = useMutation<void, Error, UpdateCurrencyDto>({
+    mutationFn: async (newCurrency) => {
+      api?.currencies.currencyControllerUpdate(editId!.toString(), newCurrency);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['currencies'] })
+    },
+  });
+
+  const addCurrency = async () => {
     const name = newCurrencyName.trim();
     const symbol = newCurrencySymbol.trim();
 
@@ -46,18 +83,17 @@ export function CurrenciesModal({
     }
 
     const newCurrency = {
-      id: currencies.length + 1,
       name: name,
       symbol: symbol,
     };
 
-    setCurrencies([...currencies, newCurrency]);
+    await saveNewCurrency.mutateAsync(newCurrency);
     setNewCurrencyName('');
     setNewCurrencySymbol('');
   }
 
-  const deleteCurrency = (id: number) => {
-    setCurrencies(currencies.filter(currency => currency.id !== id));
+  const deleteCurrency = async (id: number) => {
+    await deleteCurrencyMutation.mutateAsync(id);
     if (editId === id) {
       setEditId(null);
       setEditValue('');
@@ -76,11 +112,7 @@ export function CurrenciesModal({
 
   const saveEdit = () => {
     if (editId !== null) {
-      setCurrencies(currencies.map(currency => 
-        currency.id === editId 
-          ? { ...currency, name: editValue.trim(), symbol: editSymbolValue.trim() } 
-          : currency
-      ));
+      saveEditCurrency.mutateAsync({name: editValue.trim(), symbol: editSymbolValue.trim()});
       setEditId(null);
       setEditValue('');
       setEditSymbolValue('');
