@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json pnpm-* ./
 
 # Install all dependencies (for build + runtime)
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
+RUN pnpm install --frozen-lockfile
 
 # Copy Prisma schema first (for generate)
 COPY prisma ./prisma
