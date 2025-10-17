@@ -5,11 +5,10 @@ FROM node:20-alpine
 RUN npm install -g pnpm
 
 # Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy dependency files
-COPY package.json pnpm-lock.yaml ./
-ENV PNPM_SCRIPT_SHIM_EXEC_IGNORING_PATH=true
+COPY package.json pnpm-* ./
 
 # Install all dependencies (for build + runtime)
 RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
