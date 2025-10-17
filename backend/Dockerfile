@@ -28,5 +28,4 @@ RUN pnpm run build
 # Expose port
 EXPOSE 3001
 
-# Run Prisma migrations on startup, then start the app
-CMD pnpm prisma migrate deploy && node dist/main.js
+CMD node dist/main.js
