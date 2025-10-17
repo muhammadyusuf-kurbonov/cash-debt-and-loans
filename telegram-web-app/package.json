@@ -7,7 +7,7 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "generate:api-client": "npx swagger-typescript-api generate --path ./app/api/swagger.json -o app/api -n api-client.ts"
+    "generate:api-client": "npx swagger-typescript-api generate --axios --path ./app/api/swagger.json -o app/api -n api-client.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -21,6 +21,7 @@
     "@react-router/serve": "^7.9.2",
     "@telegram-apps/sdk": "^3.11.8",
     "@telegram-apps/sdk-react": "^3.3.9",
+    "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

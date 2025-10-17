@@ -13,18 +13,12 @@ export class ApiClient {
   static getOpenAPIClient() {
     if (!this.openapiClient) {
       this.openapiClient = new Api({
-        baseUrl: BACKEND_URL,
-        baseApiParams: {
-          secure: true,
-        },
-        securityWorker(securityData) {
-          if (!securityData){
-            return {};
-          }
-
+        baseURL: BACKEND_URL,
+        secure: true,
+        securityWorker() {
           return {
             headers: {
-              'Authorization': securityData,
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
             }
           }
         },

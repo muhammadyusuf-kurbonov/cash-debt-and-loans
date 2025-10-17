@@ -10,7 +10,7 @@ export async function authenticateWithTelegram(initData: string): Promise<AuthRe
     initData,
   });
 
-  if (!response.ok) {
+  if (response.status >= 400) {
     throw new Error(`Telegram auth failed: ${response.statusText}`);
   }
   // Store the token in localStorage for future API requests
