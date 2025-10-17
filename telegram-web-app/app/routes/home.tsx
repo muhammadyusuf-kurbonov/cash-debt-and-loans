@@ -10,14 +10,6 @@ import { ApiClient } from '~/lib/api-client';
 import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
 import type { Route } from "./+types/home";
 
-// Define types for our application
-type AppContact = {
-  id: number;
-  fullName: string;
-  balance: number;
-  currencySymbol: string;
-  currencyId: number;
-};
 
 type Transaction = {
   amount: number;
