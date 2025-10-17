@@ -26,7 +26,7 @@ export interface CreateCurrencyDto {
   symbol: string;
 }
 
-export interface Currency {
+export interface CurrencyResponseDto {
   id: number;
   name: string;
   symbol: string;
@@ -34,7 +34,10 @@ export interface Currency {
   createdAt: string;
 }
 
-export type UpdateCurrencyDto = object;
+export interface UpdateCurrencyDto {
+  name?: string;
+  symbol?: string;
+}
 
 export interface CreateContactDto {
   name?: string;
@@ -46,6 +49,14 @@ export interface Contact {
   user_id: number;
   name?: string;
   ref_user_id?: number;
+}
+
+export interface Currency {
+  id: number;
+  name: string;
+  symbol: string;
+  /** @format date-time */
+  createdAt: string;
 }
 
 export interface IntersectionBalancePickTypeClass {
@@ -88,6 +99,20 @@ export interface CreateTransactionDto {
   currency_id: number;
   amount: number;
   note?: string;
+}
+
+export interface TransactionResponseDto {
+  id: number;
+  contact_id: number;
+  currency_id: number;
+  amount: number;
+  note?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  updatedAt: string;
+  /** @format date-time */
+  deletedAt?: string;
 }
 
 export interface UserRelations {
@@ -502,7 +527,7 @@ export class Api<
       data: CreateCurrencyDto,
       params: RequestParams = {},
     ) =>
-      this.request<Currency, any>({
+      this.request<CurrencyResponseDto, any>({
         path: `/currencies`,
         method: "POST",
         body: data,
@@ -522,7 +547,7 @@ export class Api<
      * @secure
      */
     currencyControllerFindAll: (params: RequestParams = {}) =>
-      this.request<Currency[], any>({
+      this.request<CurrencyResponseDto[], any>({
         path: `/currencies`,
         method: "GET",
         secure: true,
@@ -540,7 +565,7 @@ export class Api<
      * @secure
      */
     currencyControllerFindOne: (id: string, params: RequestParams = {}) =>
-      this.request<Currency, void>({
+      this.request<CurrencyResponseDto, void>({
         path: `/currencies/${id}`,
         method: "GET",
         secure: true,
@@ -562,7 +587,7 @@ export class Api<
       data: UpdateCurrencyDto,
       params: RequestParams = {},
     ) =>
-      this.request<Currency, void>({
+      this.request<CurrencyResponseDto, void>({
         path: `/currencies/${id}`,
         method: "PATCH",
         body: data,
@@ -582,10 +607,11 @@ export class Api<
      * @secure
      */
     currencyControllerRemove: (id: string, params: RequestParams = {}) =>
-      this.request<void, void>({
+      this.request<CurrencyResponseDto, void>({
         path: `/currencies/${id}`,
         method: "DELETE",
         secure: true,
+        format: "json",
         ...params,
       }),
   };
@@ -756,12 +782,13 @@ export class Api<
       data: CreateTransactionDto,
       params: RequestParams = {},
     ) =>
-      this.request<void, void>({
+      this.request<TransactionResponseDto, void>({
         path: `/transactions/topup`,
         method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -778,12 +805,13 @@ export class Api<
       data: CreateTransactionDto,
       params: RequestParams = {},
     ) =>
-      this.request<void, void>({
+      this.request<TransactionResponseDto, void>({
         path: `/transactions/withdraw`,
         method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
         ...params,
       }),
 
@@ -797,10 +825,11 @@ export class Api<
      * @secure
      */
     transactionsControllerCancel: (id: string, params: RequestParams = {}) =>
-      this.request<void, void>({
+      this.request<TransactionResponseDto, void>({
         path: `/transactions/${id}/cancel`,
         method: "POST",
         secure: true,
+        format: "json",
         ...params,
       }),
   };

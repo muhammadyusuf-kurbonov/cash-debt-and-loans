@@ -1,15 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
+import { Transaction } from 'src/types/prisma/transaction';
 
-export class CreateTransactionDto {
-  @ApiProperty({ type: Number })
-  contact_id: number;
-
-  @ApiProperty({ type: Number })
-  currency_id: number;
-
-  @ApiProperty({ type: Number })
-  amount: number;
-
-  @ApiPropertyOptional({ type: String })
-  note?: string;
-}
+export class CreateTransactionDto extends PickType(Transaction, [
+  'contact_id',
+  'currency_id',
+  'amount',
+  'note',
+]) {}

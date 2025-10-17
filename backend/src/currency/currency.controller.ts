@@ -1,37 +1,26 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
+  Param,
+  Patch,
+  Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
-import { CurrencyService } from './currency.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
-  ApiTags,
+  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
-  ApiProperty,
+  ApiTags,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestWithUser } from '../types/request';
-import { Currency as CurrencyDto } from 'src/types/prisma/currency';
-
-class CreateCurrencyDto {
-  @ApiProperty()
-  name: string;
-  @ApiProperty()
-  symbol: string;
-}
-
-class UpdateCurrencyDto {
-  name?: string;
-  symbol?: string;
-}
+import { CurrencyService } from './currency.service';
+import { CreateCurrencyDto } from './dto/create-currency.dto';
+import { CurrencyResponseDto } from './dto/currency-response.dto';
+import { UpdateCurrencyDto } from './dto/update-currency.dto';
 
 @ApiTags('currencies')
 @Controller('currencies')
@@ -45,7 +34,7 @@ export class CurrencyController {
   @ApiResponse({
     status: 201,
     description: 'Currency created successfully',
-    type: CurrencyDto,
+    type: CurrencyResponseDto,
   })
   create(@Body() createCurrencyDto: CreateCurrencyDto) {
     return this.currencyService.create(
@@ -59,7 +48,7 @@ export class CurrencyController {
   @ApiResponse({
     status: 200,
     description: 'List of currencies',
-    type: [CurrencyDto],
+    type: [CurrencyResponseDto],
   })
   findAll() {
     return this.currencyService.findAll();
@@ -70,7 +59,7 @@ export class CurrencyController {
   @ApiResponse({
     status: 200,
     description: 'Currency details',
-    type: CurrencyDto,
+    type: CurrencyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
@@ -82,7 +71,7 @@ export class CurrencyController {
   @ApiResponse({
     status: 200,
     description: 'Currency updated successfully',
-    type: CurrencyDto,
+    type: CurrencyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   update(
@@ -99,7 +88,11 @@ export class CurrencyController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a currency' })
-  @ApiResponse({ status: 200, description: 'Currency deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Currency deleted successfully',
+    type: CurrencyResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Currency not found' })
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.currencyService.remove(+id);
