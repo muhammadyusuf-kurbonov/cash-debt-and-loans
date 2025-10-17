@@ -1,11 +1,12 @@
-import { useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
+import { useRawInitData } from '@telegram-apps/sdk-react';
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Api, type ContactResponseDto, type CreateContactDto } from "~/api/api-client";
+import { type ContactResponseDto, type CreateContactDto } from "~/api/api-client";
 import { AddTransactionModal } from "~/components/add-transaction-modal";
 import { ContactList } from "~/components/contacts-list";
 import { Money } from "~/components/money";
 import { StickyFooter } from "~/components/sticky-footer";
 import TelegramLoginButton from "~/components/telegram-login-button";
+import { ApiClient } from '~/lib/api-client';
 import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
 import type { Route } from "./+types/home";
 
@@ -73,9 +74,7 @@ export default function Home() {
   }, [initData]);
   
   // Initialize API client
-  const api = new Api({
-    baseUrl: import.meta.env.VITE_BACKEND_URL, // Backend URL
-  });
+  const api = ApiClient.getOpenAPIClient();
 
   async function fetchContacts() {
     try {

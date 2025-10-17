@@ -14,6 +14,20 @@ export class ApiClient {
     if (!this.openapiClient) {
       this.openapiClient = new Api({
         baseUrl: BACKEND_URL,
+        baseApiParams: {
+          secure: true,
+        },
+        securityWorker(securityData) {
+          if (!securityData){
+            return {};
+          }
+
+          return {
+            headers: {
+              'Authorization': securityData,
+            }
+          }
+        },
       });  
     }
     return this.openapiClient;
@@ -132,5 +146,3 @@ export class ApiClient {
     });
   };
 }
-
-export const apiClient = new ApiClient();
