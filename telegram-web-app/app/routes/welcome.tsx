@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { isAuthenticated, authenticateWithTelegram } from "~/lib/telegram-auth";
 import TelegramLoginButton from "~/components/telegram-login-button";
-import { useRawInitData } from '@telegram-apps/sdk-react';
+import { useLaunchParams } from '@tma.js/sdk-react';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const initData = useRawInitData();
+  const { initDataRaw } = useLaunchParams();
 
   useEffect(() => {
     // If user is already authenticated, redirect to home
@@ -19,13 +19,13 @@ export default function WelcomePage() {
 
     // Auto-authenticate if in Telegram Web App
     const autoAuthenticate = async () => {
-      if (initData) {
+      if (initDataRaw) {
         setAuthenticating(true);
         setAuthError(null);
         
         try {
           // Authenticate with our backend
-          await authenticateWithTelegram(initData);
+          await authenticateWithTelegram(initDataRaw);
           
           // Redirect to home after successful authentication
           navigate("/home");
@@ -38,7 +38,7 @@ export default function WelcomePage() {
     };
 
     autoAuthenticate();
-  }, [navigate, initData]);
+  }, [navigate, initDataRaw]);
 
   const handleAuthSuccess = () => {
     // Redirect to home after successful authentication

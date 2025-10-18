@@ -1,4 +1,4 @@
-import { isTMA } from '@telegram-apps/sdk-react';
+import { isTMA } from '@tma.js/sdk-react';
 
 /**
  * Switch to inline query mode in Telegram
@@ -36,11 +36,11 @@ export function switchToInlineQuery(query: string, chatTypes?: ('users' | 'bots'
  * @param callback - Callback function that receives a boolean indicating success
  * @returns boolean indicating if the operation was initiated successfully
  */
-export function requestContact(callback?: (success: boolean) => void): boolean {
+export async function requestContact(callback?: (success: boolean) => void): Promise<boolean> {
   try {
     if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
       // Check if we're in a Telegram Mini App environment
-      if (isTMA()) {
+      if (await isTMA()) {
         (window as any).Telegram.WebApp.requestContact(callback);
         return true;
       } else {

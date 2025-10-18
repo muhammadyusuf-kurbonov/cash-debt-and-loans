@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { Share } from 'lucide-react';
-import { useLaunchParams } from '@telegram-apps/sdk-react';
+import { useLaunchParams } from '@tma.js/sdk-react';
 import { switchToInlineQuery } from '~/lib/telegram-utils';
 
 interface TelegramLinkButtonProps {

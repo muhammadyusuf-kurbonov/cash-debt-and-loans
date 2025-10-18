@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { authenticateWithTelegram, isAuthenticated } from '~/lib/telegram-auth';
-import { useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
+import { useLaunchParams } from '@tma.js/sdk-react';
 
 interface TelegramLoginButtonProps {
   onAuthSuccess?: () => void;
@@ -11,17 +11,17 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
   onAuthSuccess,
   onAuthError,
 }) => {
-  const initData = useRawInitData();
+  const { initDataRaw } = useLaunchParams();
 
   const handleAuth = async () => {
     try {
       // Get the init data (this contains the authentication data)
-      if (!initData) {
+      if (!initDataRaw) {
         throw new Error('No init data available');
       }
 
       // Authenticate with our backend
-      const result = await authenticateWithTelegram(initData);
+      const result = await authenticateWithTelegram(initDataRaw);
       
       if (result.token) {
         if (onAuthSuccess) {
@@ -51,7 +51,7 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <p className="text-lg mb-4">Please open this app in Telegram to continue</p>
-      {initData ? (
+      {initDataRaw ? (
         <button 
           onClick={handleAuth}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
