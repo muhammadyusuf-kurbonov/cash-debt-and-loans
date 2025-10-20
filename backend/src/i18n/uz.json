@@ -1,0 +1,36 @@
+{
+  "commands": {
+    "contact_format": "📝 Iltimos, kontakt nomini kiriting. Formatdan foydalaning: `/contact [kontakt_nomi]`",
+    "balance_title": "Umumiy balans",
+    "recent_contacts_title": "So'nggi kontaktlar:",
+    "balance": "Balans",
+    "recent_operations_title": "So'nggi operatsiyalar:"
+  },
+  "inline_query": {
+    "invalid_request": "❌ Noto'g'ri so'rov"
+  },
+  "actions": {
+    "received": "✅ Qabul qildim",
+    "sent": "💸 Yubordim",
+    "confirm": "✅ Tasdiqlash",
+    "cancel": "❌ Bekor qilish",
+    "please_confirm": "Iltimos, operatsiyani tasdiqlang."
+  },
+  "errors": {
+    "invalid_response": "❌ Noto'g'ri javob",
+    "self_transaction": "❌ Siz o'zingizga tranzaksiya yaratib bo'lmaysiz",
+    "contact_not_found": "Kontakt topilmadi"
+  },
+  "success": {
+    "transaction_completed": "✅ Tranzaksiya muvaffaqiyatli bajarildi!",
+    "confirmed": "Tasdiqlandi"
+  },
+  "balance_messages": {
+    "received_amount": "✅ Qabul qilingan miqdor",
+    "sent_amount": "💸 Yuborilgan miqdor",
+    "current_balance": "Joriy balans"
+  },
+  "formatting": {
+    "date_locale": "uz-UZ"
+  }
+}

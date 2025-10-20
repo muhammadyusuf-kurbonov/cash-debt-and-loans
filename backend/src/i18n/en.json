@@ -1,0 +1,36 @@
+{
+  "commands": {
+    "contact_format": "📝 Please provide a contact name. Use format: `/contact [contact_name]`",
+    "balance_title": "Net Balance",
+    "recent_contacts_title": "Recent contacts:",
+    "balance": "Balance",
+    "recent_operations_title": "Recent operations:"
+  },
+  "inline_query": {
+    "invalid_request": "❌ Invalid request"
+  },
+  "actions": {
+    "received": "✅ Received",
+    "sent": "💸 Sent",
+    "confirm": "✅ Confirm",
+    "cancel": "❌ Cancel",
+    "please_confirm": "Please confirm the transaction."
+  },
+  "errors": {
+    "invalid_response": "❌ Invalid response",
+    "self_transaction": "❌ You cannot create a transaction with yourself",
+    "contact_not_found": "Contact not found"
+  },
+  "success": {
+    "transaction_completed": "✅ Transaction completed successfully!",
+    "confirmed": "Confirmed"
+  },
+  "balance_messages": {
+    "received_amount": "✅ Received amount",
+    "sent_amount": "💸 Sent amount",
+    "current_balance": "Current balance"
+  },
+  "formatting": {
+    "date_locale": "en-US"
+  }
+}

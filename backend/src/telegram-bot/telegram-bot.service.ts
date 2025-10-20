@@ -7,6 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { formatCurrency, formatBalance } from 'src/utils';
 import { Telegraf } from 'telegraf';
 import { asSection, asList, Text, Pre, Bold } from './text-format';
+import { I18nService, Language } from '../i18n/i18n.service';
 
 @Injectable()
 export class TelegramBotService {
@@ -16,6 +17,7 @@ export class TelegramBotService {
     @Inject() private usersService: UsersService,
     @Inject() private contactsService: ContactsService,
     @Inject() private transactionsService: TransactionsService,
+    @Inject() private i18nService: I18nService,
   ) {}
 
   async getBalancesTotal(userTGId: number): Promise<Text> {
@@ -28,8 +30,9 @@ export class TelegramBotService {
       })),
     );
 
+    const lang = this.i18nService.getUserLanguage(userTGId);
     const balancesText = asSection({
-      title: 'Net Balance',
+      title: this.i18nService.getTranslation('commands.balance_title', lang),
       items: [
         asList({
           sep: '\n',
@@ -59,7 +62,7 @@ export class TelegramBotService {
           ),
         }),
       ],
-      title: 'Recent contacts:',
+      title: this.i18nService.getTranslation('commands.recent_contacts_title', lang),
     });
 
     return asList({
@@ -79,7 +82,8 @@ export class TelegramBotService {
     );
 
     if (!contact) {
-      return new Text('Contact not found');
+      const lang = this.i18nService.getUserLanguage(userTGId);
+      return new Text(this.i18nService.getTranslation('errors.contact_not_found', lang));
     }
 
     return await this.getCustomerDetails(userTGId, contact.id);
@@ -92,8 +96,9 @@ export class TelegramBotService {
     const user = await this.usersService.getUserByTGId(userTGId);
     const contact = await this.contactsService.findOne(contactId, user.id);
 
+    const lang = this.i18nService.getUserLanguage(userTGId);
     const balancesText = asSection({
-      title: 'Balance',
+      title: this.i18nService.getTranslation('commands.balance', lang),
       items: [
         asList({
           sep: '\n',
@@ -120,12 +125,12 @@ export class TelegramBotService {
           asList({
             items: recentTransactions.map(
               (transaction) =>
-                `${transaction.createdAt.toLocaleString('ru-RU', { timeStyle: 'short', dateStyle: 'medium' })}\t|\t${transaction.amount} ${transaction.currency.symbol}`,
+                `${transaction.createdAt.toLocaleString(this.i18nService.getTranslation('formatting.date_locale', lang), { timeStyle: 'short', dateStyle: 'medium' })}\t|\t${transaction.amount} ${transaction.currency.symbol}`,
             ),
           }),
         ),
       ],
-      title: 'Recent operations:',
+      title: this.i18nService.getTranslation('commands.recent_operations_title', lang),
     });
 
     return asList({

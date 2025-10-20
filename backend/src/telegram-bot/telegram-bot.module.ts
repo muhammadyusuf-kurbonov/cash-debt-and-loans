@@ -7,6 +7,7 @@ import { TransactionsModule } from 'src/transactions/transactions.module';
 import { TelegramBotService } from './telegram-bot.service';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { sessionMiddleware } from './session-middleware';
+import { I18nService } from '../i18n/i18n.service';
 
 @Module({})
 export class TelegramBotModule {
@@ -34,7 +35,7 @@ export class TelegramBotModule {
     );
 
     return {
-      providers: [TelegramBotUpdate, TelegramBotService],
+      providers: [TelegramBotUpdate, TelegramBotService, I18nService],
       imports,
       module: TelegramBotModule,
     };
