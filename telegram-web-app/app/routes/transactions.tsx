@@ -1,11 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, NotebookText } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Money } from "~/components/money";
-import { Badge } from "~/components/ui/badge";
+import type { Transaction } from "~/api/api-client";
+import { TransactionsList } from "~/components/transaction-list";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { ApiClient } from "~/lib/api-client";
 
@@ -16,7 +14,8 @@ export default function TransactionsPage() {
   
   const navigate = useNavigate();
   const api = ApiClient.getOpenAPIClient();
-  
+  const queryClient = useQueryClient();
+
   const {
     data: transactions,
     isLoading,
@@ -31,9 +30,18 @@ export default function TransactionsPage() {
     enabled: !!contactId,
   });
 
-  const formatTransactionDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
-  };
+  const cancel = useMutation({
+    mutationKey: ['cancel-contact-transactions'],
+    mutationFn: async (transactionId: Transaction['id']) => {
+      const response = await api.transactions.transactionsControllerCancel(transactionId.toString());
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['contact-transactions', contactId],
+      });
+    }
+  })
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -65,35 +73,7 @@ export default function TransactionsPage() {
       ) : transactions && transactions.length > 0 ? (
         <ScrollArea className="h-[calc(100vh-200px)] pr-2">
           <div className="space-y-3">
-            {transactions.map((transaction) => (
-              <Card key={transaction.id} className="border rounded-lg">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-medium">
-                      <Money
-                        value={transaction.amount}
-                        symbol={transaction.currency.symbol}
-                        className={transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}
-                      />
-                    </CardTitle>
-                    <Badge 
-                      variant={transaction.amount >= 0 ? "default" : "secondary"}
-                      className={transaction.amount >= 0 ? 'bg-green-600' : 'bg-red-600'}
-                    >
-                      {transaction.amount >= 0 ? 'Received' : 'Given'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  {transaction.note && (
-                    <p className="text-sm text-gray-600 mb-2">{transaction.note}</p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    {formatTransactionDate(transaction.createdAt)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+            <TransactionsList transactions={transactions} onDeleteTransaction={cancel.mutate} />
           </div>
         </ScrollArea>
       ) : (
