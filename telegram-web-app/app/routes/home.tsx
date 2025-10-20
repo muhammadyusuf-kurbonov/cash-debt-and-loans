@@ -1,6 +1,7 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLaunchParams } from '@tma.js/sdk-react';
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { type ContactResponseDto, type CreateContactDto } from "~/api/api-client";
+import { type CreateContactDto, type UpdateContactDto } from "~/api/api-client";
 import { AddTransactionModal } from "~/components/add-transaction-modal";
 import { ContactList } from "~/components/contacts-list";
 import { Money } from "~/components/money";
@@ -19,7 +20,7 @@ type Transaction = {
   createdAt: Date;
 };
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "Qarz.uz - Debt Tracker" },
     { name: "description", content: "Track your debts and loans efficiently" },
@@ -27,13 +28,11 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const [contacts, setContacts] = useState<ContactResponseDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
   const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
   const [authenticating, setAuthenticating] = useState<boolean>(false);
-  const {initDataRaw} = useLaunchParams();
-  
+  const { initDataRaw } = useLaunchParams();
+
   // Check authentication status on mount and auto-authenticate if in Telegram Web App
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -42,15 +41,15 @@ export default function Home() {
         setIsAuthenticated(true);
         return;
       }
-      
+
       // Auto-authenticate if in Telegram Web App
       if (initDataRaw) {
         setAuthenticating(true);
-        
+
         try {
           // Authenticate with our backend
           await authenticateWithTelegram(initDataRaw);
-          
+
           // Update authentication state
           setIsAuthenticated(true);
         } catch (error) {
@@ -64,25 +63,29 @@ export default function Home() {
 
     checkAuthStatus();
   }, [initDataRaw]);
-  
+
   // Initialize API client
   const api = ApiClient.getOpenAPIClient();
-
-  async function fetchContacts() {
-    try {
-      setLoading(true);
+  const queryClient = useQueryClient();
+  const { data: contacts, isLoading: loading, refetch: fetchContacts } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: async () => {
       const backendContactsResponse = await api.contacts.contactsControllerFindAll();
-      
-      const contacts = backendContactsResponse.data;
 
-      setContacts(contacts);
-    } catch (error) {
-      console.error('Error fetching contacts:', error);
-    } finally {
-      setLoading(false);
+      return backendContactsResponse.data;
+    },
+    initialData: [],
+  });
+  const saveNewContact = useMutation({
+    mutationKey: ['new_contact'],
+    mutationFn: async (newContact: CreateContactDto) => {
+      return await api.contacts.contactsControllerCreate(newContact);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
     }
-  }
-  
+  });
+
   // Set token if available
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -90,37 +93,18 @@ export default function Home() {
       api.setSecurityData(`Bearer ${token}`);
     }
     if (!isAuthenticated()) {
-      setLoading(false);
       return;
     }
-    
+
     fetchContacts();
   }, []);
 
   const handleAuthSuccess = useCallback(() => {
     setIsAuthenticated(true);
     // Reload contacts after authentication
-    
+
     fetchContacts();
   }, [api]);
-
-  const handleAddNewContact = useCallback(async (newContact: CreateContactDto) => {
-    try {
-      // Create the contact in the backend
-      const backendResult = await api.contacts.contactsControllerCreate({
-        name: newContact.name,
-      });
-      
-      // Add to our local state
-      const contactToAdd = backendResult.data;
-
-      const justCreatedContact = await api.contacts.contactsControllerFindOne(contactToAdd.id.toString());
-      
-      setContacts(prev => [...prev, justCreatedContact.data]);
-    } catch (error) {
-      console.error('Error creating contact:', error);
-    }
-  }, []);
 
   const handleAddNewTransaction = useCallback(async (newData: Transaction) => {
     if (!activeContact) {
@@ -145,22 +129,26 @@ export default function Home() {
         });
       }
 
-      const updatedContact = await api.contacts.contactsControllerFindOne(activeContact.toString());
-      
-      // Update local state to reflect the transaction
-      setContacts(prev => 
-        prev.map(contact => 
-          contact.id === activeContact
-            ? updatedContact.data
-            : contact
-        )
-      );
-      
+      fetchContacts();
+
       setActiveContact(null);
     } catch (error) {
       console.error('Error adding transaction:', error);
     }
   }, [activeContact]);
+
+  const handleEditContact = useCallback(async (id: number, updatedContact: UpdateContactDto) => {
+    try {
+      await api.contacts.contactsControllerUpdate(
+        id.toString(),
+        updatedContact
+      );
+
+      fetchContacts();
+    } catch (error) {
+      console.error('Error updating contact:', error);
+    }
+  }, []);
 
   // Calculate total balances
   const totalBalances = useMemo<Record<string, number>>(() => {
@@ -183,7 +171,7 @@ export default function Home() {
         </div>
       );
     }
-    
+
     return <TelegramLoginButton onAuthSuccess={handleAuthSuccess} />;
   }
 
@@ -193,27 +181,28 @@ export default function Home() {
 
   return (
     <>
-      <ContactList 
-        contacts={contacts} 
-        onNewContactCreate={handleAddNewContact} 
-        onContactClick={(contact) => setActiveContact(contact.id)} 
+      <ContactList
+        contacts={contacts}
+        onNewContactCreate={saveNewContact.mutate}
+        onContactClick={(contact) => setActiveContact(contact.id)}
+        onContactEdit={handleEditContact}
       />
 
       <StickyFooter className='max-w-2xl mx-auto'>
         <div className='flex flex-row w-full justify-between items-center gap-2'>
           <span className="text-gray-600 font-semibold">Total Balance:</span>
           <div className="text-right">
-            { Object.entries(totalBalances).map(([symbol, value]) => (
+            {Object.entries(totalBalances).map(([symbol, value]) => (
               <Money value={value} symbol={symbol} key={symbol} />
-            )) }
+            ))}
           </div>
         </div>
       </StickyFooter>
 
-      <AddTransactionModal 
-        open={activeContact != null} 
-        onClose={() => setActiveContact(null)} 
-        onAdd={handleAddNewTransaction} 
+      <AddTransactionModal
+        open={activeContact != null}
+        onClose={() => setActiveContact(null)}
+        onAdd={handleAddNewTransaction}
       />
     </>
   );

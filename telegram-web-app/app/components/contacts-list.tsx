@@ -1,26 +1,30 @@
-import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
 import { motion } from 'framer-motion';
-import { NotebookText, PlusCircle } from 'lucide-react';
+import { NotebookText, PlusCircle, SquarePen } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import type { Contact, ContactResponseDto, CreateContactDto, UpdateContactDto } from '~/api/api-client';
 import { AddContactButton } from './add-contact-modal';
 import { CurrenciesModal } from './currencies-modal';
+import { EditContactModal } from './edit-contact-modal';
 import { Money } from './money';
-import { TopRightMenu } from './top-right-menu';
 import { TelegramLinkButton } from './telegram-link-button';
-import { useNavigate } from 'react-router';
-import type { Balance, BalanceRelations, Contact, ContactRelations, ContactResponseDto, CreateContactDto } from '~/api/api-client';
+import { TopRightMenu } from './top-right-menu';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
 
 type Props = {
   contacts: Array<ContactResponseDto>;
   onNewContactCreate: (newContact: CreateContactDto) => void;
   onContactClick: (contact: Contact) => void;
+  onContactEdit: (id: number, updatedContact: UpdateContactDto) => void;
 }
 
-export function ContactList({ contacts, onNewContactCreate, onContactClick }: Props) {
+export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactEdit }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
   const navigate = useNavigate();
 
   const handleViewLogClick = (event: React.MouseEvent<HTMLButtonElement>, contact: Contact) => {
@@ -32,6 +36,13 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick }: Pr
   const handleCurrenciesMenuClick = () => {
     setIsDropdownOpen(false);
     setIsCurrencyModalOpen(true);
+  };
+
+  const handleEditClick = (event: React.MouseEvent<HTMLButtonElement>, contact: Contact) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setContactToEdit(contact);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -90,6 +101,9 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick }: Pr
                     contactName={contact.name || 'Unnamed Contact'}
                   />
                 )}
+                <Button variant="outline" size="icon" onClickCapture={(event) => handleEditClick(event, contact)}>
+                  <SquarePen />
+                </Button>
                 <Button variant="outline" size="icon" onClickCapture={(event) => handleViewLogClick(event, contact)}>
                   <NotebookText />
                 </Button>
@@ -99,6 +113,12 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick }: Pr
         ))}
       </ul>
       <AddContactButton open={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={onNewContactCreate} />
+      <EditContactModal 
+        open={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        contactToEdit={contactToEdit} 
+        onEdit={onContactEdit} 
+      />
       <CurrenciesModal open={isCurrencyModalOpen} onOpenChange={setIsCurrencyModalOpen} />
     </div>
   );
