@@ -17,7 +17,7 @@ type Props = {
   onContactClick: (contact: Contact) => void;
 }
 
-export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactViewLogClick }: Props) {
+export function ContactList({ contacts, onNewContactCreate, onContactClick }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -84,11 +84,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
                 ))}
               </CardContent>
               <div className="flex space-x-2">
-                {contact.ref_user_id ? (
-                  <Button variant="outline" size="icon" disabled title="Already linked to Telegram">
-                    <span className="text-green-500">✓</span>
-                  </Button>
-                ) : (
+                {!contact.ref_user_id && (
                   <TelegramLinkButton
                     contactId={contact.id}
                     contactName={contact.name || 'Unnamed Contact'}
