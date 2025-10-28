@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectBot } from 'nestjs-telegraf';
 import { I18nService } from 'src/i18n/i18n.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UsersService } from 'src/users/users.service';
 import { Telegraf } from 'telegraf';
 import { InlineQueryResultArticle } from 'telegraf/types';
 
@@ -12,6 +13,7 @@ export class ContactsAttachService {
     @InjectBot()
     private bot: Telegraf,
     private i18nService: I18nService,
+    private usersService: UsersService,
   ) {}
 
   async requestInvite(contact_id: number, user_id: number, userTGId: number) {
@@ -64,7 +66,7 @@ export class ContactsAttachService {
   }
 
   async handleContactAttachAccept(
-    invitedUserId: number,
+    invitedUserTGId: number,
     contactId: number,
     user_id: number,
   ) {
@@ -80,13 +82,15 @@ export class ContactsAttachService {
       throw new NotFoundException('Original contact not found');
     }
 
+    const newUser = await this.usersService.getUserByTGId(invitedUserTGId);
+
     // Create or update the contact for the invited user with the ref_user_id
     const contact = await this.prisma.contact.update({
       where: {
         id: contactId,
       },
       data: {
-        ref_user_id: invitedUserId,
+        ref_user_id: newUser.id,
       },
     });
 
