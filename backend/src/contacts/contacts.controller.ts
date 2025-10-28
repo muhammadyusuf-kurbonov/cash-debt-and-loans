@@ -150,6 +150,7 @@ export class ContactsController {
   @ApiResponse({
     status: 200,
     description: 'Invite message and inline keyboard prepared',
+    type: String,
   })
   @ApiResponse({ status: 404, description: 'Contact not found' })
   async prepareInvite(

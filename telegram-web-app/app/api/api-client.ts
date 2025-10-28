@@ -689,10 +689,11 @@ export class Api<
      * @secure
      */
     contactsControllerPrepareInvite: (id: string, params: RequestParams = {}) =>
-      this.request<void, void>({
+      this.request<string, void>({
         path: `/contacts/${id}/prepare-invite`,
         method: "GET",
         secure: true,
+        format: "json",
         ...params,
       }),
 

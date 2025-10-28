@@ -132,7 +132,16 @@ export class TelegramBotUpdate {
         this.i18nService.getTranslation('success.transaction_completed'),
       );
       await context.editMessageReplyMarkup({
-        inline_keyboard: [],
+        inline_keyboard: [
+          [
+            {
+              text: 'Open a web app',
+              web_app: {
+                url: 'https://wokomo.kurbonov.net.uz/',
+              },
+            },
+          ],
+        ],
       });
       const absAmount = Math.abs(transaction.amount || 0);
       await context.editMessageText(
