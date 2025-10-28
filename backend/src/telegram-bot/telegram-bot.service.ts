@@ -137,6 +137,7 @@ export class TelegramBotService {
     currency_id: number,
     comment?: string,
   ) {
+    console.log('Created draft', inlineQueryId);
     await this.transactionsService.createDraft(
       inlineQueryId,
       currency_id,
@@ -147,6 +148,7 @@ export class TelegramBotService {
   }
 
   async handleConfirmed(inlineQueryId: string, userTGId: number) {
+    console.log('Confirmed draft', inlineQueryId);
     const transaction = await this.transactionsService.getDraft(inlineQueryId);
     if (!transaction) {
       throw new BadRequestException('draft not found');
