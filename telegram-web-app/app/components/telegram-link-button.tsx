@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './ui/button';
-import { Share } from 'lucide-react';
+import { Link } from 'lucide-react';
 import { useLaunchParams, shareMessage } from '@tma.js/sdk-react';
 import { useAPI } from '~/api/use-api';
 import { toast } from "sonner"
@@ -44,7 +44,7 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
       onClick={handleLinkTelegramUser}
       title={`Link Telegram account for ${contactName}`}
     >
-      <Share className="w-4 h-4" />
+      <Link className="w-4 h-4" />
     </Button>
   );
 };
