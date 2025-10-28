@@ -41,7 +41,7 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
     <Button
       variant="outline"
       size="icon"
-      onClick={handleLinkTelegramUser}
+      onClickCapture={handleLinkTelegramUser}
       title={`Link Telegram account for ${contactName}`}
     >
       <Link className="w-4 h-4" />
