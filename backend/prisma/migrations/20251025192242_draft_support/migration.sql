@@ -6,7 +6,7 @@
 */
 -- AlterTable
 ALTER TABLE "Transaction" ADD COLUMN     "draftId" TEXT,
-ADD COLUMN     "user_id" INTEGER NOT NULL,
+ADD COLUMN     "user_id" INTEGER,
 ALTER COLUMN "contact_id" DROP NOT NULL;
 
 -- AddForeignKey

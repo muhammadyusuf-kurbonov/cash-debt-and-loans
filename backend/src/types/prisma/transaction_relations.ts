@@ -10,6 +10,6 @@ export class TransactionRelations {
   @ApiProperty({ type: () => Currency })
   currency: Currency;
 
-  @ApiProperty({ type: () => User })
-  user: User;
+  @ApiPropertyOptional({ type: () => User })
+  user?: User;
 }
