@@ -1,4 +1,8 @@
-import { BadRequestException, Inject } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+} from '@nestjs/common';
 import { Action, Command, Ctx, InlineQuery, On, Update } from 'nestjs-telegraf';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { Context, Scenes } from 'telegraf';
@@ -114,10 +118,21 @@ export class TelegramBotUpdate {
     context: Context,
   ) {
     try {
-      const transaction = await this.telegramBotService.handleConfirmed(
-        context.inlineMessageId!,
-        context.from!.id,
-      );
+      const transaction = await this.telegramBotService
+        .handleConfirmed(context.inlineMessageId!, context.from!.id)
+        .catch((error) => {
+          if (error instanceof ForbiddenException) {
+            return -1 as const;
+          }
+          throw error;
+        });
+
+      if (transaction === -1) {
+        await context.answerCbQuery(
+          this.i18nService.getTranslation('errors.self_transaction'),
+        );
+        return;
+      }
 
       const actionText =
         transaction.amount < 0

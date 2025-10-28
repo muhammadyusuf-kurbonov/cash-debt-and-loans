@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { CurrencyService } from 'src/currency/currency.service';
 import { TransactionsService } from 'src/transactions/transactions.service';
@@ -155,6 +160,10 @@ export class TelegramBotService {
     }
 
     const confirmedUser = await this.usersService.getUserByTGId(userTGId);
+
+    if (confirmedUser.id === transaction.user_id) {
+      throw new ForbiddenException('You can not confirm your transaction');
+    }
 
     const contact = await this.contactsService.getContactForUserId(
       confirmedUser.id,
