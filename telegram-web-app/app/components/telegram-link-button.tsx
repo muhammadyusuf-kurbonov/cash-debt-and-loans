@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { Share } from 'lucide-react';
-import { useLaunchParams } from '@tma.js/sdk-react';
-import { switchToInlineQuery } from '~/lib/telegram-utils';
+import { useLaunchParams, useMiniApp } from '@tma.js/sdk-react';
+import { useAPI } from '~/api/use-api';
 
 interface TelegramLinkButtonProps {
   contactId: number;
@@ -20,19 +20,19 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
   onLinkError,
 }) => {
   const { platform } = useLaunchParams();
+  const { api } = useAPI();
+  const { switchInlineQuery } = useMiniApp();
 
-  const handleLinkTelegramUser = () => {
+  const handleLinkTelegramUser = async () => {
     try {
       // Check if we're in a Telegram Web App environment
       if (platform) {
-        // Trigger the switchInlineQuery to allow the user to share with a specific contact
-        // The query will contain the contact ID so the bot can link the Telegram user
-        const query = `link_contact_${contactId}`;
-        
         // Use our utility function to switch to inline query
-        const success = switchToInlineQuery(query, ['users']);
+        const id = await api.contacts.contactsControllerPrepareInvite(contactId.toString());
+
+        // if (switchInlineQuery())
         
-        if (success) {
+        if (id) {
           // Notify that the linking process has been initiated
           if (onLinkInitiated) {
             onLinkInitiated();

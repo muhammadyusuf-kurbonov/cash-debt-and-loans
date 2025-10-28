@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { Contact } from 'generated/prisma';
 
 @Injectable()
 export class TransactionsService {
@@ -10,81 +11,240 @@ export class TransactionsService {
   ) {}
 
   async create(
-    contactId: number,
+    contactId: number | null,
     currencyId: number,
     amount: number,
+    note: string | null,
+    draftId: string | null = null,
+    userId: number,
     internal?: boolean,
   ) {
     // Get contact to check for ref_user_id
-    const contact = await this.prisma.contact.findUnique({
-      where: { id: contactId },
-    });
+    let contact: Contact | null = null;
+    if (contactId) {
+      contact = await this.prisma.contact.findUnique({
+        where: { id: contactId },
+      });
+    }
 
-    if (!contact) {
+    if (contactId && !contact) {
+      console.error(`Contact with ID ${contactId} not found`);
       throw new NotFoundException(`Contact with ID ${contactId} not found`);
     }
 
-    // Create the transaction and update balance in a transaction
+    // Create the transaction and update balance in a transaction if it's not a draft
     const transaction = await this.prisma.$transaction(async (prisma) => {
       // Create the main transaction
       const transaction = await prisma.transaction.create({
         data: {
-          contact_id: contactId,
+          contact_id: contactId || null,
           currency_id: currencyId,
           amount,
+          note: note || null,
+          draftId,
+          user_id: userId,
         },
       });
 
-      // Get or create balance for the main contact
-      let balance = await prisma.balance.findUnique({
-        where: {
-          currency_id_contact_id: {
-            currency_id: currencyId,
-            contact_id: contactId,
+      if (draftId) {
+        return;
+      }
+
+      // Only update balance if it's not a draft transaction
+      if (contactId) {
+        // Get or create balance for the main contact
+        let balance = await prisma.balance.findUnique({
+          where: {
+            currency_id_contact_id: {
+              currency_id: currencyId,
+              contact_id: contactId,
+            },
           },
-        },
-      });
+        });
 
-      if (!balance) {
-        balance = await prisma.balance.create({
+        if (!balance) {
+          balance = await prisma.balance.create({
+            data: {
+              currency_id: currencyId,
+              contact_id: contactId,
+              amount: 0,
+            },
+          });
+        }
+
+        // Update balance for the main contact
+        await prisma.balance.update({
+          where: {
+            currency_id_contact_id: {
+              currency_id: currencyId,
+              contact_id: contactId,
+            },
+          },
           data: {
-            currency_id: currencyId,
-            contact_id: contactId,
-            amount: 0,
+            amount: {
+              increment: amount,
+            },
           },
         });
       }
 
-      // Update balance for the main contact
-      await prisma.balance.update({
-        where: {
-          currency_id_contact_id: {
-            currency_id: currencyId,
-            contact_id: contactId,
-          },
-        },
-        data: {
-          amount: {
-            increment: amount,
-          },
-        },
-      });
-
       return transaction;
     });
 
-    // If contact has ref_user_id, create reverse transaction for referenced user
-    if (contact.ref_user_id && !internal) {
+    if (draftId) {
+      return;
+    }
+
+    if (internal) {
+      return;
+    }
+
+    // If contact has ref_user_id and it's not a draft, create reverse transaction for referenced user
+    if (contact && contact.ref_user_id) {
       // Find or create a reverse contact for the referenced user
       const reverseContact = await this.contacts.getContactForUserId(
         contact.user_id,
         contact.ref_user_id,
       );
 
-      await this.create(reverseContact.id, currencyId, -amount, true);
+      await this.create(
+        reverseContact.id,
+        currencyId,
+        -amount,
+        note,
+        null,
+        contact.ref_user_id,
+        true,
+      );
     }
 
     return transaction;
+  }
+
+  async createDraft(
+    draftId: string,
+    currencyId: number,
+    amount: number,
+    user_id: number,
+    note?: string,
+  ) {
+    return this.create(
+      null,
+      currencyId,
+      amount,
+      note ?? null,
+      draftId,
+      user_id,
+      false,
+    );
+  }
+
+  async getDraft(draftId: string) {
+    return this.prisma.transaction.findUnique({
+      where: {
+        draftId,
+      },
+    });
+  }
+
+  async deleteDraft(draftId: string) {
+    return await this.prisma.transaction.delete({
+      where: {
+        draftId,
+      },
+    });
+  }
+
+  async finalizeDraft(draftId: string, contactId: number) {
+    // Get the draft transaction
+    const draftTransaction = await this.prisma.transaction.findUnique({
+      where: { draftId },
+    });
+
+    if (!draftTransaction) {
+      throw new NotFoundException(
+        `Draft transaction with for ${draftId} not found`,
+      );
+    }
+
+    // Create the real transaction with the contact
+    const completedTransaction = await this.prisma.$transaction(
+      async (prisma) => {
+        // Update the draft transaction to finalize it (set contact_id and isDraft to false)
+        const updatedTransaction = await prisma.transaction.update({
+          where: { draftId },
+          data: {
+            contact_id: contactId,
+            draftId: null,
+          },
+          include: {
+            currency: true,
+          },
+        });
+
+        // Get or create balance for the main contact
+        let balance = await prisma.balance.findUnique({
+          where: {
+            currency_id_contact_id: {
+              currency_id: draftTransaction.currency_id,
+              contact_id: contactId,
+            },
+          },
+        });
+
+        if (!balance) {
+          balance = await prisma.balance.create({
+            data: {
+              currency_id: draftTransaction.currency_id,
+              contact_id: contactId,
+              amount: 0,
+            },
+          });
+        }
+
+        // Update balance for the main contact
+        await prisma.balance.update({
+          where: {
+            currency_id_contact_id: {
+              currency_id: draftTransaction.currency_id,
+              contact_id: contactId,
+            },
+          },
+          data: {
+            amount: {
+              increment: draftTransaction.amount,
+            },
+          },
+        });
+
+        return updatedTransaction;
+      },
+    );
+
+    // Get the contact to check for ref_user_id and create reverse transaction
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contactId },
+    });
+
+    if (contact && contact.ref_user_id) {
+      // Find or create a reverse contact for the referenced user
+      const reverseContact = await this.contacts.getContactForUserId(
+        contact.user_id,
+        contact.ref_user_id,
+      );
+
+      await this.create(
+        reverseContact.id,
+        draftTransaction.currency_id,
+        -draftTransaction.amount,
+        draftTransaction.note,
+        null,
+        contact.ref_user_id,
+        true,
+      );
+    }
+
+    return completedTransaction;
   }
 
   async findAll(userId: number) {
@@ -127,11 +287,16 @@ export class TransactionsService {
   async remove(id: number, userId: number) {
     const transaction = await this.findOne(id, userId);
 
+    const contact_id = transaction.contact_id;
+    if (contact_id === null) {
+      return;
+    }
+
     // Soft delete transaction and update balance in a transaction
     return this.prisma.$transaction(async (prisma) => {
       // Get the contact to check for ref_user_id
       const contact = await prisma.contact.findUnique({
-        where: { id: transaction.contact_id },
+        where: { id: contact_id },
       });
 
       if (!contact) {
@@ -151,7 +316,7 @@ export class TransactionsService {
         where: {
           currency_id_contact_id: {
             currency_id: transaction.currency_id,
-            contact_id: transaction.contact_id,
+            contact_id: contact_id,
           },
         },
         data: {

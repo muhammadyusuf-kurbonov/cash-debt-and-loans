@@ -57,9 +57,12 @@ export class TransactionsController {
     }
 
     return this.transactionsService.create(
-      dto.contact_id,
+      dto.contact_id ?? null,
       dto.currency_id,
       Math.abs(dto.amount), // Ensure amount is positive
+      null,
+      null,
+      req.user.id,
     );
   }
 
@@ -89,9 +92,12 @@ export class TransactionsController {
     }
 
     return this.transactionsService.create(
-      dto.contact_id,
+      dto.contact_id ?? null,
       dto.currency_id,
       -Math.abs(dto.amount), // Make amount negative
+      null,
+      null,
+      req.user.id,
     );
   }
 

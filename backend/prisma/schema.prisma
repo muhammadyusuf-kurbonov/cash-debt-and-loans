@@ -33,7 +33,8 @@ model User {
   verification_code String?
   is_verified       Boolean @default(false)
 
-  contacts   Contact[] 
+  contacts   Contact[]
+  transactions Transaction[]
 
   isContactFor Contact[] @relation(name: "refUser")
 }
@@ -61,12 +62,15 @@ model Balance {
 
 model Transaction {
   id          Int      @id @default(autoincrement())
-  contact_id     Int
-  contact        Contact     @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+  contact_id     Int?
+  contact        Contact?     @relation(fields: [contact_id], references: [id], onDelete: Cascade)
   currency_id Int
   currency    Currency @relation(fields: [currency_id], references: [id], onDelete: Cascade)
+  user_id     Int
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   amount      Float
   note        String?
+  draftId     String? @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?

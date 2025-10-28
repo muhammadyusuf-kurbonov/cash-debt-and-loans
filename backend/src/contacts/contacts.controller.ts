@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -29,6 +30,7 @@ import { RequestWithUser } from 'src/types/request';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ContactsService } from './contacts.service';
 import { ContactResponseDto } from './dto/contact-response-dto';
+import { ContactsAttachService } from './contact-attach.service';
 
 class CreateContactDto extends PickType(Contact, ['name', 'ref_user_id']) {}
 
@@ -41,6 +43,7 @@ class UpdateContactDto extends PickType(Contact, ['name', 'ref_user_id']) {}
 export class ContactsController {
   constructor(
     private readonly contactsService: ContactsService,
+    private readonly contactsAttachService: ContactsAttachService,
     private readonly transactionsService: TransactionsService,
   ) {}
 
@@ -139,6 +142,32 @@ export class ContactsController {
     );
     return balances;
   }
+
+  @Get(':id/prepare-invite')
+  @ApiOperation({
+    summary: 'Prepare an invite message with inline button for Telegram',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Invite message and inline keyboard prepared',
+  })
+  @ApiResponse({ status: 404, description: 'Contact not found' })
+  async prepareInvite(
+    @Request() req: RequestWithUser,
+    @Param('id') contactId: string,
+  ) {
+    // Get bot username from environment
+    if (!req.user.telegram_id) {
+      throw new BadRequestException();
+    }
+
+    return await this.contactsAttachService.requestInvite(
+      +contactId,
+      req.user.id,
+      +req.user.telegram_id,
+    );
+  }
+
   @Get(':id/transactions')
   @ApiOperation({ summary: 'Get transactions for a specific contact' })
   @ApiResponse({ status: 404, description: 'Contact not found' })
@@ -169,6 +198,8 @@ export class ContactsController {
     return transactions.map((transaction) => ({
       ...transaction,
       note: transaction.note ?? undefined,
+      draftId: transaction.draftId ?? undefined,
+      contact_id: transaction.contact_id ?? undefined,
       deletedAt: transaction.deletedAt ?? undefined,
     }));
   }

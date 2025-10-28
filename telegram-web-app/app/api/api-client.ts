@@ -89,10 +89,12 @@ export interface UpdateContactDto {
 
 export interface IntersectionTransactionPickTypeClass {
   id: number;
-  contact_id: number;
+  contact_id?: number;
   currency_id: number;
+  user_id: number;
   amount: number;
   note?: string;
+  draftId?: string;
   /** @format date-time */
   createdAt: string;
   /** @format date-time */
@@ -103,7 +105,7 @@ export interface IntersectionTransactionPickTypeClass {
 }
 
 export interface CreateTransactionDto {
-  contact_id: number;
+  contact_id?: number;
   currency_id: number;
   amount: number;
   note?: string;
@@ -111,10 +113,28 @@ export interface CreateTransactionDto {
 
 export interface TransactionResponseDto {
   id: number;
-  contact_id: number;
+  contact_id?: number;
   currency_id: number;
+  user_id: number;
   amount: number;
   note?: string;
+  draftId?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  updatedAt: string;
+  /** @format date-time */
+  deletedAt?: string;
+}
+
+export interface Transaction {
+  id: number;
+  contact_id?: number;
+  currency_id: number;
+  user_id: number;
+  amount: number;
+  note?: string;
+  draftId?: string;
   /** @format date-time */
   createdAt: string;
   /** @format date-time */
@@ -125,6 +145,7 @@ export interface TransactionResponseDto {
 
 export interface UserRelations {
   contacts: Contact[];
+  transactions: Transaction[];
   isContactFor: Contact[];
 }
 
@@ -132,20 +153,6 @@ export interface Balance {
   currency_id: number;
   amount: number;
   contact_id: number;
-}
-
-export interface Transaction {
-  id: number;
-  contact_id: number;
-  currency_id: number;
-  amount: number;
-  note?: string;
-  /** @format date-time */
-  createdAt: string;
-  /** @format date-time */
-  updatedAt: string;
-  /** @format date-time */
-  deletedAt?: string;
 }
 
 export interface CurrencyRelations {
@@ -156,11 +163,6 @@ export interface CurrencyRelations {
 export interface BalanceRelations {
   currency: Currency;
   contact: Contact;
-}
-
-export interface TransactionRelations {
-  contact: Contact;
-  currency: Currency;
 }
 
 export interface User {
@@ -175,6 +177,12 @@ export interface User {
   telegram_id?: string;
   verification_code?: string;
   is_verified: boolean;
+}
+
+export interface TransactionRelations {
+  contact?: Contact;
+  currency: Currency;
+  user: User;
 }
 
 export interface ContactRelations {
@@ -668,6 +676,23 @@ export class Api<
         query: query,
         secure: true,
         format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags contacts
+     * @name ContactsControllerPrepareInvite
+     * @summary Prepare an invite message with inline button for Telegram
+     * @request GET:/contacts/{id}/prepare-invite
+     * @secure
+     */
+    contactsControllerPrepareInvite: (id: string, params: RequestParams = {}) =>
+      this.request<void, void>({
+        path: `/contacts/${id}/prepare-invite`,
+        method: "GET",
+        secure: true,
         ...params,
       }),
 

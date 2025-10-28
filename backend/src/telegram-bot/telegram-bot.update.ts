@@ -1,26 +1,20 @@
 import { BadRequestException, Inject } from '@nestjs/common';
-import { Action, Command, Ctx, InlineQuery, Update } from 'nestjs-telegraf';
+import { Action, Command, Ctx, InlineQuery, On, Update } from 'nestjs-telegraf';
 import { ContactsService } from 'src/contacts/contacts.service';
-import { CurrencyService } from 'src/currency/currency.service';
-import { TransactionsService } from 'src/transactions/transactions.service';
-import { UsersService } from 'src/users/users.service';
 import { Context, Scenes } from 'telegraf';
 import {
-  InlineQueryResultArticle,
+  CallbackQuery,
   Message,
   Update as TelegramUpdate,
 } from 'telegraf/types';
-import { SceneContext } from 'telegraf/typings/scenes';
 import { I18nService } from '../i18n/i18n.service';
 import { TelegramBotService } from './telegram-bot.service';
+import { parseQuery } from './utils';
 
 @Update()
 export class TelegramBotUpdate {
   constructor(
-    @Inject() private currencyService: CurrencyService,
-    @Inject() private usersService: UsersService,
     @Inject() private contactsService: ContactsService,
-    @Inject() private transactionsService: TransactionsService,
     @Inject() private telegramBotService: TelegramBotService,
     @Inject() private i18nService: I18nService,
   ) {}
@@ -61,165 +55,136 @@ export class TelegramBotUpdate {
     });
   }
 
-  @InlineQuery(/^-?\d+(\.\d+)?$/)
-  async onAmount(@Ctx() context: Scenes.SceneContext) {
-    const inlineQuery = context.inlineQuery!;
-    const lang = this.i18nService.getUserLanguage(inlineQuery.from.id);
-
-    if (!inlineQuery) {
-      throw new BadRequestException(
-        this.i18nService.getTranslation('inline_query.invalid_request', lang),
-      );
+  @On('chosen_inline_result')
+  async onChosenInlineResult(@Ctx() context: Scenes.SceneContext) {
+    const chosenInlineResult = context.chosenInlineResult;
+    if (!chosenInlineResult) {
+      throw new BadRequestException('No chosen inline result');
     }
 
-    const amount = context.inlineQuery.query;
-    const formatted = this.i18nService
-      .getIntlNumberFormat(lang)
-      .format(parseFloat(amount));
-
-    const currencies = await this.currencyService.findAll();
-
-    if (currencies.length === 0) {
-      const defaultCurrency = await this.currencyService.create('UZS', "So'm");
-      currencies.push(defaultCurrency);
+    if (chosenInlineResult.result_id.startsWith('error')) {
+      return;
     }
 
-    await this.usersService.getUserByTGId(
-      inlineQuery.from.id,
-      `${inlineQuery.from.first_name} ${inlineQuery.from.last_name ?? ''}`,
-    );
+    const { amount, comment } = parseQuery(chosenInlineResult.query);
+    const [type, currency_id] = chosenInlineResult.result_id.split('_');
 
-    await context.answerInlineQuery(
-      currencies
-        .map(
-          (currency) =>
-            [
-              {
-                id: `topup_${currency.id}_${amount}`,
-                type: 'article',
-                title: `${this.i18nService.getTranslation('actions.received', lang)} ${formatted} ${currency.name}`,
-                input_message_content: {
-                  message_text: `${this.i18nService.getTranslation('actions.received', lang)} ${formatted} ${currency.name}. ${this.i18nService.getTranslation('actions.please_confirm', lang)}`,
-                },
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: this.i18nService.getTranslation(
-                          'actions.confirm',
-                          lang,
-                        ),
-                        callback_data: `cr_${inlineQuery.from.id}_${amount}_${currency.id}`,
-                      },
-                      {
-                        text: this.i18nService.getTranslation(
-                          'actions.cancel',
-                          lang,
-                        ),
-                        callback_data: `cancel`,
-                      },
-                    ], // Use a unique ID for each inline query result
-                  ],
-                },
-              },
-              {
-                id: `widraw_${currency.id}_${amount}`,
-                type: 'article',
-                title: `${this.i18nService.getTranslation('actions.sent', lang)} ${formatted} ${currency.name}`,
-                input_message_content: {
-                  message_text: `${this.i18nService.getTranslation('actions.sent', lang)} ${formatted} ${currency.name}. ${this.i18nService.getTranslation('actions.please_confirm', lang)}`,
-                },
-                reply_markup: {
-                  inline_keyboard: [
-                    [
-                      {
-                        text: this.i18nService.getTranslation(
-                          'actions.confirm',
-                          lang,
-                        ),
-                        callback_data: `cs_${inlineQuery.from.id}_${amount}_${currency.id}`,
-                      },
-                      {
-                        text: this.i18nService.getTranslation(
-                          'actions.cancel',
-                          lang,
-                        ),
-                        callback_data: `cancel`,
-                      },
-                    ], // Use a unique ID for each inline query result
-                  ],
-                },
-              },
-            ] satisfies InlineQueryResultArticle[],
-        )
-        .flat(),
+    await this.telegramBotService.handleResultSelected(
+      chosenInlineResult.inline_message_id!,
+      type as 'topup' | 'withdraw',
+      chosenInlineResult.from.id,
+      amount,
+      parseInt(currency_id),
+      comment,
     );
   }
 
-  @Action(/c[r|s]_.*/)
-  async onConfirm(
+  @InlineQuery(/^-?[\d\s]+(?:\s+.+)?$/) // Matches amounts with optional comments (e.g., "100000 Comment", "100 000 Comment")
+  async onQuery(@Ctx() context: Scenes.SceneContext) {
+    const inlineQuery = context.inlineQuery!;
+
+    const results = await this.telegramBotService.handleMainInlineQuery(
+      inlineQuery.query,
+      inlineQuery.from,
+    );
+    await context.answerInlineQuery(results);
+    return;
+  }
+
+  @Action('cancel')
+  async onCancel(
     @Ctx()
-    context: SceneContext & { update: TelegramUpdate.CallbackQueryUpdate },
+    context: Context<TelegramUpdate.CallbackQueryUpdate>,
   ) {
-    const cbQuery = context.update.callback_query;
-    const userAnswer = 'data' in cbQuery ? cbQuery.data : null;
-
-    const lang = this.i18nService.getUserLanguage(context.from!.id);
-    if (!userAnswer) {
-      await context.answerCbQuery(
-        this.i18nService.getTranslation('errors.invalid_response', lang),
-      );
-      return;
-    }
-
-    const [action, userId, amount, currencyId] = userAnswer.split('_');
-
-    if (context.from?.id === parseInt(userId)) {
-      await context.answerCbQuery(
-        this.i18nService.getTranslation('errors.self_transaction', lang),
-      );
-      return;
-    }
-
-    const currentUser = await this.usersService.getUserByTGId(parseInt(userId));
-    const partyUser = await this.usersService.getUserByTGId(
-      context.from!.id,
-      `${context.from!.first_name} ${context.from!.last_name ?? ''}`,
-    );
-
-    const partyContact = await this.contactsService.getContactForUserId(
-      partyUser.id,
-      currentUser.id,
-      partyUser.name ?? context.from?.first_name ?? 'Unknown',
-    );
-
-    await this.transactionsService.create(
-      partyContact.id,
-      parseInt(currencyId),
-      parseFloat(amount) * (action === 'cr' ? -1 : 1),
-    );
-    await context.answerCbQuery(
-      this.i18nService.getTranslation('success.transaction_completed', lang),
-    );
+    await this.telegramBotService
+      .handleCancelled(context.inlineMessageId!)
+      .catch((error) => console.warn(error));
+    await context.answerCbQuery('Transaction cancelled');
     await context.editMessageReplyMarkup({
       inline_keyboard: [],
     });
-    const currency = await this.currencyService.findOne(parseInt(currencyId));
-    const actionText =
-      action === 'cr'
-        ? this.i18nService.getTranslation(
-            'balance_messages.received_amount',
-            lang,
-          )
-        : this.i18nService.getTranslation('balance_messages.sent_amount', lang);
-
     await context.editMessageText(
-      `
-✅ ${actionText}: ${amount} ${currency?.symbol ?? 'currency'}
-
-${this.i18nService.getTranslation('balance_messages.current_balance', lang)}: ${(await this.contactsService.getBalance(partyContact.id, currentUser.id, parseInt(currencyId)))[0].amount}
-
-${this.i18nService.getTranslation('success.confirmed', lang)}`,
+      `❌️ Operation ${context.inlineMessageId} was cancelled`,
     );
+  }
+
+  @Action('confirm_transaction')
+  async onConfirm(
+    @Ctx()
+    context: Context,
+  ) {
+    try {
+      const transaction = await this.telegramBotService.handleConfirmed(
+        context.inlineMessageId!,
+        context.from!.id,
+      );
+
+      const actionText =
+        transaction.amount < 0
+          ? this.i18nService.getTranslation('balance_messages.received_amount')
+          : this.i18nService.getTranslation('balance_messages.sent_amount');
+
+      const commentText = transaction.note
+        ? `\n📝 Comment: ${transaction.note}`
+        : '';
+
+      await context.answerCbQuery(
+        this.i18nService.getTranslation('success.transaction_completed'),
+      );
+      await context.editMessageReplyMarkup({
+        inline_keyboard: [],
+      });
+      const absAmount = Math.abs(transaction.amount || 0);
+      await context.editMessageText(
+        `
+  ✅ ${actionText}: ${absAmount} ${transaction.currency.symbol ?? 'currency'}${commentText}
+
+  ${this.i18nService.getTranslation('balance_messages.current_balance')}: ${(await this.contactsService.getBalance(transaction.contact_id ?? 0, transaction.user_id, transaction.currency_id))[0].amount}
+
+  ${this.i18nService.getTranslation('success.confirmed')}`,
+      );
+    } catch (err) {
+      console.error(err);
+      await context.answerCbQuery(
+        this.i18nService.getTranslation('errors.invalid_response'),
+      );
+    }
+  }
+
+  @Action(/^accept_contact_invite_.*/)
+  async onAcceptContactInvite(
+    @Ctx()
+    context: Context<
+      TelegramUpdate.CallbackQueryUpdate<CallbackQuery.DataQuery>
+    >,
+  ) {
+    try {
+      const callbackData = context.update.callback_query.data;
+      if (!callbackData) {
+        await context.answerCbQuery('Invalid request');
+        return;
+      }
+
+      const inviteCode = callbackData.replace('accept_contact_invite_', '');
+
+      // Process the invite
+      await this.telegramBotService.handleUserToContactAttached(
+        inviteCode,
+        context.from.id,
+      );
+
+      await context.answerCbQuery('Contact request accepted!');
+      await context.editMessageText(
+        '✅ You have successfully accepted the contact request!',
+      );
+      await context.editMessageReplyMarkup({
+        inline_keyboard: [],
+      });
+    } catch (error) {
+      console.error('Error processing contact invite callback:', error);
+      await context.answerCbQuery(
+        'There was an error processing the request. Please try again.',
+      );
+    }
   }
 }
