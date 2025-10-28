@@ -1,9 +1,9 @@
-import React from 'react';
-import { Button } from './ui/button';
+import { shareMessage } from '@tma.js/sdk-react';
 import { Link } from 'lucide-react';
-import { useLaunchParams, shareMessage } from '@tma.js/sdk-react';
+import React from 'react';
+import { toast } from "sonner";
 import { useAPI } from '~/api/use-api';
-import { toast } from "sonner"
+import { Button } from './ui/button';
 
 interface TelegramLinkButtonProps {
   contactId: number;
