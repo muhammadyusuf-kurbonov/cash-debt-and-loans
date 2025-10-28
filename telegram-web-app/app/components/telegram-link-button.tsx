@@ -21,7 +21,6 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
 }) => {
   const { platform } = useLaunchParams();
   const { api } = useAPI();
-  const { switchInlineQuery } = useMiniApp();
 
   const handleLinkTelegramUser = async () => {
     try {
