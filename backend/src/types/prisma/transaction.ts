@@ -10,8 +10,8 @@ export class Transaction {
   @ApiProperty({ type: Number })
   currency_id: number;
 
-  @ApiPropertyOptional({ type: Number })
-  user_id?: number;
+  @ApiProperty({ type: Number })
+  user_id: number;
 
   @ApiProperty({ type: Number })
   amount: number;

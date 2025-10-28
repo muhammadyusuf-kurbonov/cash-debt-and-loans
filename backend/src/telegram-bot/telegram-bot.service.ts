@@ -151,10 +151,10 @@ export class TelegramBotService {
     if (!transaction) {
       throw new BadRequestException('draft not found');
     }
-    const user = await this.usersService.getUserByTGId(transaction.user_id);
+
     const contact = await this.contactsService.getContactForUserId(
       userTGId,
-      user.id,
+      transaction.user_id,
     );
     return await this.transactionsService.finalizeDraft(
       inlineQueryId,

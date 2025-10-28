@@ -34,6 +34,13 @@ export class UsersService {
 
     return user;
   }
+  async getUserById(user_id: number): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: user_id },
+    });
+
+    return user;
+  }
 
   async getNetBalanceOfUser(userId: number) {
     const balances = await this.prisma.balance.groupBy({

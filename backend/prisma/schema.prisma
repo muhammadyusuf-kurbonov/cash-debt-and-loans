@@ -66,8 +66,8 @@ model Transaction {
   contact        Contact?     @relation(fields: [contact_id], references: [id], onDelete: Cascade)
   currency_id Int
   currency    Currency @relation(fields: [currency_id], references: [id], onDelete: Cascade)
-  user_id     Int?
-  user        User?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     Int
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   amount      Float
   note        String?
   draftId     String? @unique
