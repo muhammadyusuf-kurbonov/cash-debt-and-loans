@@ -142,11 +142,11 @@ export class TelegramBotService {
     currency_id: number,
     comment?: string,
   ) {
-    console.log('Created draft', inlineQueryId);
+    console.log('Created draft', inlineQueryId, type);
     await this.transactionsService.createDraft(
       inlineQueryId,
       currency_id,
-      type === 'topup' ? amount : -amount,
+      type === 'topup' ? -amount : amount,
       (await this.usersService.getUserByTGId(authorTgId)).id,
       comment,
     );
