@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { viewport } from '@tma.js/sdk-react';
+import { max } from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from 'react-router';
 import { type CreateContactDto, type UpdateContactDto } from "~/api/api-client";
 import { AddTransactionModal } from "~/components/add-transaction-modal";
 import { ContactList } from "~/components/contacts-list";
 import { Money } from "~/components/money";
 import { StickyFooter } from "~/components/sticky-footer";
-import TelegramLoginButton from "~/components/telegram-login-button";
 import { ApiClient } from '~/lib/api-client';
-import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
-import type { Route } from "./+types/home";
-import { max } from 'date-fns';
+import { isAuthenticated } from "~/lib/telegram-auth";
 import { useTelegramData } from "~/lib/useTelegramData";
+import type { Route } from "./+types/home";
 
 
 type Transaction = {
@@ -31,46 +31,24 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Home() {
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
-  const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
-  const [authenticating, setAuthenticating] = useState<boolean>(false);
-  const { initDataRaw } = useTelegramData();
+  const { isTelegram } = useTelegramData();
+  const navigate = useNavigate();
 
   // Check authentication status on mount and auto-authenticate if in Telegram Web App
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      // If already authenticated, just update the state
-      if (isAuthenticated()) {
-        setIsAuthenticated(true);
-        return;
-      }
+    if (isAuthenticated()) {
+      return;
+    }
 
-      // Auto-authenticate if in Telegram Web App
-      if (initDataRaw) {
-        setAuthenticating(true);
-
-        try {
-          // Authenticate with our backend
-          await authenticateWithTelegram(initDataRaw);
-
-          // Update authentication state
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Auto-authentication failed:', error);
-          // Still show login button if auto-auth fails
-        } finally {
-          setAuthenticating(false);
-        }
-      }
-    };
-
-    checkAuthStatus();
-  }, [initDataRaw]);
+    navigate('/');
+  }, []);
 
   useEffect(() => {
-    // Only expand the viewport when in Telegram
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-      viewport.requestFullscreen().then(() => viewport.expand());
+    if (!isTelegram) {
+      return;
     }
+
+    viewport.requestFullscreen().then(() => viewport.expand());
   }, []);
 
   // Initialize API client
@@ -117,13 +95,6 @@ export default function Home() {
 
     fetchContacts();
   }, []);
-
-  const handleAuthSuccess = useCallback(() => {
-    setIsAuthenticated(true);
-    // Reload contacts after authentication
-
-    fetchContacts();
-  }, [api]);
 
   const handleAddNewTransaction = useCallback(async (newData: Transaction) => {
     if (!activeContact) {
@@ -181,20 +152,6 @@ export default function Home() {
       return acc;
     }, {} as Record<string, number>);
   }, [contacts]);
-
-  // Show login button if not authenticated
-  if (!isAuthenticatedState) {
-    // Show loading indicator if auto-authenticating
-    if (authenticating) {
-      return (
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-        </div>
-      );
-    }
-
-    return <TelegramLoginButton onAuthSuccess={handleAuthSuccess} />;
-  }
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;

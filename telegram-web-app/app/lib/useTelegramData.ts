@@ -1,5 +1,5 @@
+import { retrieveLaunchParams } from '@tma.js/sdk';
 import { useEffect, useState } from 'react';
-import { initializeTMA, isRunningInTelegram } from './tma-initializer';
 
 /**
  * Custom hook to safely access Telegram Mini Apps data
@@ -7,34 +7,20 @@ import { initializeTMA, isRunningInTelegram } from './tma-initializer';
  */
 export function useTelegramData() {
   const [initDataRaw, setInitDataRaw] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
   const [isTelegram, setIsTelegram] = useState(false);
 
   useEffect(() => {
-    const checkAndSetTelegramData = async () => {
-      try {
-        const inTelegram = isRunningInTelegram();
-        setIsTelegram(inTelegram);
-
-        if (inTelegram) {
-          const { initDataRaw: raw } = await initializeTMA();
-          setInitDataRaw(raw);
-          setIsTelegram(true);
-        }
-      } catch (error) {
-        console.warn('Error initializing Telegram data:', error);
-      } finally {
-        setIsLoading(false);
+    try {
+      const launchParams = retrieveLaunchParams();
+  
+      if (launchParams) {
+        setIsTelegram(true);
+        setInitDataRaw(launchParams.initDataRaw);
       }
-    };
-
-    checkAndSetTelegramData();
-
-    // Clean up in case we need to reset the state
-    return () => {
-      setIsLoading(true);
-    };
+    } catch (error) {
+      console.log('We are not in TG');
+    }
   }, []);
 
-  return { initDataRaw, isLoading, isTelegram };
+  return { initDataRaw, isTelegram };
 }

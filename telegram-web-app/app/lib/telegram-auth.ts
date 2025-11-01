@@ -1,24 +1,7 @@
 // lib/telegram-auth.ts
 import type { JwtPayload } from 'jwt-decode';
 import { jwtDecode } from 'jwt-decode';
-import type { AuthResponseDto } from '~/api/api-client';
-import { ApiClient } from './api-client';
 
-/**
- * Authenticate with Telegram through the backend using initData
- */
-export async function authenticateWithTelegram(initData: string): Promise<AuthResponseDto> {
-  const response = await ApiClient.getOpenAPIClient().auth.authControllerTelegramSignUp({
-    initData,
-  });
-
-  if (response.status >= 400) {
-    throw new Error(`Telegram auth failed: ${response.statusText}`);
-  }
-  // Store the token in localStorage for future API requests
-  localStorage.setItem(TOKEN_STORAGE_KEY, response.data.token);
-  return response.data;
-}
 
 export const TOKEN_STORAGE_KEY = 'dl_auth_token';
 /**
@@ -50,25 +33,4 @@ export function isAuthenticated(): boolean {
     console.error("Error validating JWT token:", error);
     return false;
   }
-}
-
-/**
- * Get the current user's token
- */
-export function getToken(): string | null {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-  
-  // Only return the token if it's still valid
-  if (token && isAuthenticated()) {
-    return token;
-  }
-  
-  return null;
-}
-
-/**
- * Log out the current user
- */
-export function logout(): void {
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
 }

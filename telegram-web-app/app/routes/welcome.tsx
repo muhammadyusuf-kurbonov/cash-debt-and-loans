@@ -1,13 +1,12 @@
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { useMutation } from '@tanstack/react-query';
 import TelegramLoginButton from "~/components/telegram-login-button";
-import { authenticateWithTelegram, isAuthenticated, TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
-import { ApiClient } from '~/lib/api-client';
-import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { ApiClient } from '~/lib/api-client';
+import { isAuthenticated, TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
 import { useTelegramData } from "~/lib/useTelegramData";
 
 export default function WelcomePage() {
@@ -53,6 +52,7 @@ export default function WelcomePage() {
     }
     
     if (!initDataRaw) {
+      console.log('No init data');
       return;
     }
     setAuthenticating(true);
