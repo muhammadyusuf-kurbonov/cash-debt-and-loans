@@ -407,7 +407,6 @@ export class TransactionsService {
     return await this.prisma.transaction.findMany({
       where: {
         contact_id,
-        deletedAt: null,
         currency_id,
       },
       include: {
