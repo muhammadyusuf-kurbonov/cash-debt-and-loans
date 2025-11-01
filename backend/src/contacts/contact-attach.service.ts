@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { LazyModuleLoader } from '@nestjs/core';
 import { I18nService } from 'src/i18n/i18n.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { InlineQueryResultArticle } from 'telegraf/types';
+import { Telegraf } from 'telegraf';
+import { DEFAULT_BOT_NAME } from 'nestjs-telegraf';
 
 @Injectable()
 export class ContactsAttachService {
@@ -31,9 +33,8 @@ export class ContactsAttachService {
 
     const { TelegrafModule } = await import('nestjs-telegraf');
     const moduleRef = await this.lazyModuleLoader.load(() => TelegrafModule);
-
-    const { Telegraf } = await import('telegraf');
-    const bot = moduleRef.get(Telegraf);
+    
+    const bot: Telegraf = moduleRef.get(DEFAULT_BOT_NAME);
 
     // @ts-expect-error undeclared method call
     const preparedMsg: { id: string } = await bot.telegram.callApi(
