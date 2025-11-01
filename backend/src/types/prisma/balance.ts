@@ -9,4 +9,7 @@ export class Balance {
 
   @ApiProperty({ type: Number })
   contact_id: number;
+
+  @ApiProperty({ type: Date })
+  updatedAt: Date;
 }

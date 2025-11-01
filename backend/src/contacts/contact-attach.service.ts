@@ -1,17 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectBot } from 'nestjs-telegraf';
+import { LazyModuleLoader } from '@nestjs/core';
 import { I18nService } from 'src/i18n/i18n.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import { Telegraf } from 'telegraf';
 import { InlineQueryResultArticle } from 'telegraf/types';
 
 @Injectable()
 export class ContactsAttachService {
   constructor(
     private prisma: PrismaService,
-    @InjectBot()
-    private bot: Telegraf,
+    private lazyModuleLoader: LazyModuleLoader,
     private i18nService: I18nService,
     private usersService: UsersService,
   ) {}
@@ -30,8 +28,17 @@ export class ContactsAttachService {
         },
       },
     });
+
+    const { TelegramBotModule } = await import(
+      '../telegram-bot/telegram-bot.module'
+    );
+    const moduleRef = await this.lazyModuleLoader.load(() => TelegramBotModule);
+
+    const { Telegraf } = await import('telegraf');
+    const bot = moduleRef.get(Telegraf);
+
     // @ts-expect-error undeclared method call
-    const preparedMsg: { id: string } = await this.bot.telegram.callApi(
+    const preparedMsg: { id: string } = await bot.telegram.callApi(
       // @ts-expect-error undeclared method call
       'savePreparedInlineMessage',
       {

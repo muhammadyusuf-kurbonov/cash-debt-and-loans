@@ -57,6 +57,8 @@ model Balance {
   contact_id   Int
   contact    Contact   @relation(fields: [contact_id], references: [id], onDelete: Cascade)
 
+  updatedAt   DateTime @updatedAt
+
   @@id([currency_id, contact_id])
 }
 

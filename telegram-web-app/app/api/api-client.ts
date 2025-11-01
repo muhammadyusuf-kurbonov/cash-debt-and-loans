@@ -71,6 +71,8 @@ export interface IntersectionBalancePickTypeClass {
   currency_id: number;
   amount: number;
   contact_id: number;
+  /** @format date-time */
+  updatedAt: string;
   currency: Currency;
 }
 
@@ -153,6 +155,8 @@ export interface Balance {
   currency_id: number;
   amount: number;
   contact_id: number;
+  /** @format date-time */
+  updatedAt: string;
 }
 
 export interface CurrencyRelations {

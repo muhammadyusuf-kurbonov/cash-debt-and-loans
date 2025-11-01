@@ -10,6 +10,7 @@ import TelegramLoginButton from "~/components/telegram-login-button";
 import { ApiClient } from '~/lib/api-client';
 import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
 import type { Route } from "./+types/home";
+import { max } from 'date-fns';
 
 
 type Transaction = {
@@ -76,7 +77,9 @@ export default function Home() {
     queryFn: async () => {
       const backendContactsResponse = await api.contacts.contactsControllerFindAll();
 
-      return backendContactsResponse.data;
+      return backendContactsResponse.data.sort((contact1, contact2) => {
+        return -max(contact1.Balance.map((balance) => balance.updatedAt)).getTime() + max(contact2.Balance.map((balance) => balance.updatedAt)).getTime();
+      });
     },
     initialData: [],
   });
