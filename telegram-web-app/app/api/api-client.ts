@@ -129,6 +129,10 @@ export interface TransactionResponseDto {
   deletedAt?: string;
 }
 
+export interface UpdateTransactionDto {
+  note?: string;
+}
+
 export interface ProfileDto {
   /** User ID */
   id: number;
@@ -837,6 +841,30 @@ export class Api<
         path: `/transactions/${id}/cancel`,
         method: "POST",
         secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags transactions
+     * @name TransactionsControllerUpdate
+     * @summary Update a transaction (e.g., edit note)
+     * @request PUT:/transactions/{id}
+     * @secure
+     */
+    transactionsControllerUpdate: (
+      id: string,
+      data: UpdateTransactionDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<TransactionResponseDto, void>({
+        path: `/transactions/${id}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),

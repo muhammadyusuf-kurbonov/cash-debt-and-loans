@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { RequestWithUser } from '../types/request';
 import { CreateTransactionDto } from './dto/create-transaction-dto';
+import { UpdateTransactionDto } from './dto/update-transaction-dto';
 import { TransactionsService } from './transactions.service';
 import { TransactionResponseDto } from './dto/transaction-response-dto';
 
@@ -119,5 +121,22 @@ export class TransactionsController {
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   cancel(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.transactionsService.remove(+id, req.user.id);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a transaction (e.g., edit note)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Transaction updated successfully',
+    type: TransactionResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Transaction not found' })
+  @ApiBody({ type: UpdateTransactionDto })
+  async update(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateTransactionDto,
+  ) {
+    return this.transactionsService.update(+id, req.user.id, dto);
   }
 }

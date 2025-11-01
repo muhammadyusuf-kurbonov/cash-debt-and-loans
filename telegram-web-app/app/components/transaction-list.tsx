@@ -1,18 +1,34 @@
 'use client'
 import { format } from 'date-fns';
-import { CircleX } from 'lucide-react';
+import { CircleX, Edit3 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Money } from './money';
 import type { Transaction, TransactionRelations } from '~/api/api-client';
 import { cn } from '~/lib/utils';
+import { useState } from 'react';
 
 type Props = {
   transactions: Array<Transaction & Pick<TransactionRelations, 'currency'>>;
   onDeleteTransaction: (id: number) => void;
+  onEditNote: (id: number, note: string) => void;
 };
 
-export function TransactionsList({ transactions, onDeleteTransaction }: Props) {
+export function TransactionsList({ transactions, onDeleteTransaction, onEditNote }: Props) {
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editNoteValue, setEditNoteValue] = useState<string>('');
+
+  const handleEditNote = (transactionId: number, currentNote: string | null) => {
+    setEditingNoteId(transactionId);
+    setEditNoteValue(currentNote || '');
+  };
+
+  const saveNote = (transactionId: number) => {
+    onEditNote(transactionId, editNoteValue);
+    setEditingNoteId(null);
+    setEditNoteValue('');
+  };
+
   return (
     <div className="space-y-4 mb-4">
       {transactions.map((transaction) => (
@@ -21,17 +37,58 @@ export function TransactionsList({ transactions, onDeleteTransaction }: Props) {
             <div className='flex flex-row justify-between'>
               <div>
                 <h2 className="text-lg font-semibold"><Money value={transaction.amount} symbol={transaction.currency.symbol}/></h2>
-                <p className="text-sm text-gray-600">Description: {transaction.note || 'N/A'}</p>
+                <div className="flex items-center">
+                  {editingNoteId === transaction.id ? (
+                    <div className="flex flex-col">
+                      <input
+                        type="text"
+                        value={editNoteValue}
+                        onChange={(e) => setEditNoteValue(e.target.value)}
+                        className="border rounded p-1 mb-1"
+                        autoFocus
+                      />
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => saveNote(transaction.id)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingNoteId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-600">
+                        Description: {transaction.note || 'N/A'}{' '}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditNote(transaction.id, transaction.note)}
+                          className="h-auto p-1 text-xs"
+                        >
+                          <Edit3 size={14} />
+                        </Button>
+                      </p>
+                    </>
+                  )}
+                </div>
                 <p className="text-sm text-gray-600">Date: {format(new Date(transaction.createdAt), 'Pp')}</p>
-
               </div>
               {!transaction.deletedAt && <Button
-                variant="outline" // Using ghost variant for a subtle, icon-only button
-                size="icon" // Makes the button square and sized for an icon
-                onClick={() => onDeleteTransaction(transaction.id)} // Pass transaction ID to the delete handler
-                className="text-gray-500 hover:text-red-600 transition-colors" // Styling for hover effect
+                variant="outline"
+                size="icon"
+                onClick={() => onDeleteTransaction(transaction.id)}
+                className="text-gray-500 hover:text-red-600 transition-colors"
               >
-                <CircleX size={20} /> {/* Trash icon */}
+                <CircleX size={20} />
               </Button>}
             </div>
           </CardContent>

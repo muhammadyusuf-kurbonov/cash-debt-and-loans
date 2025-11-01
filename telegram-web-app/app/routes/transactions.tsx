@@ -46,6 +46,19 @@ export default function TransactionsPage() {
     }
   })
 
+  const updateNote = useMutation({
+    mutationKey: ['update-transaction-note'],
+    mutationFn: async ({ transactionId, note }: { transactionId: Transaction['id']; note: string }) => {
+      const response = await api.transactions.transactionsControllerUpdate(transactionId.toString(), { note });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['contact-transactions', contactId],
+      });
+    }
+  })
+
   const totalBalances = useMemo(() => {
     const balances: Record<Currency['id'], number> = {};
     transactions?.forEach(transaction => {
@@ -85,7 +98,11 @@ export default function TransactionsPage() {
         <>
           <ScrollArea className="h-[calc(100vh-200px)] pr-2">
             <div className="space-y-3">
-              <TransactionsList transactions={transactions} onDeleteTransaction={cancel.mutate} />
+              <TransactionsList 
+                transactions={transactions} 
+                onDeleteTransaction={cancel.mutate} 
+                onEditNote={(id, note) => updateNote.mutate({ transactionId: id, note })} 
+              />
             </div>
           </ScrollArea>
           <StickyFooter>

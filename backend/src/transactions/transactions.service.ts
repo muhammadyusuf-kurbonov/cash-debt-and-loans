@@ -417,4 +417,30 @@ export class TransactionsService {
       },
     });
   }
+
+  async update(id: number, userId: number, data: { note?: string | null }) {
+    // First verify that the transaction belongs to the user
+    const transaction = await this.prisma.transaction.findFirst({
+      where: {
+        id,
+        contact: {
+          user_id: userId,
+        },
+        deletedAt: null,
+      },
+    });
+
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ID ${id} not found`);
+    }
+
+    // Update the transaction with the provided data
+    return this.prisma.transaction.update({
+      where: { id },
+      data: {
+        note: data.note,
+        updatedAt: new Date(),
+      },
+    });
+  }
 }
