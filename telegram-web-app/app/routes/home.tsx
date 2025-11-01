@@ -68,11 +68,11 @@ export default function Home() {
       return backendContactsResponse.data.sort((contact1, contact2) => {
         let firstCustomerLastBalanceUpdate = max(contact1.Balance.map((balance) => balance.updatedAt)).getTime();
         if (!contact1.Balance.length) {
-          firstCustomerLastBalanceUpdate = contact1.id;
+          firstCustomerLastBalanceUpdate = contact1.id * 1000000000;
         }
         let secondContactLastBalanceUpdate = max(contact2.Balance.map((balance) => balance.updatedAt)).getTime();
         if (!contact2.Balance.length) {
-          secondContactLastBalanceUpdate = contact2.id;
+          secondContactLastBalanceUpdate = contact2.id * 1000000000;
         }
         return -firstCustomerLastBalanceUpdate + secondContactLastBalanceUpdate;
       });

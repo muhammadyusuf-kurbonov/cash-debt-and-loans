@@ -3,14 +3,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { ApiClient } from '~/lib/api-client';
-import { type Route } from './+types/profile';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 import { toast } from 'sonner';
 
-export function meta({ }: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "Profile Settings - Qarz.uz" },
     { name: "description", content: "Update your profile information and password" },
