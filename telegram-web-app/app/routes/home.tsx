@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { viewport } from '@tma.js/sdk-react';
+import { init, viewport } from '@tma.js/sdk-react';
 import { max } from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from 'react-router';
@@ -47,6 +47,8 @@ export default function Home() {
     if (!isTelegram) {
       return;
     }
+
+    init();
 
     if (!viewport.requestFullscreen.isAvailable()) {
       return;
