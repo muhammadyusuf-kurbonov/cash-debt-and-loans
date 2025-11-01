@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
@@ -14,16 +14,14 @@ type Props = {
 export function EditContactModal({ open, onClose, contactToEdit, onEdit }: Props) {
   const [fullName, setFullName] = useState(contactToEdit?.name || '');
 
-  // Update the input field when the contactToEdit prop changes
-  useState(() => {
+  useEffect(() => {
     setFullName(contactToEdit?.name || '');
-  });
+  }, [contactToEdit]);
 
   const handleEdit = () => {
     if (fullName.trim() && contactToEdit) {
       onEdit(contactToEdit.id, {
         name: fullName,
-        ref_user_id: contactToEdit.ref_user_id
       });
       setFullName('');
       onClose();
