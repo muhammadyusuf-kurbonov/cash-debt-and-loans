@@ -78,7 +78,15 @@ export default function Home() {
       const backendContactsResponse = await api.contacts.contactsControllerFindAll();
 
       return backendContactsResponse.data.sort((contact1, contact2) => {
-        return -max(contact1.Balance.map((balance) => balance.updatedAt)).getTime() + max(contact2.Balance.map((balance) => balance.updatedAt)).getTime();
+        let firstCustomerLastBalanceUpdate = max(contact1.Balance.map((balance) => balance.updatedAt)).getTime();
+        if (!contact1.Balance.length) {
+          firstCustomerLastBalanceUpdate = contact1.id;
+        }
+        let secondContactLastBalanceUpdate = max(contact2.Balance.map((balance) => balance.updatedAt)).getTime();
+        if (!contact2.Balance.length) {
+          secondContactLastBalanceUpdate = contact2.id;
+        }
+        return -firstCustomerLastBalanceUpdate + secondContactLastBalanceUpdate;
       });
     },
     initialData: [],
