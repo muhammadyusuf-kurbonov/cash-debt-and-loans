@@ -5,7 +5,7 @@ import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
 export class TransactionRelations {
   @ApiPropertyOptional({ type: () => Contact })
-  contact?: Contact;
+  contact: Contact | null;
 
   @ApiProperty({ type: () => Currency })
   currency: Currency;

@@ -58,6 +58,10 @@ export class ContactsController {
     @Request() req: RequestWithUser,
     @Body() createContactDto: CreateContactDto,
   ) {
+    if (!createContactDto.name) {
+      throw new BadRequestException();
+    }
+
     return await this.contactsService.create(
       req.user.id,
       createContactDto.name,
@@ -101,6 +105,10 @@ export class ContactsController {
     @Param('id') id: string,
     @Body() updateContactDto: UpdateContactDto,
   ) {
+    if (!updateContactDto.name) {
+      throw new BadRequestException();
+    }
+
     return this.contactsService.update(
       +id,
       req.user.id,
@@ -198,10 +206,10 @@ export class ContactsController {
       );
     return transactions.map((transaction) => ({
       ...transaction,
-      note: transaction.note ?? undefined,
-      draftId: transaction.draftId ?? undefined,
-      contact_id: transaction.contact_id ?? undefined,
-      deletedAt: transaction.deletedAt ?? undefined,
+      note: transaction.note,
+      draftId: transaction.draftId,
+      contact_id: transaction.contact_id,
+      deletedAt: transaction.deletedAt,
     }));
   }
 }

@@ -5,7 +5,8 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { Button } from './ui/button'
-import { MoreVertical } from 'lucide-react'
+import { MoreVertical, User, LogOut } from 'lucide-react'
+import { useNavigate } from 'react-router';
 
 export function TopRightMenu({
   openCurrencyList,
@@ -16,6 +17,20 @@ export function TopRightMenu({
   dropdownOpen: boolean,
   onDropdownOpenChange: (isOpen: boolean) => void,
 }) {
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleLogout = () => {
+    // Clear authentication token
+    localStorage.removeItem('token');
+    
+    // Redirect to welcome page
+    window.location.href = '/';
+  };
+
   return (
     <DropdownMenu open={dropdownOpen} onOpenChange={onDropdownOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -23,9 +38,17 @@ export function TopRightMenu({
           <MoreVertical className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={openCurrencyList}>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={handleProfileClick} className="flex items-center">
+          <User className="mr-2 h-4 w-4" />
+          <span>Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={openCurrencyList} className="flex items-center">
           💲 Currencies
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout} className="flex items-center text-red-600">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Logout</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

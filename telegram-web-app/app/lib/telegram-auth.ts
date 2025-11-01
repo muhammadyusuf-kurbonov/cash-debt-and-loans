@@ -16,15 +16,16 @@ export async function authenticateWithTelegram(initData: string): Promise<AuthRe
     throw new Error(`Telegram auth failed: ${response.statusText}`);
   }
   // Store the token in localStorage for future API requests
-  localStorage.setItem('token', response.data.token);
+  localStorage.setItem(TOKEN_STORAGE_KEY, response.data.token);
   return response.data;
 }
 
+export const TOKEN_STORAGE_KEY = 'dl_auth_token';
 /**
  * Check if user is authenticated
  */
 export function isAuthenticated(): boolean {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   if (!token) {
     return false;
   }
@@ -55,7 +56,7 @@ export function isAuthenticated(): boolean {
  * Get the current user's token
  */
 export function getToken(): string | null {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   
   // Only return the token if it's still valid
   if (token && isAuthenticated()) {
@@ -69,5 +70,5 @@ export function getToken(): string | null {
  * Log out the current user
  */
 export function logout(): void {
-  localStorage.removeItem('token');
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
 }

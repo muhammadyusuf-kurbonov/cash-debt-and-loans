@@ -8,8 +8,8 @@ export class Contact {
   user_id: number;
 
   @ApiPropertyOptional({ type: String })
-  name?: string;
+  name: string | null;
 
   @ApiPropertyOptional({ type: Number })
-  ref_user_id?: number;
+  ref_user_id: number | null;
 }

@@ -8,7 +8,7 @@ export class ContactRelations {
   user: User;
 
   @ApiPropertyOptional({ type: () => User })
-  ref_user?: User;
+  ref_user: User | null;
 
   @ApiProperty({ isArray: true, type: () => Transaction })
   Transaction: Transaction[];

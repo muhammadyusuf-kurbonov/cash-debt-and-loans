@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRawInitData, viewport } from '@tma.js/sdk-react';
+import { viewport } from '@tma.js/sdk-react';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { type CreateContactDto, type UpdateContactDto } from "~/api/api-client";
 import { AddTransactionModal } from "~/components/add-transaction-modal";
@@ -11,6 +11,7 @@ import { ApiClient } from '~/lib/api-client';
 import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
 import type { Route } from "./+types/home";
 import { max } from 'date-fns';
+import { useTelegramData } from "~/lib/useTelegramData";
 
 
 type Transaction = {
@@ -32,7 +33,7 @@ export default function Home() {
   const [activeContact, setActiveContact] = useState<number | null>(null); // For showing transaction modal
   const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
   const [authenticating, setAuthenticating] = useState<boolean>(false);
-  const initDataRaw = useRawInitData();
+  const { initDataRaw } = useTelegramData();
 
   // Check authentication status on mount and auto-authenticate if in Telegram Web App
   useEffect(() => {
@@ -66,7 +67,10 @@ export default function Home() {
   }, [initDataRaw]);
 
   useEffect(() => {
-    viewport.requestFullscreen().then(() => viewport.expand());
+    // Only expand the viewport when in Telegram
+    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+      viewport.requestFullscreen().then(() => viewport.expand());
+    }
   }, []);
 
   // Initialize API client

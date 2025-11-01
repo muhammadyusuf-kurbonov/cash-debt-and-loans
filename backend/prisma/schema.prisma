@@ -13,6 +13,7 @@ generator prismaClassGenerator {
   provider = "prisma-class-generator"
   dryRun   = false
   separateRelationFields  = true
+  preserveDefaultNullable = true
   output   = "../src/types/prisma"
 }
 

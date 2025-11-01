@@ -9,5 +9,9 @@ export default [
   {
     path: "/transactions",
     file: "./routes/transactions.tsx",
+  },
+  {
+    path: "/profile",
+    file: "./routes/profile.tsx",
   }
 ] satisfies RouteConfig;

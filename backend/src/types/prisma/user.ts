@@ -5,13 +5,13 @@ export class User {
   id: number;
 
   @ApiPropertyOptional({ type: String })
-  name?: string;
+  name: string | null;
 
   @ApiPropertyOptional({ type: String })
-  email?: string;
+  email: string | null;
 
   @ApiPropertyOptional({ type: String })
-  password?: string;
+  password: string | null;
 
   @ApiProperty({ type: Date })
   createdAt: Date;
@@ -20,10 +20,10 @@ export class User {
   updatedAt: Date;
 
   @ApiPropertyOptional({ type: String })
-  telegram_id?: string;
+  telegram_id: string | null;
 
   @ApiPropertyOptional({ type: String })
-  verification_code?: string;
+  verification_code: string | null;
 
   @ApiProperty({ type: Boolean })
   is_verified: boolean;

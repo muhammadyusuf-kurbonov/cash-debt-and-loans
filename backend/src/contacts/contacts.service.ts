@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ContactsService {
   constructor(private prisma: PrismaService) {}
 
-  create(userId: number, name?: string, refUserId?: number) {
+  create(userId: number, name: string, refUserId: number | null) {
     return this.prisma.contact.create({
       data: {
         user_id: userId,
@@ -52,7 +52,12 @@ export class ContactsService {
     return contact;
   }
 
-  async update(id: number, userId: number, name?: string, refUserId?: number) {
+  async update(
+    id: number,
+    userId: number,
+    name: string,
+    refUserId: number | null,
+  ) {
     await this.findOne(id, userId); // Ensure contact exists and belongs to user
 
     return this.prisma.contact.update({

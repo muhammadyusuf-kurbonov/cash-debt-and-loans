@@ -5,7 +5,7 @@ export class Transaction {
   id: number;
 
   @ApiPropertyOptional({ type: Number })
-  contact_id?: number;
+  contact_id: number | null;
 
   @ApiProperty({ type: Number })
   currency_id: number;
@@ -17,10 +17,10 @@ export class Transaction {
   amount: number;
 
   @ApiPropertyOptional({ type: String })
-  note?: string;
+  note: string | null;
 
   @ApiPropertyOptional({ type: String })
-  draftId?: string;
+  draftId: string | null;
 
   @ApiProperty({ type: Date })
   createdAt: Date;
@@ -29,5 +29,5 @@ export class Transaction {
   updatedAt: Date;
 
   @ApiPropertyOptional({ type: Date })
-  deletedAt?: Date;
+  deletedAt: Date | null;
 }

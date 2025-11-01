@@ -1,68 +1,59 @@
-import React, { useEffect } from 'react';
-import { authenticateWithTelegram, isAuthenticated } from '~/lib/telegram-auth';
-import { useLaunchParams } from '@tma.js/sdk-react';
+import React from 'react';
+import { isAuthenticated } from '~/lib/telegram-auth';
+import { useTelegramData } from '~/lib/useTelegramData';
 
 interface TelegramLoginButtonProps {
-  onAuthSuccess?: () => void;
-  onAuthError?: (error: Error) => void;
+  handleAuthClick?: () => void;
+  isLoading: boolean;
 }
 
 const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
-  onAuthSuccess,
-  onAuthError,
+  handleAuthClick,
+  isLoading,
 }) => {
-  const { initDataRaw } = useLaunchParams();
-
-  const handleAuth = async () => {
-    try {
-      // Get the init data (this contains the authentication data)
-      if (!initDataRaw) {
-        throw new Error('No init data available');
-      }
-
-      // Authenticate with our backend
-      const result = await authenticateWithTelegram(initDataRaw);
-      
-      if (result.token) {
-        if (onAuthSuccess) {
-          onAuthSuccess();
-        }
-      }
-    } catch (error) {
-      console.error('Telegram auth error:', error);
-      if (onAuthError) {
-        onAuthError(error as Error);
-      }
-    }
-  };
-
-  // Check if user is already authenticated on component mount
-  useEffect(() => {
-    if (isAuthenticated()) {
-      onAuthSuccess?.();
-    }
-  }, []);
-
+  const { initDataRaw, isTelegram } = useTelegramData();
   // If already authenticated, we can return a different component or just null
   if (isAuthenticated()) {
     return null;
   }
 
+  // Show loading state while checking Telegram environment
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-4">
+        <p className="text-lg mb-4">Checking environment...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center p-4">
-      <p className="text-lg mb-4">Please open this app in Telegram to continue</p>
-      {initDataRaw ? (
-        <button 
-          onClick={handleAuth}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
-        >
-          Continue in Telegram
-        </button>
+      {isTelegram ? (
+        <>
+          <p className="text-lg mb-4">Continue with Telegram</p>
+          {initDataRaw ? (
+            <button 
+              onClick={handleAuthClick}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+            >
+              Continue in Telegram
+            </button>
+          ) : (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+              <strong className="font-bold">Note: </strong>
+              <span className="block sm:inline">No authentication data received. Please restart the bot.</span>
+            </div>
+          )}
+        </>
       ) : (
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Note: </strong>
-          <span className="block sm:inline">This app is designed to work inside Telegram. Please open this link in the Telegram app.</span>
-        </div>
+        <>
+          <p className="text-lg mb-4">This app can work inside Telegram</p>
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+            <strong className="font-bold">Note: </strong>
+            <span className="block sm:inline">Open this link in the Telegram app and pass auth.</span>
+          </div>
+        </>
       )}
     </div>
   );

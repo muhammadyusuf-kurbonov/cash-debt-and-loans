@@ -129,6 +129,58 @@ export interface TransactionResponseDto {
   deletedAt?: string;
 }
 
+export interface ProfileDto {
+  /** User ID */
+  id: number;
+  /**
+   * User display name
+   * @example "John Doe"
+   */
+  name: string | null;
+  /**
+   * User email address
+   * @example "john@example.com"
+   */
+  email: string | null;
+  /**
+   * Telegram ID
+   * @example "123456789"
+   */
+  telegram_id: string | null;
+  /** Account verification status */
+  is_verified: boolean;
+  /**
+   * Account creation date
+   * @format date-time
+   */
+  createdAt: string;
+}
+
+export interface UpdateProfileDto {
+  /** User display name */
+  name?: string;
+  /**
+   * User email address
+   * @format email
+   * @example "user@example.com"
+   */
+  email?: string;
+}
+
+export interface UpdatePasswordDto {
+  /**
+   * Current password
+   * @minLength 6
+   */
+  currentPassword: string;
+  /**
+   * New password
+   * @minLength 6
+   * @example "newpassword123"
+   */
+  newPassword: string;
+}
+
 export interface Transaction {
   id: number;
   contact_id?: number;
@@ -788,6 +840,71 @@ export class Api<
         path: `/transactions/${id}/cancel`,
         method: "POST",
         secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  users = {
+    /**
+     * No description
+     *
+     * @tags users
+     * @name UsersControllerGetProfile
+     * @summary Get current user profile
+     * @request GET:/users/profile
+     * @secure
+     */
+    usersControllerGetProfile: (params: RequestParams = {}) =>
+      this.request<ProfileDto, void>({
+        path: `/users/profile`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags users
+     * @name UsersControllerUpdateProfile
+     * @summary Update current user profile
+     * @request PUT:/users/profile
+     * @secure
+     */
+    usersControllerUpdateProfile: (
+      data: UpdateProfileDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<ProfileDto, void>({
+        path: `/users/profile`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags users
+     * @name UsersControllerUpdatePassword
+     * @summary Update current user password
+     * @request PUT:/users/password
+     * @secure
+     */
+    usersControllerUpdatePassword: (
+      data: UpdatePasswordDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<ProfileDto, void>({
+        path: `/users/password`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   NotFoundException,
@@ -44,6 +45,10 @@ export class TransactionsController {
     @Request() req: RequestWithUser,
     @Body() dto: CreateTransactionDto,
   ) {
+    if (!dto.contact_id) {
+      throw new BadRequestException();
+    }
+
     // Verify that contact belongs to user
     const contact = await this.prisma.contact.findFirst({
       where: {
@@ -79,6 +84,9 @@ export class TransactionsController {
     @Request() req: RequestWithUser,
     @Body() dto: CreateTransactionDto,
   ) {
+    if (!dto.contact_id) {
+      throw new BadRequestException();
+    }
     // Verify that contact belongs to user
     const contact = await this.prisma.contact.findFirst({
       where: {

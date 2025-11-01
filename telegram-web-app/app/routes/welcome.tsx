@@ -1,48 +1,100 @@
-import { useRawInitData } from '@tma.js/sdk-react';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { useMutation } from '@tanstack/react-query';
 import TelegramLoginButton from "~/components/telegram-login-button";
-import { authenticateWithTelegram, isAuthenticated } from "~/lib/telegram-auth";
+import { authenticateWithTelegram, isAuthenticated, TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
+import { ApiClient } from '~/lib/api-client';
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
+import { Label } from "~/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { useTelegramData } from "~/lib/useTelegramData";
 
 export default function WelcomePage() {
   const navigate = useNavigate();
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const initDataRaw = useRawInitData();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { initDataRaw } = useTelegramData();
 
+  const telegramSignInMutation = useMutation({
+    mutationFn: async (initData: string) => {
+      const response = await ApiClient.getOpenAPIClient().auth.authControllerTelegramSignUp({
+        initData,
+      });
+
+      if (response.status >= 400) {
+        throw new Error(`Telegram auth failed: ${response.statusText}`);
+      }
+
+      return response.data;
+    },
+    onSuccess: (response) => {
+      handleAuthSuccess(response.token);
+    },
+    onError: (error) => {
+      console.error('Sign in failed:', error);
+      setAuthError(error.message || 'Sign in failed');
+    },
+  });
+
+  // Check if user is already authenticated
   useEffect(() => {
-    // If user is already authenticated, redirect to home
     if (isAuthenticated()) {
       navigate("/home");
+    }
+  }, [navigate]);
+
+  // Auto-authenticate if in Telegram Web App
+  useEffect(() => {
+    if (isAuthenticated()) {
       return;
     }
+    
+    if (!initDataRaw) {
+      return;
+    }
+    setAuthenticating(true);
+    setAuthError(null);
+    
+    telegramSignInMutation.mutate(initDataRaw);
+  }, [telegramSignInMutation, initDataRaw]);
 
-    // Auto-authenticate if in Telegram Web App
-    const autoAuthenticate = async () => {
-      if (initDataRaw) {
-        setAuthenticating(true);
-        setAuthError(null);
-        
-        try {
-          // Authenticate with our backend
-          await authenticateWithTelegram(initDataRaw);
-          
-          // Redirect to home after successful authentication
-          navigate("/home");
-        } catch (error: any) {
-          console.error('Auto-authentication failed:', error);
-          setAuthError(error.message || 'Authentication failed');
-          setAuthenticating(false);
-        }
-      }
-    };
+  // Sign in mutation
+  const signInMutation = useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const api = ApiClient.getOpenAPIClient();
+      const response = await api.auth.authControllerSignIn({
+        email,
+        password,
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Store the token in localStorage
+      
+      handleAuthSuccess(data.token);
+    },
+    onError: (error: any) => {
+      console.error('Sign in failed:', error);
+      setAuthError(error.message || 'Sign in failed');
+    }
+  });
 
-    autoAuthenticate();
-  }, [navigate, initDataRaw]);
+  const handleAuthSuccess = (token: string) => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
 
-  const handleAuthSuccess = () => {
+    // Set the token for future API requests
+    ApiClient.getOpenAPIClient().setSecurityData(`Bearer ${token}`);
+    
     // Redirect to home after successful authentication
     navigate("/home");
+  };
+
+  const handleSignIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    signInMutation.mutate({ email, password });
   };
 
   // If authenticated, don't show the welcome page
@@ -71,19 +123,71 @@ export default function WelcomePage() {
             ) : authError ? (
               <div className="mb-6 p-4 bg-red-50 rounded-lg">
                 <p className="text-red-600 text-sm">{authError}</p>
-                <p className="text-gray-600 text-sm mt-2">
-                  Please make sure you're opening this in the Telegram app.
-                </p>
               </div>
             ) : (
-              <div className="mt-6">
-                <TelegramLoginButton 
-                  onAuthSuccess={handleAuthSuccess}
-                  onAuthError={(error) => {
-                    console.error("Authentication error:", error);
-                    setAuthError(error.message || 'Authentication failed');
-                  }}
-                />
+              <div className="space-y-6">
+                {/* Telegram Login Section */}
+                <div>
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
+                  
+                  <TelegramLoginButton 
+                    handleAuthClick={() => telegramSignInMutation.mutate(initDataRaw!)}
+                    isLoading={telegramSignInMutation.isPending}
+                  />
+                </div>
+                
+                {/* Email/Password Login Section */}
+                <div>
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or use email</span>
+                    </div>
+                  </div>
+                  
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="your.email@example.com"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={signInMutation.isPending}
+                    >
+                      {signInMutation.isPending ? 'Signing in...' : 'Sign In'}
+                    </Button>
+                  </form>
+                </div>
               </div>
             )}
           </div>
@@ -91,7 +195,7 @@ export default function WelcomePage() {
         
         <div className="bg-gray-50 px-8 py-6 text-center">
           <p className="text-gray-600 text-sm">
-            This app works inside Telegram. Open this link in the Telegram app to get started.
+            Track your debts and loans with friends and contacts
           </p>
         </div>
       </div>
