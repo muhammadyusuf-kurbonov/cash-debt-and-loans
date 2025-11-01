@@ -123,6 +123,7 @@ export default function Home() {
           contact_id: activeContact,
           currency_id: newData.currencyId,
           amount: newData.amount,
+          note: newData.description,
         });
       } else {
         // This is a withdrawal (given money)
@@ -130,6 +131,7 @@ export default function Home() {
           contact_id: activeContact,
           currency_id: newData.currencyId,
           amount: Math.abs(newData.amount),
+          note: newData.description,
         });
       }
 
