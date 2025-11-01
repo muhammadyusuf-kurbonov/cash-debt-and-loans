@@ -33,7 +33,7 @@ export class ContactsAttachService {
 
     const { TelegrafModule } = await import('nestjs-telegraf');
     const moduleRef = await this.lazyModuleLoader.load(() => TelegrafModule);
-    
+
     const bot: Telegraf = moduleRef.get(DEFAULT_BOT_NAME);
 
     // @ts-expect-error undeclared method call
