@@ -168,10 +168,7 @@ export interface UpdateProfileDto {
 }
 
 export interface UpdatePasswordDto {
-  /**
-   * Current password
-   * @minLength 6
-   */
+  /** Current password */
   currentPassword: string;
   /**
    * New password

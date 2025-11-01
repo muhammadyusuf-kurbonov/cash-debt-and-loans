@@ -19,7 +19,7 @@ export class UpdateProfileDto {
 export class UpdatePasswordDto {
   @ApiProperty({ description: 'Current password' })
   @IsString()
-  @MinLength(6)
+  @IsOptional()
   currentPassword: string;
 
   @ApiProperty({ description: 'New password', example: 'newpassword123' })

@@ -136,15 +136,14 @@ export class UsersService {
       where: { id: userId },
     });
 
-    if (!user || !user.password) {
+    if (!user) {
       throw new UnauthorizedException('User does not have a password set');
     }
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password,
-    );
+    const isPasswordValid = user.password
+      ? await bcrypt.compare(currentPassword, user.password)
+      : true;
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
