@@ -7,6 +7,7 @@ import {
 import { Button } from './ui/button'
 import { MoreVertical, User, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router';
+import { TOKEN_STORAGE_KEY } from '~/lib/telegram-auth';
 
 export function TopRightMenu({
   openCurrencyList,
@@ -25,10 +26,10 @@ export function TopRightMenu({
 
   const handleLogout = () => {
     // Clear authentication token
-    localStorage.removeItem('token');
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
     
     // Redirect to welcome page
-    window.location.href = '/';
+    navigate('/');
   };
 
   return (
