@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { LazyModuleLoader, ModuleRef } from '@nestjs/core';
+import { ModuleRef } from '@nestjs/core';
 import { DEFAULT_BOT_NAME } from 'nestjs-telegraf';
 import { I18nService } from 'src/i18n/i18n.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,7 +11,6 @@ import { InlineQueryResultArticle } from 'telegraf/types';
 export class ContactsAttachService {
   constructor(
     private prisma: PrismaService,
-    private lazyModuleLoader: LazyModuleLoader,
     private moduleRef: ModuleRef,
     private i18nService: I18nService,
     private usersService: UsersService,

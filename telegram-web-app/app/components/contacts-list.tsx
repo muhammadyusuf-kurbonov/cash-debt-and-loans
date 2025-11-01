@@ -11,6 +11,7 @@ import { TelegramLinkButton } from './telegram-link-button';
 import { TopRightMenu } from './top-right-menu';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
+import { useTelegramData } from '~/lib/useTelegramData';
 
 type Props = {
   contacts: Array<ContactResponseDto>;
@@ -20,6 +21,7 @@ type Props = {
 }
 
 export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactEdit }: Props) {
+  const { isTelegram } = useTelegramData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -95,7 +97,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
                 ))}
               </CardContent>
               <div className="flex space-x-2">
-                {!contact.ref_user_id && (
+                {!contact.ref_user_id && isTelegram && (
                   <TelegramLinkButton
                     contactId={contact.id}
                     contactName={contact.name || 'Unnamed Contact'}
