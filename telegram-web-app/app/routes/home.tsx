@@ -48,6 +48,10 @@ export default function Home() {
       return;
     }
 
+    if (!viewport.requestFullscreen.isAvailable()) {
+      return;
+    }
+
     viewport.requestFullscreen().then(() => viewport.expand());
   }, []);
 

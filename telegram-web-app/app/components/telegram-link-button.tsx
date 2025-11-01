@@ -26,13 +26,11 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
 
       const response = await api.contacts.contactsControllerPrepareInvite(contactId.toString());
 
-
       if (response.status === 200) {
         shareMessage(response.data);
       } else {
         toast('Can\'t get link to invite');
       }
-
     } catch (error) {
       toast(`Error initializing Telegram linking: ${error}`);
     }
