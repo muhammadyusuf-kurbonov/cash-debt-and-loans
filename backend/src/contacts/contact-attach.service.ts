@@ -29,10 +29,8 @@ export class ContactsAttachService {
       },
     });
 
-    const { TelegramBotModule } = await import(
-      '../telegram-bot/telegram-bot.module'
-    );
-    const moduleRef = await this.lazyModuleLoader.load(() => TelegramBotModule);
+    const { TelegrafModule } = await import('nestjs-telegraf');
+    const moduleRef = await this.lazyModuleLoader.load(() => TelegrafModule);
 
     const { Telegraf } = await import('telegraf');
     const bot = moduleRef.get(Telegraf);
