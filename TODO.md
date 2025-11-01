@@ -40,6 +40,12 @@ This roadmap outlines the planned features and improvements for the cash, debt a
 - [ ] Add filtering options for contact list
 - [ ] Create advanced contact management tools
 
+### 1.7 Share Contact Summary as Image
+- [ ] Generate summary image on backend with contact name, current date, and balances per currency
+- [ ] Add canvas or image manipulation library to backend
+- [ ] Create API endpoint that returns generated image directly
+- [ ] Implement image sharing functionality via existing share APIs
+
 ## Phase 2: User Experience Improvements
 
 ### 2.1 Enhanced Dashboard
