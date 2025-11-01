@@ -1,6 +1,6 @@
 import { shareMessage } from '@tma.js/sdk-react';
 import { Link } from 'lucide-react';
-import React from 'react';
+import React, { type MouseEventHandler } from 'react';
 import { toast } from "sonner";
 import { useAPI } from '~/api/use-api';
 import { Button } from './ui/button';
@@ -16,7 +16,8 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
 }) => {
   const { api } = useAPI();
 
-  const handleLinkTelegramUser = async () => {
+  const handleLinkTelegramUser: MouseEventHandler = async (event) => {
+    event.stopPropagation();
     try {
       if (!shareMessage.isAvailable) {
         toast('Can\'t share link to activate');
