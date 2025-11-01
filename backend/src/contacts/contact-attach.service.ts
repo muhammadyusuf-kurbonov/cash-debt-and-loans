@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { DEFAULT_BOT_NAME } from 'nestjs-telegraf';
+import { TELEGRAF_BOT_NAME } from 'nestjs-telegraf';
 import { I18nService } from 'src/i18n/i18n.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
@@ -31,7 +31,9 @@ export class ContactsAttachService {
       },
     });
 
-    const bot: Telegraf = this.moduleRef.get(DEFAULT_BOT_NAME);
+    const bot: Telegraf = this.moduleRef.get(TELEGRAF_BOT_NAME, {
+      strict: false,
+    });
 
     // @ts-expect-error undeclared method call
     const preparedMsg: { id: string } = await bot.telegram.callApi(
