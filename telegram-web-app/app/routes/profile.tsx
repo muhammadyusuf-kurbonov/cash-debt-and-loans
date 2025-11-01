@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { ArrowLeft } from 'lucide-react';
 import { ApiClient } from '~/lib/api-client';
 import { type Route } from './+types/profile';
 import { Button } from '~/components/ui/button';
@@ -63,7 +65,7 @@ export default function Profile() {
     },
     onError: (error) => {
       console.error('Error updating password:', error);
-      toast.error('Failed to update password');
+      toast.error(`Failed to update password ${error}`);
     }
   });
 
@@ -86,6 +88,8 @@ export default function Profile() {
     e.preventDefault();
     updateProfileMutation.mutate({ name, email });
   }, [name, email, updateProfileMutation]);
+
+  const navigate = useNavigate();
 
   const handlePasswordSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +141,17 @@ export default function Profile() {
 
   return (
     <div className="p-4 max-w-md mx-auto space-y-6">
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          onClick={() => navigate(-1)}
+          className="flex items-center"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
