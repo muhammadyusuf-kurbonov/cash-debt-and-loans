@@ -60,9 +60,9 @@ export default function TransactionsPage() {
   })
 
   const totalBalances = useMemo(() => {
-    const balances: Record<Currency['id'], number> = {};
+    const balances: Record<Currency['symbol'], number> = {};
     transactions?.forEach(transaction => {
-      balances[transaction.currency_id] = (balances[transaction.currency_id] || 0) + transaction.amount;
+      balances[transaction.currency.symbol] = (balances[transaction.currency_id] || 0) + transaction.amount;
     });
     return balances;
   }, [transactions]);

@@ -71,7 +71,7 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEditNote(transaction.id, transaction.note)}
+                          onClick={() => handleEditNote(transaction.id, transaction.note ?? null)}
                           className="h-auto p-1 text-xs"
                         >
                           <Edit3 size={14} />
