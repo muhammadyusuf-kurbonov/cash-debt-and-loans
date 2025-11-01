@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { ApiClient } from '~/lib/api-client';
@@ -77,12 +77,12 @@ export default function Profile() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   // Update form state when profile data loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setName(profile.name || '');
       setEmail(profile.email || '');
     }
-  });
+  }, [profile]);
 
   const handleProfileSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -204,14 +204,9 @@ export default function Profile() {
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder={profile.password ? "Current password" : "Leave blank if not set"}
-                disabled={!profile.password} // Disable if user doesn't have a password set yet
+                placeholder="Leave blank if not set"
+                // Disable if user doesn't have a password set yet
               />
-              {!profile.password && (
-                <p className="text-sm text-muted-foreground">
-                  You don't have a password set yet. You can set one below.
-                </p>
-              )}
             </div>
             
             <div className="space-y-2">
