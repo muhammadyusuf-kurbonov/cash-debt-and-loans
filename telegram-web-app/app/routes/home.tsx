@@ -167,6 +167,7 @@ export default function Home() {
     <>
       <ContactList
         contacts={contacts}
+        loading={loading}
         onNewContactCreate={saveNewContact.mutate}
         onContactClick={(contact) => setActiveContact(contact.id)}
         onContactEdit={handleEditContact}

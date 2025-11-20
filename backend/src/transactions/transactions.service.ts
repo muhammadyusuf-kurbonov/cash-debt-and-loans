@@ -183,37 +183,22 @@ export class TransactionsService {
         });
 
         // Get or create balance for the main contact
-        let balance = await prisma.balance.findUnique({
+        await prisma.balance.upsert({
           where: {
             currency_id_contact_id: {
               currency_id: draftTransaction.currency_id,
               contact_id: contactId,
             },
           },
-        });
-
-        if (!balance) {
-          balance = await prisma.balance.create({
-            data: {
-              currency_id: draftTransaction.currency_id,
-              contact_id: contactId,
-              amount: 0,
-            },
-          });
-        }
-
-        // Update balance for the main contact
-        await prisma.balance.update({
-          where: {
-            currency_id_contact_id: {
-              currency_id: draftTransaction.currency_id,
-              contact_id: contactId,
-            },
-          },
-          data: {
+          update: {
             amount: {
               increment: draftTransaction.amount,
             },
+          },
+          create: {
+            currency_id: draftTransaction.currency_id,
+            contact_id: contactId,
+            amount: draftTransaction.amount,
           },
         });
 

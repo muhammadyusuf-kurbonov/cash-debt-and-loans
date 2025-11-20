@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, NotebookText } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { Currency, Transaction } from "~/api/api-client";
 import { Money } from "~/components/money";
@@ -9,6 +9,7 @@ import { TransactionsList } from "~/components/transaction-list";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { ApiClient } from "~/lib/api-client";
+import { TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
 
 export default function TransactionsPage() {
   const [searchParams] = useSearchParams();
@@ -62,10 +63,24 @@ export default function TransactionsPage() {
   const totalBalances = useMemo(() => {
     const balances: Record<Currency['symbol'], number> = {};
     transactions?.forEach(transaction => {
-      balances[transaction.currency.symbol] = (balances[transaction.currency_id] || 0) + transaction.amount;
+      balances[transaction.currency.symbol] = (balances[transaction.currency.symbol] || 0) + transaction.amount;
     });
     return balances;
   }, [transactions]);
+
+  const handleRecalculate = useCallback(async () => {
+    if (!contactId) return;
+
+    try {
+      await api.contacts.contactsControllerRecalculateBalance(contactId);
+
+      // Refresh transactions and contacts list
+      queryClient.invalidateQueries({ queryKey: ['contact-transactions', contactId] });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    } catch (err) {
+      console.error('Error recalculating balances', err);
+    }
+  }, [contactId, queryClient]);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -107,9 +122,14 @@ export default function TransactionsPage() {
           </ScrollArea>
           <StickyFooter>
             <div className='w-full flex flex-row justify-between items-center gap-2'>
-              <span className="text-gray-600 font-semibold">Total Balance:</span>
-              <div className="text-right">
-                {Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />))}
+              <div className="flex items-center gap-4">
+                <span className="text-gray-600 font-semibold">Total Balance:</span>
+                <div className="text-right">
+                  {Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleRecalculate}>Recalculate balance</Button>
               </div>
             </div>
           </StickyFooter>

@@ -1,1 +1,0 @@
-ALTER TABLE `contact` ADD `balance` integer DEFAULT 0 NOT NULL;

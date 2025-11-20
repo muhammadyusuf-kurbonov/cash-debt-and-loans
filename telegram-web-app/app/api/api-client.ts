@@ -779,6 +779,26 @@ export class Api<
         format: "json",
         ...params,
       }),
+
+    /**
+     * No description
+     *
+     * @tags contacts
+     * @name ContactsControllerRecalculateBalance
+     * @summary Recalculate balances for a contact
+     * @request POST:/contacts/{id}/recalculate-balance
+     * @secure
+     */
+    contactsControllerRecalculateBalance: (
+      id: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<void, void>({
+        path: `/contacts/${id}/recalculate-balance`,
+        method: "POST",
+        secure: true,
+        ...params,
+      }),
   };
   transactions = {
     /**

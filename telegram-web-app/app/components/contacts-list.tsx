@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { NotebookText, PlusCircle, SquarePen } from 'lucide-react';
+import { NotebookText, PlusCircle, SquarePen, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { Contact, ContactResponseDto, CreateContactDto, UpdateContactDto } from '~/api/api-client';
@@ -18,9 +18,10 @@ type Props = {
   onNewContactCreate: (newContact: CreateContactDto) => void;
   onContactClick: (contact: Contact) => void;
   onContactEdit: (id: number, updatedContact: UpdateContactDto) => void;
+  loading?: boolean;
 }
 
-export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactEdit }: Props) {
+export function ContactList({ contacts, onNewContactCreate, onContactClick, onContactEdit, loading }: Props) {
   const { isTelegram } = useTelegramData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
@@ -66,7 +67,14 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
         {!contacts.length && (
           <div>
             <div className="w-full h-[300px] flex items-center justify-center">
-              <div>No contacts found. Add a new one!</div>
+              {loading ? (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                  <div>Loading contacts...</div>
+                </div>
+              ) : (
+                <div>No contacts found. Add a new one!</div>
+              )}
             </div>
           </div>
         )}

@@ -1,1 +1,0 @@
-ALTER TABLE `currency` ADD `enabled` integer DEFAULT true NOT NULL;
