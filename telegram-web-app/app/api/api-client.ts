@@ -768,6 +768,8 @@ export class Api<
       query?: {
         /** Optional currency ID to filter balances */
         currencyId?: string;
+        /** Set to true to include cancelled (soft-deleted) transactions */
+        includeDeleted?: string;
       },
       params: RequestParams = {},
     ) =>
