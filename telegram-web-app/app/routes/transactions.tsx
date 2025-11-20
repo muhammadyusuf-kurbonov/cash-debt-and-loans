@@ -28,7 +28,7 @@ export default function TransactionsPage() {
     queryKey: ['contact-transactions', contactId],
     queryFn: async () => {
       if (!contactId) return [];
-      const response = await api.contacts.contactsControllerGetTransactions(contactId);
+      const response = await api.contacts.contactsControllerGetTransactions(contactId, ({ includeDeleted: 'true' } as any));
       return response.data;
     },
     enabled: !!contactId,

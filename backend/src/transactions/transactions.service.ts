@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ContactsService } from 'src/contacts/contacts.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { Contact } from 'generated/prisma';
+import { Contact, Prisma, Transaction } from 'generated/prisma';
 
 @Injectable()
 export class TransactionsService {
@@ -388,13 +388,22 @@ export class TransactionsService {
     });
   }
 
-  async getAllTransactionsOfContact(contact_id: number, currency_id?: number) {
+  async getAllTransactionsOfContact(
+    contact_id: number,
+    currency_id?: number,
+    includeDeleted = false,
+  ) {
+    const whereClause: Prisma.TransactionFindManyArgs['where'] = {
+      contact_id,
+      ...(currency_id ? { currency_id } : {}),
+    };
+
+    if (!includeDeleted) {
+      whereClause.deletedAt = null;
+    }
+
     return await this.prisma.transaction.findMany({
-      where: {
-        contact_id,
-        currency_id,
-        deletedAt: null,
-      },
+      where: whereClause,
       include: {
         currency: true,
       },

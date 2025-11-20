@@ -194,15 +194,22 @@ export class ContactsController {
     required: false,
     description: 'Optional currency ID to filter balances',
   })
+  @ApiQuery({
+    name: 'includeDeleted',
+    required: false,
+    description: 'Set to true to include cancelled (soft-deleted) transactions',
+  })
   async getTransactions(
     @Request() req: RequestWithUser,
     @Param('id') contactId: string,
     @Query('currencyId') currencyId?: string,
+    @Query('includeDeleted') includeDeleted?: string,
   ): Promise<Array<Transaction & Pick<TransactionRelations, 'currency'>>> {
     const transactions =
       await this.transactionsService.getAllTransactionsOfContact(
         +contactId,
         currencyId ? +currencyId : undefined,
+        includeDeleted === 'true',
       );
     return transactions.map((transaction) => ({
       ...transaction,
