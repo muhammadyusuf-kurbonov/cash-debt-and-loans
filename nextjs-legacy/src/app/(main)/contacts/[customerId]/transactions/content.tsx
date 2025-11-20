@@ -39,7 +39,7 @@ export function TransactionsPageContent({
   }, []);
 
   const totalBalances = useMemo<Record<string, number>>(() => {
-    return transactions.filter(transaction => !transaction.cancelled).reduce((acc, transaction) => {
+    return transactions.filter(transaction => !transaction.deletedAt).reduce((acc, transaction) => {
       if (!acc[transaction.currency.symbol]) {
         acc[transaction.currency.symbol] = 0
       }

@@ -408,6 +408,7 @@ export class TransactionsService {
       where: {
         contact_id,
         currency_id,
+        deletedAt: null,
       },
       include: {
         currency: true,
