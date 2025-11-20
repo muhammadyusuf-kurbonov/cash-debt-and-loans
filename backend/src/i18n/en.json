@@ -3,6 +3,7 @@
     "contact_format": "📝 Please provide a contact name. Use format: `/contact [contact_name]`",
     "balance_title": "Net Balance",
     "recent_contacts_title": "Recent contacts:",
+    "view_balance": "Show balance",
     "balance": "Balance",
     "recent_operations_title": "Recent operations:"
   },

@@ -66,6 +66,39 @@ export class TelegramBotService {
     );
 
     const result: InlineQueryResultArticle[] = [];
+    // If amount is 0, treat it as a balance display request — don't create drafts.
+    if (amount === 0) {
+      for (const currency of currencies) {
+        const title = `${this.i18nService.getTranslation('commands.balance', lang)} ${currency.symbol}`;
+        const messageText = `${this.i18nService.getTranslation('commands.balance_title', lang)}: ${currency.symbol}`;
+
+        // Include an inline button that encodes currency id and the owner's TG id
+        // Format: balance_<currencyId>_<ownerTgId>
+        result.push({
+          id: `balance_${currency.id}`,
+          type: 'article',
+          title,
+          input_message_content: {
+            message_text: messageText,
+          },
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: this.i18nService.getTranslation(
+                    'commands.view_balance',
+                    lang,
+                  ),
+                  callback_data: `balance_${currency.id}_${author.id}`,
+                },
+              ],
+            ],
+          },
+        } satisfies InlineQueryResultArticle);
+      }
+      return result;
+    }
+
     // Create draft transactions for each currency
     for (const currency of currencies) {
       // Format the display message with the comment

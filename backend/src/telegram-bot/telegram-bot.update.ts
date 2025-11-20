@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Action, Command, Ctx, InlineQuery, On, Update } from 'nestjs-telegraf';
 import { ContactsService } from 'src/contacts/contacts.service';
+import { UsersService } from 'src/users/users.service';
 import { Context, Scenes } from 'telegraf';
 import {
   CallbackQuery,
@@ -22,6 +23,7 @@ export class TelegramBotUpdate {
     @Inject() private contactsService: ContactsService,
     @Inject() private telegramBotService: TelegramBotService,
     @Inject() private i18nService: I18nService,
+    @Inject() private usersService: UsersService,
   ) {}
 
   @Command('balance')
@@ -68,6 +70,13 @@ export class TelegramBotUpdate {
     }
 
     if (chosenInlineResult.result_id.startsWith('error')) {
+      return;
+    }
+
+    // If this is a balance display result, ignore the chosen_inline_result event.
+    // Balances will be shown via explicit callback queries (buttons) that include
+    // the target user's Telegram id. This avoids creating draft transactions.
+    if (chosenInlineResult.result_id.startsWith('balance_')) {
       return;
     }
 
@@ -212,6 +221,75 @@ export class TelegramBotUpdate {
       await context.answerCbQuery(
         'There was an error processing the request. Please try again.',
       );
+    }
+  }
+
+  @Action(/^balance_.*/)
+  async onBalanceRequest(
+    @Ctx()
+    context: Context<
+      TelegramUpdate.CallbackQueryUpdate<CallbackQuery.DataQuery>
+    >,
+  ) {
+    try {
+      const callbackData = context.update.callback_query.data;
+      if (!callbackData) {
+        await context.answerCbQuery('Invalid request');
+        return;
+      }
+
+      // Expected format: balance_<currencyId>_<ownerTgId>
+      const payload = callbackData.replace('balance_', '');
+      const parts = payload.split('_');
+      const currencyId = parts[0] ? parseInt(parts[0], 10) : NaN;
+      const ownerTgId = parts[1] ? parseInt(parts[1], 10) : NaN;
+
+      if (Number.isNaN(currencyId) || Number.isNaN(ownerTgId)) {
+        await context.answerCbQuery('Invalid data');
+        return;
+      }
+
+      const requesterTgId = context.from.id;
+
+      // Forbid author clicking their own button
+      if (requesterTgId === ownerTgId) {
+        await context.answerCbQuery(
+          this.i18nService.getTranslation('errors.self_transaction'),
+        );
+        return;
+      }
+
+      // Map telegram ids to internal user ids
+      const ownerUser = await this.usersService.getUserByTGId(ownerTgId);
+      const contactUser = await this.usersService.getUserByTGId(requesterTgId);
+
+      // Ensure contact exists (creates if needed)
+      const contact = await this.contactsService.getContactForUserId(
+        contactUser.id,
+        ownerUser.id,
+      );
+
+      const balances = await this.contactsService.getBalance(
+        contact.id,
+        ownerUser.id,
+        currencyId,
+      );
+
+      const amount = balances && balances.length ? balances[0].amount : 0;
+      let symbol = '';
+      if (balances && balances.length) {
+        symbol = balances[0].currency.symbol;
+      }
+      const formatted = formatCurrency(amount);
+
+      await context.answerCbQuery();
+      await context.editMessageReplyMarkup({ inline_keyboard: [] });
+      await context.editMessageText(
+        `${this.i18nService.getTranslation('commands.balance_title', this.i18nService.getUserLanguage(ownerTgId))}: ${formatted} ${symbol}`,
+      );
+    } catch (error) {
+      console.error('Error handling balance callback:', error);
+      await context.answerCbQuery('Failed to fetch balance');
     }
   }
 }

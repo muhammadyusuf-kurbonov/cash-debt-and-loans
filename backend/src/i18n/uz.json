@@ -3,6 +3,7 @@
     "contact_format": "📝 Iltimos, kontakt nomini kiriting. Formatdan foydalaning: `/contact [kontakt_nomi]`",
     "balance_title": "Umumiy balans",
     "recent_contacts_title": "So'nggi kontaktlar:",
+    "view_balance": "Balansni ko'rsatish",
     "balance": "Balans",
     "recent_operations_title": "So'nggi operatsiyalar:"
   },
