@@ -48,6 +48,28 @@ export function TransactionsPageContent({
     }, {} as Record<string, number>);
   }, [transactions]);
 
+  const handleRecalculate = useCallback(async () => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+      const res = await fetch(`${apiUrl}/contacts/${contactId}/recalculate-balance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!res.ok) {
+        console.error('Failed to recalculate balances', res.statusText);
+      }
+
+      router.refresh();
+    } catch (err) {
+      console.error('Error recalculating balances', err);
+    }
+  }, [contactId, router]);
+
   return (
     <>
       { topBarButtonRef &&
@@ -63,9 +85,14 @@ export function TransactionsPageContent({
 
       <StickyFooter>
         <div className='w-full flex flex-row justify-between items-center gap-2'>
-          <span className="text-gray-600 font-semibold">Total Balance:</span>
-          <div className="text-right">
-            { Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />)) }
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600 font-semibold">Total Balance:</span>
+            <div className="text-right">
+              { Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />)) }
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleRecalculate}>Recalculate balance</Button>
           </div>
         </div>
       </StickyFooter>

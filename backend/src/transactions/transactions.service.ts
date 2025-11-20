@@ -419,6 +419,77 @@ export class TransactionsService {
     });
   }
 
+  /**
+   * Recalculate balances for a contact based on non-deleted transactions.
+   * This will set each `Balance.amount` to the sum of transactions for that currency
+   * and contact. Balances without transactions will be set to 0.
+   */
+  async recalculateBalancesForContact(contact_id: number) {
+    return this.prisma.$transaction(async (prisma) => {
+      // Sum transactions per currency for the contact
+      const sums = await prisma.transaction.groupBy({
+        by: ['currency_id'],
+        _sum: {
+          amount: true,
+        },
+        where: {
+          contact_id,
+          deletedAt: null,
+        },
+      });
+
+      // Build map of currency_id -> sum
+      const sumMap = new Map<number, number>();
+      for (const s of sums) {
+        sumMap.set(s.currency_id, s._sum.amount ?? 0);
+      }
+
+      // Fetch existing balances for contact
+      const existingBalances = await prisma.balance.findMany({
+        where: { contact_id },
+      });
+
+      // Update or create balances for currencies present in sums
+      for (const [currency_id, amount] of sumMap.entries()) {
+        await prisma.balance.upsert({
+          where: {
+            currency_id_contact_id: {
+              currency_id,
+              contact_id,
+            },
+          },
+          create: {
+            currency_id,
+            contact_id,
+            amount,
+          },
+          update: {
+            amount,
+          },
+        });
+      }
+
+      // For any existing balance without a corresponding transactions sum, set to 0
+      for (const b of existingBalances) {
+        if (!sumMap.has(b.currency_id)) {
+          await prisma.balance.update({
+            where: {
+              currency_id_contact_id: {
+                currency_id: b.currency_id,
+                contact_id,
+              },
+            },
+            data: {
+              amount: 0,
+            },
+          });
+        }
+      }
+
+      return true;
+    });
+  }
+
   async update(id: number, userId: number, data: { note?: string | null }) {
     // First verify that the transaction belongs to the user
     const transaction = await this.prisma.transaction.findFirst({
