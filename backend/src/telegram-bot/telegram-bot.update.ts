@@ -14,6 +14,7 @@ import {
 import { I18nService } from '../i18n/i18n.service';
 import { TelegramBotService } from './telegram-bot.service';
 import { parseQuery } from './utils';
+import { formatCurrency } from 'src/utils';
 
 @Update()
 export class TelegramBotUpdate {
@@ -150,11 +151,22 @@ export class TelegramBotUpdate {
         inline_keyboard: [],
       });
       const absAmount = Math.abs(transaction.amount || 0);
+      const formattedAmount = formatCurrency(absAmount);
+
+      const balances = await this.contactsService.getBalance(
+        transaction.contact_id ?? 0,
+        transaction.user_id,
+        transaction.currency_id,
+      );
+      const currentBalance =
+        balances && balances.length ? balances[0].amount : 0;
+      const formattedCurrentBalance = formatCurrency(currentBalance);
+
       await context.editMessageText(
         `
-  ✅ ${actionText}: ${absAmount} ${transaction.currency.symbol ?? 'currency'}${commentText}
+  ✅ ${actionText}: ${formattedAmount} ${transaction.currency.symbol ?? 'currency'}${commentText}
 
-  ${this.i18nService.getTranslation('balance_messages.current_balance')}: ${(await this.contactsService.getBalance(transaction.contact_id ?? 0, transaction.user_id, transaction.currency_id))[0].amount}
+  ${this.i18nService.getTranslation('balance_messages.current_balance')}: ${formattedCurrentBalance} ${transaction.currency.symbol ?? 'у.е.'}
 
   ${this.i18nService.getTranslation('success.confirmed')}`,
       );
