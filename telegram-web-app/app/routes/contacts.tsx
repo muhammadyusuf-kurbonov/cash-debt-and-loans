@@ -63,7 +63,7 @@ export default function Contacts() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       api.setSecurityData(`Bearer ${token}`);
     }

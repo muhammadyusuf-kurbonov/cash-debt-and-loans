@@ -72,7 +72,7 @@ export default function WelcomePage() {
       return response.data;
     },
     onSuccess: (data) => {
-      // Store the token in localStorage
+      // Store the token in sessionStorage
       
       handleAuthSuccess(data.token);
     },
@@ -83,7 +83,7 @@ export default function WelcomePage() {
   });
 
   const handleAuthSuccess = (token: string) => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
 
     // Set the token for future API requests
     ApiClient.getOpenAPIClient().setSecurityData(`Bearer ${token}`);

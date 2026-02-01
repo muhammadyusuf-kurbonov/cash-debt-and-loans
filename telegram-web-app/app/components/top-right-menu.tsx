@@ -26,7 +26,7 @@ export function TopRightMenu({
 
   const handleLogout = () => {
     // Clear authentication token
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     
     // Redirect to welcome page
     navigate('/');

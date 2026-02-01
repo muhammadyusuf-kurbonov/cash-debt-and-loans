@@ -1,7 +1,7 @@
 // api/client.ts
 
 import { Api } from "~/api/api-client";
-import { TOKEN_STORAGE_KEY } from "./telegram-auth";
+import {  } from "./telegram-auth";
 
 // Use a placeholder that will be replaced at runtime by the Docker container
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -18,7 +18,7 @@ export class ApiClient {
         securityWorker() {
           return {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem(TOKEN_STORAGE_KEY)}`,
+              'Authorization': `Bearer ${getUserToken()}`,
             }
           }
         },

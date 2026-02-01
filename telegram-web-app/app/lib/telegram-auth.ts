@@ -8,7 +8,7 @@ export const TOKEN_STORAGE_KEY = 'dl_auth_token';
  * Check if user is authenticated
  */
 export function isAuthenticated(): boolean {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
   if (!token) {
     return false;
   }

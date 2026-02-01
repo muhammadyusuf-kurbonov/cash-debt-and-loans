@@ -23,7 +23,7 @@ No test framework is configured.
 - **React 19 + React Router 7** (SPA mode, SSR disabled) with **Vite 7**
 - **TanStack React Query** for server state — query keys like `['contacts']`, `['contact-transactions', contactId]`; mutations invalidate related queries
 - **API client** auto-generated from Swagger spec (`app/api/api-client.ts`) using `swagger-typescript-api`. Access via `ApiClient.getOpenAPIClient()` singleton in `app/lib/api-client.ts`
-- **JWT auth** stored in `localStorage` key `dl_auth_token`. Telegram login via `@tma.js/sdk-react`. Auth check: `isAuthenticated()` in `app/lib/telegram-auth.ts`
+- **JWT auth** stored in `sessionStorage` key `dl_auth_token`. Telegram login via `@tma.js/sdk-react`. Auth check: `isAuthenticated()` in `app/lib/telegram-auth.ts`
 - **shadcn/ui** (new-york style) on Radix UI primitives in `app/components/ui/`
 - **Tailwind CSS 4** for styling; `cn()` utility in `app/lib/utils.ts`
 - **Primary color**: `#2481cc` (Telegram blue), backgrounds `#efeff4` light / `#1c1c1d` dark
