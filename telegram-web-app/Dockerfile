@@ -1,21 +1,20 @@
-# Use pnpm for package management instead of npm
-FROM node:20-alpine
-# Install pnpm globally
-RUN npm install -g pnpm serve
+# Stage 1: Build
+FROM node:20-alpine AS build
+RUN npm install -g pnpm
 WORKDIR /app
 
-# Copy dependency files
-COPY package.json pnpm-* ./
-
-# Install all dependencies (for build + runtime)
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-
-# Build the application
 RUN pnpm run build
 
-EXPOSE 3000
+# Stage 2: Serve
+FROM nginx:alpine
 
-# Start the application using serve
-CMD ["serve", "-s", "build/client", "-l", "3000"]
+COPY --from=build /app/build/client /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
