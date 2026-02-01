@@ -182,6 +182,33 @@ export interface UpdatePasswordDto {
   newPassword: string;
 }
 
+export interface SummaryDto {
+  owedToMe: number;
+  iOwe: number;
+  netBalance: number;
+}
+
+export interface TrendItemDto {
+  date: string;
+  receivables: number;
+  payables: number;
+}
+
+export interface DebtorCreditorDto {
+  contactId: number;
+  contactName: string;
+  amount: number;
+  currencySymbol: string;
+}
+
+export interface CurrencyBreakdownDto {
+  currencyId: number;
+  symbol: string;
+  owed: number;
+  iOwe: number;
+  net: number;
+}
+
 export interface Transaction {
   id: number;
   contact_id?: number;
@@ -952,6 +979,124 @@ export class Api<
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+  };
+  reports = {
+    /**
+     * No description
+     *
+     * @tags reports
+     * @name ReportsControllerGetSummary
+     * @summary Get financial summary
+     * @request GET:/reports/summary
+     * @secure
+     */
+    reportsControllerGetSummary: (
+      query?: {
+        from?: string;
+        to?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<SummaryDto, any>({
+        path: `/reports/summary`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags reports
+     * @name ReportsControllerGetTrends
+     * @summary Get transaction trends over time
+     * @request GET:/reports/trends
+     * @secure
+     */
+    reportsControllerGetTrends: (
+      query?: {
+        period?: "day" | "week" | "month" | "year";
+        from?: string;
+        to?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<TrendItemDto[], any>({
+        path: `/reports/trends`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags reports
+     * @name ReportsControllerGetTopDebtors
+     * @summary Get contacts who owe you the most
+     * @request GET:/reports/top-debtors
+     * @secure
+     */
+    reportsControllerGetTopDebtors: (
+      query?: {
+        limit?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<DebtorCreditorDto[], any>({
+        path: `/reports/top-debtors`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags reports
+     * @name ReportsControllerGetTopCreditors
+     * @summary Get contacts you owe the most
+     * @request GET:/reports/top-creditors
+     * @secure
+     */
+    reportsControllerGetTopCreditors: (
+      query?: {
+        limit?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<DebtorCreditorDto[], any>({
+        path: `/reports/top-creditors`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags reports
+     * @name ReportsControllerGetCurrencyBreakdown
+     * @summary Get balance breakdown by currency
+     * @request GET:/reports/currency-breakdown
+     * @secure
+     */
+    reportsControllerGetCurrencyBreakdown: (params: RequestParams = {}) =>
+      this.request<CurrencyBreakdownDto[], any>({
+        path: `/reports/currency-breakdown`,
+        method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { CurrencyResponseDto } from "~/api/api-client";
 import { useAPI } from "~/api/use-api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
@@ -9,8 +10,8 @@ type CurrencySelectProps = {
 
 export function CurrencySelect({ currency, onChange }: CurrencySelectProps) {
   const { api } = useAPI();
-  
-  const { data: currencies = [], isLoading, isError } = useQuery({
+
+  const { data: currencies = [], isLoading, isError } = useQuery<CurrencyResponseDto[]>({
     queryKey: ['currencies'],
     queryFn: async () => {
       if (!api) {
@@ -19,10 +20,10 @@ export function CurrencySelect({ currency, onChange }: CurrencySelectProps) {
       const response = await api.currencies.currencyControllerFindAll();
       return response?.data || [];
     },
-    retry: 1, // Retry once on failure
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Cache data for 10 minutes
-    enabled: !!api, // Only run query when api is available
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    enabled: !!api,
   });
 
   // If there was an error, show an error state

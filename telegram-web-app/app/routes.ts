@@ -13,5 +13,13 @@ export default [
   {
     path: "/profile",
     file: "./routes/profile.tsx",
-  }
+  },
+  {
+    path: "/contacts",
+    file: "./routes/contacts.tsx",
+  },
+  {
+    path: "/reports",
+    file: "./routes/reports.tsx",
+  },
 ] satisfies RouteConfig;

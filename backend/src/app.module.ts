@@ -7,6 +7,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { CurrencyModule } from './currency/currency.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
+import { ReportsModule } from './reports/reports.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 
@@ -19,6 +20,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     CurrencyModule,
     ContactsModule,
+    ReportsModule,
     TransactionsModule,
     UsersModule,
     TelegramBotModule.register(!process.env.TELEGRAM_DISABLED),

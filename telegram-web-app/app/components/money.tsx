@@ -7,9 +7,9 @@ export function Money({ value, symbol, label, className }: { value: number, symb
       className={cn(
         'text-sm',
         {
-          'text-green-600': value > 0,
-          'text-red-600': value < 0,
-          'text-gray-600': value === 0,
+          'text-emerald-600 dark:text-emerald-400': value > 0,
+          'text-rose-600 dark:text-rose-400': value < 0,
+          'text-gray-500': value === 0,
         },
         className,
       )}

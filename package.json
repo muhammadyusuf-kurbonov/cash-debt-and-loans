@@ -1,0 +1,7 @@
+{
+  "name": "cash-debt-and-loans",
+  "private": true,
+  "scripts": {
+    "update:swagger": "pnpm --filter backend generate:swagger && cp backend/swagger.json telegram-web-app/app/api/swagger.json && pnpm --filter telegram-web-app generate:api-client"
+  }
+}

@@ -14,6 +14,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Toaster } from "./components/ui/sonner";
+import { BottomNav } from "./components/bottom-nav";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -25,6 +26,10 @@ export const links: Route.LinksFunction = () => [
   {
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+  },
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
   },
 ];
 const queryClient = new QueryClient();
@@ -38,7 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="select-none overflow-x-hidden">
         <QueryClientProvider client={queryClient}>
           {children}
           <Toaster />
@@ -51,7 +56,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <><title>Qarz.uz</title><Outlet /></>;
+  return (
+    <>
+      <title>Qarz.uz</title>
+      <div className="flex flex-col min-h-screen pb-20 md:pb-0">
+        <Outlet />
+      </div>
+      <BottomNav />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
