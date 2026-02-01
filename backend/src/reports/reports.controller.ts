@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -45,7 +39,11 @@ export class ReportsController {
   @Get('trends')
   @ApiOperation({ summary: 'Get transaction trends over time' })
   @ApiResponse({ status: 200, type: [TrendItemDto] })
-  @ApiQuery({ name: 'period', required: false, enum: ['day', 'week', 'month', 'year'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['day', 'week', 'month', 'year'],
+  })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
   getTrends(

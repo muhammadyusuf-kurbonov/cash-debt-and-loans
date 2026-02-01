@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ApiClient } from '~/lib/api-client';
 import { isAuthenticated } from '~/lib/telegram-auth';
-import { max } from 'date-fns';
 
 export function meta() {
   return [
@@ -24,62 +23,87 @@ export default function Reports() {
 
   const api = ApiClient.getOpenAPIClient();
 
-  const { data: contacts } = useQuery({
-    queryKey: ['contacts'],
+  // Use real report endpoints
+  const { data: summary } = useQuery({
+    queryKey: ['reports', 'summary'],
     queryFn: async () => {
-      const response = await api.contacts.contactsControllerFindAll();
-      return response.data.sort((a, b) => {
-        let aTime = a.Balance.length ? max(a.Balance.map(bal => bal.updatedAt)).getTime() : a.id * 1000000000;
-        let bTime = b.Balance.length ? max(b.Balance.map(bal => bal.updatedAt)).getTime() : b.id * 1000000000;
-        return -aTime + bTime;
-      });
+      const response = await api.reports.reportsControllerGetSummary();
+      return response.data;
+    },
+    initialData: { owedToMe: 0, iOwe: 0, netBalance: 0 },
+  });
+
+  const { data: trends } = useQuery({
+    queryKey: ['reports', 'trends'],
+    queryFn: async () => {
+      const response = await api.reports.reportsControllerGetTrends();
+      return response.data;
     },
     initialData: [],
   });
 
-  // Derive reports from contacts data
-  const { owedToMe, iOwe, netBalance, topDebtors, topCreditors, currencyBreakdown } = useMemo(() => {
-    const byCurrency: Record<string, { owed: number; iOwe: number }> = {};
-    const debtors: Array<{ name: string; amount: number; symbol: string; maxAmount: number }> = [];
-    const creditors: Array<{ name: string; amount: number; symbol: string; maxAmount: number }> = [];
+  const { data: topDebtors } = useQuery({
+    queryKey: ['reports', 'top-debtors'],
+    queryFn: async () => {
+      const response = await api.reports.reportsControllerGetTopDebtors({ limit: '5' });
+      return response.data;
+    },
+    initialData: [],
+  });
 
-    for (const contact of contacts) {
-      for (const bal of contact.Balance) {
-        if (!byCurrency[bal.currency.symbol]) {
-          byCurrency[bal.currency.symbol] = { owed: 0, iOwe: 0 };
-        }
-        if (bal.amount > 0) {
-          byCurrency[bal.currency.symbol].owed += bal.amount;
-          debtors.push({ name: contact.name || 'Unnamed', amount: bal.amount, symbol: bal.currency.symbol, maxAmount: 0 });
-        } else if (bal.amount < 0) {
-          byCurrency[bal.currency.symbol].iOwe += Math.abs(bal.amount);
-          creditors.push({ name: contact.name || 'Unnamed', amount: Math.abs(bal.amount), symbol: bal.currency.symbol, maxAmount: 0 });
-        }
-      }
-    }
+  const { data: topCreditors } = useQuery({
+    queryKey: ['reports', 'top-creditors'],
+    queryFn: async () => {
+      const response = await api.reports.reportsControllerGetTopCreditors({ limit: '5' });
+      return response.data;
+    },
+    initialData: [],
+  });
 
-    const sortedDebtors = debtors.sort((a, b) => b.amount - a.amount).slice(0, 5);
-    const sortedCreditors = creditors.sort((a, b) => b.amount - a.amount).slice(0, 5);
-    const maxDebtor = sortedDebtors[0]?.amount || 1;
-    const maxCreditor = sortedCreditors[0]?.amount || 1;
+  const { data: currencyBreakdown } = useQuery({
+    queryKey: ['reports', 'currency-breakdown'],
+    queryFn: async () => {
+      const response = await api.reports.reportsControllerGetCurrencyBreakdown();
+      return response.data;
+    },
+    initialData: [],
+  });
 
-    let totalOwed = 0, totalIOwe = 0;
-    const breakdown: Array<{ symbol: string; net: number }> = [];
-    for (const [symbol, { owed, iOwe }] of Object.entries(byCurrency)) {
-      totalOwed += owed;
-      totalIOwe += iOwe;
-      breakdown.push({ symbol, net: owed - iOwe });
-    }
+  // Calculate max amounts for progress bars
+  const maxDebtor = useMemo(() => {
+    return topDebtors.length > 0 ? Math.max(...topDebtors.map(d => d.amount)) : 1;
+  }, [topDebtors]);
 
-    return {
-      owedToMe: totalOwed,
-      iOwe: totalIOwe,
-      netBalance: totalOwed - totalIOwe,
-      topDebtors: sortedDebtors.map(d => ({ ...d, maxAmount: maxDebtor })),
-      topCreditors: sortedCreditors.map(c => ({ ...c, maxAmount: maxCreditor })),
-      currencyBreakdown: breakdown,
-    };
-  }, [contacts]);
+  const maxCreditor = useMemo(() => {
+    return topCreditors.length > 0 ? Math.max(...topCreditors.map(c => c.amount)) : 1;
+  }, [topCreditors]);
+
+  // Transform data for UI
+  const { owedToMe, iOwe, netBalance } = summary;
+  const formattedTopDebtors = useMemo(() => {
+    return topDebtors.map(d => ({
+      name: d.contactName,
+      amount: d.amount,
+      symbol: d.currencySymbol,
+      maxAmount: maxDebtor,
+    }));
+  }, [topDebtors, maxDebtor]);
+
+  const formattedTopCreditors = useMemo(() => {
+    return topCreditors.map(c => ({
+      name: c.contactName,
+      amount: c.amount,
+      symbol: c.currencySymbol,
+      maxAmount: maxCreditor,
+    }));
+  }, [topCreditors, maxCreditor]);
+
+  const formattedCurrencyBreakdown = useMemo(() => {
+    return currencyBreakdown.map(cb => ({
+      symbol: cb.symbol,
+      net: cb.net,
+    }));
+  }, [currencyBreakdown]);
 
   const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
 
@@ -185,22 +209,22 @@ export default function Reports() {
                 {topDebtors.length === 0 && (
                   <div className="p-4 text-center text-gray-400 text-sm">No debtors</div>
                 )}
-                {topDebtors.map((debtor, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3">
-                    <div className="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                      {getInitials(debtor.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{debtor.name}</p>
-                      <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-1">
-                        <div className="h-full bg-primary rounded-full" style={{ width: `${(debtor.amount / debtor.maxAmount) * 100}%` }} />
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">{debtor.amount.toLocaleString('ru', { maximumFractionDigits: 2 })} {debtor.symbol}</p>
-                    </div>
-                  </div>
-                ))}
+{formattedTopDebtors.map((debtor, i) => (
+                   <div key={i} className="flex items-center gap-3 p-3">
+                     <div className="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                       {getInitials(debtor.name)}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-semibold truncate">{debtor.name}</p>
+                       <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-1">
+                         <div className="h-full bg-primary rounded-full" style={{ width: `${(debtor.amount / debtor.maxAmount) * 100}%` }} />
+                       </div>
+                     </div>
+                     <div className="text-right">
+                       <p className="text-sm font-bold">{debtor.amount.toLocaleString('ru', { maximumFractionDigits: 2 })} {debtor.symbol}</p>
+                     </div>
+                   </div>
+                 ))}
               </div>
             </div>
           </section>
@@ -212,22 +236,22 @@ export default function Reports() {
                 {topCreditors.length === 0 && (
                   <div className="p-4 text-center text-gray-400 text-sm">No creditors</div>
                 )}
-                {topCreditors.map((creditor, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3">
-                    <div className="size-9 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center font-bold text-xs">
-                      {getInitials(creditor.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{creditor.name}</p>
-                      <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-1">
-                        <div className="h-full bg-rose-500 rounded-full" style={{ width: `${(creditor.amount / creditor.maxAmount) * 100}%` }} />
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">{creditor.amount.toLocaleString('ru', { maximumFractionDigits: 2 })} {creditor.symbol}</p>
-                    </div>
-                  </div>
-                ))}
+{formattedTopCreditors.map((creditor, i) => (
+                   <div key={i} className="flex items-center gap-3 p-3">
+                     <div className="size-9 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center font-bold text-xs">
+                       {getInitials(creditor.name)}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-semibold truncate">{creditor.name}</p>
+                       <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-1">
+                         <div className="h-full bg-rose-500 rounded-full" style={{ width: `${(creditor.amount / creditor.maxAmount) * 100}%` }} />
+                       </div>
+                     </div>
+                     <div className="text-right">
+                       <p className="text-sm font-bold">{creditor.amount.toLocaleString('ru', { maximumFractionDigits: 2 })} {creditor.symbol}</p>
+                     </div>
+                   </div>
+                 ))}
               </div>
             </div>
           </section>
@@ -240,12 +264,12 @@ export default function Reports() {
             {currencyBreakdown.length === 0 && (
               <div className="text-gray-400 text-sm">No data</div>
             )}
-            {currencyBreakdown.map(({ symbol, net }) => (
-              <div key={symbol} className="flex-shrink-0 min-w-[120px] bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
-                <p className="text-[10px] font-bold text-gray-500 mb-1">{symbol}</p>
-                <p className="text-lg font-extrabold">{net.toLocaleString('ru', { maximumFractionDigits: 2 })}</p>
-              </div>
-            ))}
+{formattedCurrencyBreakdown.map(({ symbol, net }) => (
+               <div key={symbol} className="flex-shrink-0 min-w-[120px] bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
+                 <p className="text-[10px] font-bold text-gray-500 mb-1">{symbol}</p>
+                 <p className="text-lg font-extrabold">{net.toLocaleString('ru', { maximumFractionDigits: 2 })}</p>
+               </div>
+             ))}
           </div>
         </section>
       </main>
