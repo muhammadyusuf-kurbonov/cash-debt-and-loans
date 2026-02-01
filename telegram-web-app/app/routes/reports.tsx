@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ApiClient } from '~/lib/api-client';
@@ -11,7 +12,7 @@ export function meta() {
   ];
 }
 
-type Period = 'today' | 'month' | 'range';
+type Period = 'today' | 'month';
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -27,7 +28,20 @@ export default function Reports() {
   const { data: summary } = useQuery({
     queryKey: ['reports', 'summary'],
     queryFn: async () => {
-      const response = await api.reports.reportsControllerGetSummary();
+      const query: Partial<{ from: string, to: string }> = {};
+
+      switch (period) {
+        case 'today':
+          query.from = startOfDay(new Date()).toISOString();
+          query.to = endOfDay(new Date()).toISOString();
+          break;
+        case 'month':
+          query.from = startOfMonth(new Date()).toISOString();
+          query.to = endOfMonth(new Date()).toISOString();
+          break;
+      }
+
+      const response = await api.reports.reportsControllerGetSummary(query);
       return response.data;
     },
     initialData: { owedToMe: 0, iOwe: 0, netBalance: 0 },
@@ -119,7 +133,7 @@ export default function Reports() {
         </div>
         {/* Period Tabs */}
         <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
-          {(['today', 'month', 'range'] as const).map((p) => (
+          {(['today', 'month'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -129,7 +143,7 @@ export default function Reports() {
                   : 'text-gray-500 dark:text-gray-400'
               }`}
             >
-              {p === 'today' ? 'Today' : p === 'month' ? 'Month' : 'Range'}
+              {p === 'today' ? 'Today' : 'Month'}
             </button>
           ))}
         </div>
