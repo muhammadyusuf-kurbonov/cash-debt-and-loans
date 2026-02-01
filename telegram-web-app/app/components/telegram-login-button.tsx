@@ -1,6 +1,7 @@
 import React from 'react';
 import { isAuthenticated } from '~/lib/telegram-auth';
 import { useTelegramData } from '~/lib/useTelegramData';
+import { Button } from '~/components/ui/button';
 
 interface TelegramLoginButtonProps {
   handleAuthClick?: () => void;
@@ -12,48 +13,63 @@ const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
   isLoading,
 }) => {
   const { initDataRaw, isTelegram } = useTelegramData();
-  // If already authenticated, we can return a different component or just null
+
   if (isAuthenticated()) {
     return null;
   }
 
-  // Show loading state while checking Telegram environment
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-4">
-        <p className="text-lg mb-4">Checking environment...</p>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col items-center justify-center">
+        <Button disabled className="w-full h-12 rounded-xl bg-[#2481cc] hover:bg-[#1a6db3] text-white">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          Connecting...
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
+    <div className="flex flex-col items-center justify-center">
       {isTelegram ? (
         <>
-          <p className="text-lg mb-4">Continue with Telegram</p>
           {initDataRaw ? (
-            <button 
+            <Button 
               onClick={handleAuthClick}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+              className="w-full h-12 rounded-xl bg-[#2481cc] hover:bg-[#1a6db3] text-white font-semibold"
             >
+              <span className="material-symbols-outlined mr-2">send</span>
               Continue in Telegram
-            </button>
+            </Button>
           ) : (
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-              <strong className="font-bold">Note: </strong>
-              <span className="block sm:inline">No authentication data received. Please restart the bot.</span>
+            <div className="w-full p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400">warning</span>
+                <span className="font-semibold text-amber-800 dark:text-amber-200">No Authentication Data</span>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-300">Please restart the bot in Telegram.</p>
             </div>
           )}
         </>
       ) : (
-        <>
-          <p className="text-lg mb-4">This app can work inside Telegram</p>
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-            <strong className="font-bold">Note: </strong>
-            <span className="block sm:inline">Open this link in the Telegram app and pass auth.</span>
+        <div className="w-full p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-[#2481cc]">smart_toy</span>
+            <span className="font-semibold text-blue-800 dark:text-blue-200">Open in Telegram</span>
           </div>
-        </>
+          <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+            For the best experience, open this app in Telegram
+          </p>
+          <a 
+            href="https://t.me/qarzuz_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2481cc] hover:bg-[#1a6db3] text-white rounded-lg font-medium transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">open_in_new</span>
+            Open @qarzuz_bot
+          </a>
+        </div>
       )}
     </div>
   );

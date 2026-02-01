@@ -4,6 +4,14 @@ import { jwtDecode } from 'jwt-decode';
 
 
 export const TOKEN_STORAGE_KEY = 'dl_auth_token';
+
+/**
+ * Get the current user's auth token from session storage
+ */
+export function getUserToken(): string | null {
+  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
 /**
  * Check if user is authenticated
  */

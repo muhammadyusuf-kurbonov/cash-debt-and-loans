@@ -1,7 +1,7 @@
 // api/client.ts
 
 import { Api } from "~/api/api-client";
-import {  } from "./telegram-auth";
+import { getUserToken } from "./telegram-auth";
 
 // Use a placeholder that will be replaced at runtime by the Docker container
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;

@@ -9,6 +9,13 @@ import { ApiClient } from '~/lib/api-client';
 import { isAuthenticated, TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
 import { useTelegramData } from "~/lib/useTelegramData";
 
+export function meta() {
+  return [
+    { title: "Welcome - Qarz.uz" },
+    { name: "description", content: "Track your debts and loans efficiently" },
+  ];
+}
+
 export default function WelcomePage() {
   const navigate = useNavigate();
   const [authenticating, setAuthenticating] = useState(false);
@@ -36,16 +43,17 @@ export default function WelcomePage() {
       console.error('Sign in failed:', error);
       setAuthError(error.message || 'Sign in failed');
     },
+    onSettled() {
+      setAuthenticating(false);
+    },
   });
 
-  // Check if user is already authenticated
   useEffect(() => {
     if (isAuthenticated()) {
       navigate("/home");
     }
   }, [navigate]);
 
-  // Auto-authenticate if in Telegram Web App
   useEffect(() => {
     if (isAuthenticated()) {
       return;
@@ -61,7 +69,6 @@ export default function WelcomePage() {
     telegramSignInMutation.mutate(initDataRaw);
   }, [telegramSignInMutation, initDataRaw]);
 
-  // Sign in mutation
   const signInMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const api = ApiClient.getOpenAPIClient();
@@ -72,133 +79,155 @@ export default function WelcomePage() {
       return response.data;
     },
     onSuccess: (data) => {
-      // Store the token in sessionStorage
-      
       handleAuthSuccess(data.token);
     },
     onError: (error: any) => {
       console.error('Sign in failed:', error);
       setAuthError(error.message || 'Sign in failed');
-    }
+    },
   });
 
   const handleAuthSuccess = (token: string) => {
     sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
-
-    // Set the token for future API requests
     ApiClient.getOpenAPIClient().setSecurityData(`Bearer ${token}`);
-    
-    // Redirect to home after successful authentication
     navigate("/home");
   };
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
     signInMutation.mutate({ email, password });
   };
 
-  // If authenticated, don't show the welcome page
   if (isAuthenticated()) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-8">
-          <div className="text-center">
-            <div className="mx-auto bg-blue-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
+    <div className="min-h-screen bg-[#efeff4] dark:bg-[#1c1c1d] flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-center px-4 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-primary text-2xl">account_balance_wallet</span>
+          <h1 className="text-[19px] font-bold tracking-tight">Qarz.uz</h1>
+        </div>
+      </header>
+
+      <main className="flex-1 flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full">
+        {/* Logo/Icon Section */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="size-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-5xl text-primary">account_balance_wallet</span>
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-center">
+            Track your debts and loans efficiently
+          </p>
+        </div>
+
+        {/* Error Display */}
+        {authError && (
+          <div className="w-full mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-600 dark:text-red-400">error</span>
+              <div>
+                <p className="text-sm font-semibold text-red-800 dark:text-red-200">Authentication Failed</p>
+                <p className="text-sm text-red-600 dark:text-red-300">{authError}</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Qarz.uz</h1>
-            <p className="text-gray-600 mb-8">Track your debts and loans efficiently</p>
-            
-            {authenticating ? (
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-4"></div>
-                <p className="text-gray-600">Authenticating with Telegram...</p>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {authenticating ? (
+          <div className="w-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-8">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Authenticating with Telegram...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full space-y-4">
+            {/* Telegram Login Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="size-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl text-[#2481cc]">send</span>
+                </div>
               </div>
-            ) : authError ? (
-              <div className="mb-6 p-4 bg-red-50 rounded-lg">
-                <p className="text-red-600 text-sm">{authError}</p>
+              <TelegramLoginButton 
+                handleAuthClick={() => telegramSignInMutation.mutate(initDataRaw!)}
+                isLoading={telegramSignInMutation.isPending}
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-gray-700" />
               </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Telegram Login Section */}
-                <div>
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                    </div>
-                  </div>
-                  
-                  <TelegramLoginButton 
-                    handleAuthClick={() => telegramSignInMutation.mutate(initDataRaw!)}
-                    isLoading={telegramSignInMutation.isPending}
+              <div className="relative flex justify-center text-sm">
+                <span className="px-3 bg-[#efeff4] dark:bg-[#1c1c1d] text-gray-500 dark:text-gray-400">or continue with email</span>
+              </div>
+            </div>
+
+            {/* Email/Password Login Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    required
+                    className="h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
                   />
                 </div>
                 
-                {/* Email/Password Login Section */}
-                <div>
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">Or use email</span>
-                    </div>
-                  </div>
-                  
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your.email@example.com"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                      />
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={signInMutation.isPending}
-                    >
-                      {signInMutation.isPending ? 'Signing in...' : 'Sign In'}
-                    </Button>
-                  </form>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                  />
                 </div>
-              </div>
-            )}
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold"
+                  disabled={signInMutation.isPending}
+                >
+                  {signInMutation.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Signing in...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined">login</span>
+                      Sign In
+                    </span>
+                  )}
+                </Button>
+              </form>
+            </div>
           </div>
-        </div>
-        
-        <div className="bg-gray-50 px-8 py-6 text-center">
-          <p className="text-gray-600 text-sm">
-            Track your debts and loans with friends and contacts
-          </p>
-        </div>
-      </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="py-4 text-center">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Track your debts and loans with friends and contacts
+        </p>
+      </footer>
     </div>
   );
 }
