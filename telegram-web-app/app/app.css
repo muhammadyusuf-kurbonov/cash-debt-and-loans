@@ -12,7 +12,6 @@ html,
 body {
   @apply bg-background text-foreground;
   overscroll-behavior: none;
-  overflow-x: hidden;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;

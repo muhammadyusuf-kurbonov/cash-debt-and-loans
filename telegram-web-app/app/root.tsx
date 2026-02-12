@@ -43,7 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="select-none overflow-x-hidden">
+      <body className="select-none overflow-x-clip">
         <QueryClientProvider client={queryClient}>
           {children}
           <Toaster />
