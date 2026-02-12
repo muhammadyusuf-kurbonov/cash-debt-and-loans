@@ -91,14 +91,14 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3">
           <span className="material-symbols-outlined text-primary text-2xl">account_balance_wallet</span>
           <h1 className="text-[17px] font-semibold tracking-tight">Qarz.uz</h1>
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-6 space-y-6 max-w-[960px] mx-auto w-full">
+      <main className="flex-1 px-4 py-6 space-y-6">
         {/* Total Net Debt Hero */}
         <div className="flex flex-col items-center text-center space-y-1">
           <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Общий баланс</p>

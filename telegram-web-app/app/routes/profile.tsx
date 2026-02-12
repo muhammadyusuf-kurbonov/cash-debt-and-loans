@@ -6,7 +6,6 @@ import { ApiClient } from '~/lib/api-client';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 import { toast } from 'sonner';
 
 export function meta() {
@@ -124,123 +123,123 @@ export default function Profile() {
 
   if (isError || !profile) {
     return (
-      <div className="p-4 max-w-md mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Ошибка</CardTitle>
-            <CardDescription>Не удалось загрузить профиль</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => refetch()}>Повторить</Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center h-screen px-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 text-center max-w-sm w-full">
+          <span className="material-symbols-outlined text-4xl text-rose-500 mb-2">error</span>
+          <h2 className="text-lg font-semibold mb-1">Ошибка</h2>
+          <p className="text-sm text-muted-foreground mb-4">Не удалось загрузить профиль</p>
+          <Button onClick={() => refetch()} className="w-full h-12 rounded-xl">Повторить</Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto space-y-6">
-      <div className="mb-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="flex items-center"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Назад
-        </Button>
-      </div>
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-[17px] font-semibold tracking-tight">Настройки</h1>
+      </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Профиль</CardTitle>
-          <CardDescription>Обновите имя и email</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Имя</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ваше имя"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              disabled={updateProfileMutation.isPending}
-            >
-              {updateProfileMutation.isPending ? 'Сохранение...' : 'Сохранить'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <main className="flex-1 px-4 py-6 space-y-6">
+        {/* Profile Section */}
+        <section>
+          <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-2 ml-1">Профиль</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <form onSubmit={handleProfileSubmit}>
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm text-muted-foreground">Имя</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ваше имя"
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm text-muted-foreground">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+              </div>
+              <div className="px-4 pb-4">
+                <Button
+                  type="submit"
+                  className="w-full h-12 rounded-xl"
+                  disabled={updateProfileMutation.isPending}
+                >
+                  {updateProfileMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Сменить пароль</CardTitle>
-          <CardDescription>Установите или обновите пароль</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Текущий пароль</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Оставьте пустым, если не задан"
-                // Disable if user doesn't have a password set yet
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Новый пароль</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Новый пароль"
-                minLength={6}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirmNewPassword">Подтвердите пароль</Label>
-              <Input
-                id="confirmNewPassword"
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                placeholder="Подтвердите новый пароль"
-                minLength={6}
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              disabled={updatePasswordMutation.isPending}
-            >
-              {updatePasswordMutation.isPending ? 'Сохранение...' : 'Сменить пароль'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Password Section */}
+        <section>
+          <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-2 ml-1">Безопасность</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword" className="text-sm text-muted-foreground">Текущий пароль</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Оставьте пустым, если не задан"
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-sm text-muted-foreground">Новый пароль</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Новый пароль"
+                    minLength={6}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword" className="text-sm text-muted-foreground">Подтвердите пароль</Label>
+                  <Input
+                    id="confirmNewPassword"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Подтвердите новый пароль"
+                    minLength={6}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+              </div>
+              <div className="px-4 pb-4">
+                <Button
+                  type="submit"
+                  className="w-full h-12 rounded-xl"
+                  disabled={updatePasswordMutation.isPending}
+                >
+                  {updatePasswordMutation.isPending ? 'Сохранение...' : 'Сменить пароль'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

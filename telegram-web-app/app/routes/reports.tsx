@@ -122,7 +122,7 @@ export default function Reports() {
   const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex flex-col w-full max-w-[960px] mx-auto min-h-screen">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between mb-4">
@@ -274,12 +274,12 @@ export default function Reports() {
         {/* Currency Breakdown */}
         <section className="space-y-3 pb-8">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">По валютам</h3>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+          <div className="grid grid-cols-2 gap-3">
             {currencyBreakdown.length === 0 && (
-              <div className="text-gray-400 text-sm">Нет данных</div>
+              <div className="text-gray-400 text-sm col-span-2">Нет данных</div>
             )}
 {formattedCurrencyBreakdown.map(({ symbol, net }) => (
-               <div key={symbol} className="flex-shrink-0 min-w-[120px] bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
+               <div key={symbol} className="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
                  <p className="text-[10px] font-bold text-gray-500 mb-1">{symbol}</p>
                  <p className="text-lg font-extrabold">{net.toLocaleString('ru', { maximumFractionDigits: 2 })}</p>
                </div>

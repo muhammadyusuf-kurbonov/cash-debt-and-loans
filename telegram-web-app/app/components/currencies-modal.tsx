@@ -129,8 +129,8 @@ export function CurrenciesModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Manage Currencies</DialogTitle>
-          <DialogDescription>View, add, edit, or delete currencies.</DialogDescription>
+          <DialogTitle>Управление валютами</DialogTitle>
+          <DialogDescription>Просмотр, добавление и редактирование валют.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -190,24 +190,24 @@ export function CurrenciesModal({
 
           <div className="flex gap-2 mt-3">
             <Input
-              placeholder="New currency"
+              placeholder="Новая валюта"
               value={newCurrencyName}
               onChange={(e) => setNewCurrencyName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addCurrency()}
             />
             <Input
-              placeholder="Symbol"
+              placeholder="Символ"
               value={newCurrencySymbol}
               onChange={(e) => setNewCurrencySymbol(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addCurrency()}
             />
-            <Button onClick={addCurrency}>Add</Button>
+            <Button onClick={addCurrency}>Добавить</Button>
           </div>
         </div>
 
         <DialogFooter className="mt-4">
           <DialogClose asChild>
-            <Button variant="secondary">Close</Button>
+            <Button variant="secondary">Закрыть</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

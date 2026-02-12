@@ -12,7 +12,7 @@ import { useTelegramData } from "~/lib/useTelegramData";
 export function meta() {
   return [
     { title: "Welcome - Qarz.uz" },
-    { name: "description", content: "Track your debts and loans efficiently" },
+    { name: "description", content: "Управление долгами и займами" },
   ];
 }
 
@@ -41,7 +41,7 @@ export default function WelcomePage() {
     },
     onError: (error) => {
       console.error('Sign in failed:', error);
-      setAuthError(error.message || 'Sign in failed');
+      setAuthError(error.message || 'Ошибка авторизации');
     },
     onSettled() {
       setAuthenticating(false);
@@ -83,7 +83,7 @@ export default function WelcomePage() {
     },
     onError: (error: any) => {
       console.error('Sign in failed:', error);
-      setAuthError(error.message || 'Sign in failed');
+      setAuthError(error.message || 'Ошибка авторизации');
     },
   });
 
@@ -106,7 +106,7 @@ export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-[#efeff4] dark:bg-[#1c1c1d] flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-center px-4 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+      <header className="sticky top-0 z-50 flex items-center justify-center px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3">
           <span className="material-symbols-outlined text-primary text-2xl">account_balance_wallet</span>
           <h1 className="text-[19px] font-bold tracking-tight">Qarz.uz</h1>
@@ -120,7 +120,7 @@ export default function WelcomePage() {
             <span className="material-symbols-outlined text-5xl text-primary">account_balance_wallet</span>
           </div>
           <p className="text-gray-500 dark:text-gray-400 text-center">
-            Track your debts and loans efficiently
+            Управляйте долгами и займами
           </p>
         </div>
 
@@ -130,7 +130,7 @@ export default function WelcomePage() {
             <div className="flex items-start gap-3">
               <span className="material-symbols-outlined text-red-600 dark:text-red-400">error</span>
               <div>
-                <p className="text-sm font-semibold text-red-800 dark:text-red-200">Authentication Failed</p>
+                <p className="text-sm font-semibold text-red-800 dark:text-red-200">Ошибка авторизации</p>
                 <p className="text-sm text-red-600 dark:text-red-300">{authError}</p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function WelcomePage() {
           <div className="w-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-8">
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Authenticating with Telegram...</p>
+              <p className="text-gray-600 dark:text-gray-400">Авторизация через Telegram...</p>
             </div>
           </div>
         ) : (
@@ -166,7 +166,7 @@ export default function WelcomePage() {
                 <div className="w-full border-t border-gray-300 dark:border-gray-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-[#efeff4] dark:bg-[#1c1c1d] text-gray-500 dark:text-gray-400">or continue with email</span>
+                <span className="px-3 bg-[#efeff4] dark:bg-[#1c1c1d] text-gray-500 dark:text-gray-400">или войдите через email</span>
               </div>
             </div>
 
@@ -187,7 +187,7 @@ export default function WelcomePage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">Пароль</Label>
                   <Input
                     id="password"
                     type="password"
@@ -207,12 +207,12 @@ export default function WelcomePage() {
                   {signInMutation.isPending ? (
                     <span className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Signing in...
+                      Вход...
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
                       <span className="material-symbols-outlined">login</span>
-                      Sign In
+                      Войти
                     </span>
                   )}
                 </Button>
@@ -225,7 +225,7 @@ export default function WelcomePage() {
       {/* Footer */}
       <footer className="py-4 text-center">
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Track your debts and loans with friends and contacts
+          Управляйте долгами и займами с друзьями и контактами
         </p>
       </footer>
     </div>

@@ -42,14 +42,15 @@ export function TopRightMenu({
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={handleProfileClick} className="flex items-center">
           <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+          <span>Профиль</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={openCurrencyList} className="flex items-center">
-          💲 Currencies
+          <span className="material-symbols-outlined mr-2 h-4 w-4 text-[16px]">currency_exchange</span>
+          <span>Валюты</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout} className="flex items-center text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Logout</span>
+          <span>Выйти</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

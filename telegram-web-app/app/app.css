@@ -11,9 +11,26 @@
 html,
 body {
   @apply bg-background text-foreground;
+  overscroll-behavior: none;
+  overflow-x: hidden;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
+  }
+}
+
+.app-frame {
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  min-height: 100svh;
+  position: relative;
+}
+
+@media (min-width: 431px) {
+  .app-frame {
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
   }
 }
 

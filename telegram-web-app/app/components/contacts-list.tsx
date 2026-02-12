@@ -53,10 +53,10 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Контакты</h1>
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <h1 className="text-[17px] font-semibold tracking-tight">Контакты</h1>
         <div className="flex flex-row space-x-2">
           <Button
             variant="outline"
@@ -72,8 +72,9 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
             openCurrencyList={handleCurrenciesMenuClick}
           />
         </div>
-      </div>
+      </header>
 
+      <main className="flex-1 px-4 py-4">
       {/* Contact List */}
       <div className="space-y-2 overflow-hidden">
         {!contacts.length && (
@@ -156,6 +157,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
           );
         })}
       </div>
+      </main>
 
       <AddContactButton open={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={onNewContactCreate} />
       <EditContactModal

@@ -111,26 +111,21 @@ export default function TransactionsPage() {
   }, [contactId, api, queryClient]);
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="flex items-center"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Назад
-        </Button>
-        <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-1">
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-[17px] font-semibold tracking-tight truncate">{contactName}</h1>
+        </div>
+        <Button onClick={() => setShowAddModal(true)} size="sm" className="flex items-center gap-1">
           <span className="material-symbols-outlined text-lg">add</span>
-          Новая транзакция
+          Добавить
         </Button>
-      </div>
+      </header>
 
-      <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <NotebookText className="w-5 h-5" />
-        Транзакции: {contactName}
-      </h1>
+      <main className="flex-1 px-4 py-4">
 
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
@@ -173,6 +168,7 @@ export default function TransactionsPage() {
           <p className="text-sm mt-2">Добавьте первую транзакцию</p>
         </div>
       )}
+      </main>
 
       <AddTransactionModal
         open={showAddModal}
