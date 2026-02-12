@@ -41,11 +41,11 @@ export default function Profile() {
     },
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(['profile'], updatedProfile);
-      toast.success('Profile updated successfully');
+      toast.success('Профиль обновлён');
     },
     onError: (error) => {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast.error('Не удалось обновить профиль');
     }
   });
 
@@ -60,11 +60,11 @@ export default function Profile() {
     },
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(['profile'], updatedProfile);
-      toast.success('Password updated successfully');
+      toast.success('Пароль обновлён');
     },
     onError: (error) => {
       console.error('Error updating password:', error);
-      toast.error(`Failed to update password ${error}`);
+      toast.error(`Не удалось обновить пароль: ${error}`);
     }
   });
 
@@ -94,12 +94,12 @@ export default function Profile() {
     e.preventDefault();
     
     if (newPassword !== confirmNewPassword) {
-      toast.error('New passwords do not match');
+      toast.error('Пароли не совпадают');
       return;
     }
-    
+
     if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error('Пароль должен быть не менее 6 символов');
       return;
     }
 
@@ -127,11 +127,11 @@ export default function Profile() {
       <div className="p-4 max-w-md mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>Failed to load profile information</CardDescription>
+            <CardTitle>Ошибка</CardTitle>
+            <CardDescription>Не удалось загрузить профиль</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => refetch()}>Try Again</Button>
+            <Button onClick={() => refetch()}>Повторить</Button>
           </CardContent>
         </Card>
       </div>
@@ -147,24 +147,24 @@ export default function Profile() {
           className="flex items-center"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          Назад
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Update your name and email address</CardDescription>
+          <CardTitle>Профиль</CardTitle>
+          <CardDescription>Обновите имя и email</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleProfileSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Имя</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                placeholder="Ваше имя"
               />
             </div>
             
@@ -183,7 +183,7 @@ export default function Profile() {
               type="submit" 
               disabled={updateProfileMutation.isPending}
             >
-              {updateProfileMutation.isPending ? 'Updating...' : 'Update Profile'}
+              {updateProfileMutation.isPending ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </form>
         </CardContent>
@@ -191,43 +191,43 @@ export default function Profile() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Change Password</CardTitle>
-          <CardDescription>Set or update your account password</CardDescription>
+          <CardTitle>Сменить пароль</CardTitle>
+          <CardDescription>Установите или обновите пароль</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword">Текущий пароль</Label>
               <Input
                 id="currentPassword"
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Leave blank if not set"
+                placeholder="Оставьте пустым, если не задан"
                 // Disable if user doesn't have a password set yet
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">Новый пароль</Label>
               <Input
                 id="newPassword"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="New password"
+                placeholder="Новый пароль"
                 minLength={6}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmNewPassword">Подтвердите пароль</Label>
               <Input
                 id="confirmNewPassword"
                 type="password"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
-                placeholder="Confirm new password"
+                placeholder="Подтвердите новый пароль"
                 minLength={6}
               />
             </div>
@@ -236,7 +236,7 @@ export default function Profile() {
               type="submit" 
               disabled={updatePasswordMutation.isPending}
             >
-              {updatePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
+              {updatePasswordMutation.isPending ? 'Сохранение...' : 'Сменить пароль'}
             </Button>
           </form>
         </CardContent>

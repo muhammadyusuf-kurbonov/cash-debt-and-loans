@@ -56,7 +56,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
     <div className="max-w-2xl mx-auto p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">People</h1>
+        <h1 className="text-xl font-bold">Контакты</h1>
         <div className="flex flex-row space-x-2">
           <Button
             variant="outline"
@@ -64,7 +64,7 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
             onClick={() => setIsModalOpen(true)}
           >
             <span className="material-symbols-outlined text-lg mr-1">person_add</span>
-            Add
+            Добавить
           </Button>
           <TopRightMenu
             dropdownOpen={isDropdownOpen}
@@ -75,18 +75,18 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
       </div>
 
       {/* Contact List */}
-      <div className="space-y-2">
+      <div className="space-y-2 overflow-hidden">
         {!contacts.length && (
           <div className="w-full h-[300px] flex items-center justify-center">
             {loading ? (
               <div className="flex flex-col items-center">
                 <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
-                <div className="text-gray-500">Loading contacts...</div>
+                <div className="text-gray-500">Загрузка контактов...</div>
               </div>
             ) : (
               <div className="text-center text-gray-400">
                 <span className="material-symbols-outlined text-5xl mb-2 block">group_add</span>
-                <p>No contacts yet. Add your first one!</p>
+                <p>Контактов пока нет. Добавьте первый!</p>
               </div>
             )}
           </div>
@@ -112,12 +112,12 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
               </div>
 
               {/* Name + Balance */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <h2 className="text-[15px] font-semibold truncate">{contact.name || 'Unnamed'}</h2>
                 {contact.Balance.map((balance) => (
-                  <div key={balance.currency?.id} className="mt-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <Money value={balance.amount} symbol={balance.currency?.symbol} className="text-xs font-semibold" />
+                  <div key={balance.currency?.id} className="mt-1 min-w-0">
+                    <div className="flex items-center justify-between text-xs min-w-0">
+                      <Money value={balance.amount} symbol={balance.currency?.symbol} className="text-xs font-semibold truncate" />
                     </div>
                     {maxBalance > 0 && (
                       <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-1">

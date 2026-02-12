@@ -1,19 +1,23 @@
 import { useLocation, useNavigate } from 'react-router';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AddTransactionModal } from './add-transaction-modal';
+import { ApiClient } from '~/lib/api-client';
 
 const tabs = [
-  { path: '/home', icon: 'dashboard', label: 'Home' },
-  { path: '/reports', icon: 'analytics', label: 'Reports' },
-  { path: '__add__', icon: 'add', label: 'Add' },
-  { path: '/contacts', icon: 'group', label: 'People' },
-  { path: '/profile', icon: 'settings', label: 'Settings' },
+  { path: '/home', icon: 'dashboard', label: 'Главная' },
+  { path: '/reports', icon: 'analytics', label: 'Отчёты' },
+  { path: '__add__', icon: 'add', label: 'Добавить' },
+  { path: '/contacts', icon: 'group', label: 'Контакты' },
+  { path: '/profile', icon: 'settings', label: 'Настройки' },
 ] as const;
 
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+  const queryClient = useQueryClient();
+  const api = ApiClient.getOpenAPIClient();
 
   // Don't show on welcome/login page
   if (location.pathname === '/') return null;
@@ -59,8 +63,31 @@ export function BottomNav() {
       <AddTransactionModal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onAdd={async () => {
-          setShowAddModal(false);
+        onAdd={async (newData) => {
+          try {
+            if (!newData.contactId) return;
+
+            if (newData.amount > 0) {
+              await api.transactions.transactionsControllerTopup({
+                contact_id: newData.contactId,
+                currency_id: newData.currencyId,
+                amount: newData.amount,
+                note: newData.description,
+              });
+            } else {
+              await api.transactions.transactionsControllerWithdraw({
+                contact_id: newData.contactId,
+                currency_id: newData.currencyId,
+                amount: Math.abs(newData.amount),
+                note: newData.description,
+              });
+            }
+
+            queryClient.invalidateQueries({ queryKey: ['contacts'] });
+            setShowAddModal(false);
+          } catch (error) {
+            console.error('Error adding transaction:', error);
+          }
         }}
       />
     </>

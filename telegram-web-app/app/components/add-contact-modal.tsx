@@ -27,11 +27,11 @@ export function AddContactButton({ open, onClose, onAdd }: Props) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Contact</DialogTitle>
+          <DialogTitle>Новый контакт</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <Input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <Button onClick={handleAdd} className="w-full">Add Contact</Button>
+          <Input placeholder="Имя" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <Button onClick={handleAdd} className="w-full">Добавить</Button>
         </div>
       </DialogContent>
     </Dialog>

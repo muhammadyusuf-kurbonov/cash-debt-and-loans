@@ -120,6 +120,7 @@ export default function Contacts() {
         open={activeContact != null}
         onClose={() => setActiveContact(null)}
         onAdd={handleAddNewTransaction}
+        contactId={activeContact ?? undefined}
       />
     </>
   );

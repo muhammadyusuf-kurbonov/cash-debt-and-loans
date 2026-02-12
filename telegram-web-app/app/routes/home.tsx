@@ -101,7 +101,7 @@ export default function Home() {
       <main className="flex-1 px-4 py-6 space-y-6 max-w-[960px] mx-auto w-full">
         {/* Total Net Debt Hero */}
         <div className="flex flex-col items-center text-center space-y-1">
-          <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Net Balance</p>
+          <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Общий баланс</p>
           <div className="space-y-0.5">
             {Object.entries(netByCurrency).length === 0 ? (
               <h2 className="text-4xl font-extrabold tracking-tight">0.00</h2>
@@ -122,14 +122,14 @@ export default function Home() {
             className="flex flex-col items-center justify-center gap-2 h-24 bg-primary text-white rounded-2xl shadow-sm active:opacity-80 transition-opacity"
           >
             <span className="material-symbols-outlined text-3xl">add_circle</span>
-            <span className="text-sm font-bold">Add Debt</span>
+            <span className="text-sm font-bold">Я дал в долг</span>
           </button>
           <button
             onClick={() => navigate('/contacts')}
             className="flex flex-col items-center justify-center gap-2 h-24 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 active:opacity-80 transition-opacity"
           >
             <span className="material-symbols-outlined text-3xl text-primary">payments</span>
-            <span className="text-sm font-bold">Add Loan</span>
+            <span className="text-sm font-bold">Мне дали в долг</span>
           </button>
         </div>
 
@@ -138,10 +138,10 @@ export default function Home() {
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400">south_east</span>
+                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400">north_east</span>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Owed to Me</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Мне должны</p>
                 <div>
                   {Object.entries(totals).map(([symbol, { owed }]) =>
                     owed > 0 && (
@@ -162,10 +162,10 @@ export default function Home() {
           <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-rose-600 dark:text-rose-400">north_east</span>
+                <span className="material-symbols-outlined text-rose-600 dark:text-rose-400">south_east</span>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">I Owe</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Я должен</p>
                 <div>
                   {Object.entries(totals).map(([symbol, { iOwe }]) =>
                     iOwe > 0 && (
@@ -187,14 +187,14 @@ export default function Home() {
         {/* Recent Activity */}
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Recent Activity</h3>
-            <button onClick={() => navigate('/contacts')} className="text-primary text-sm font-semibold">View All</button>
+            <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Последние операции</h3>
+            <button onClick={() => navigate('/contacts')} className="text-primary text-sm font-semibold">Все</button>
           </div>
 
           {recentContacts.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-8 text-center text-gray-400">
               <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
-              <p>No recent activity</p>
+              <p>Нет недавних операций</p>
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">

@@ -42,15 +42,15 @@ export function EditContactModal({ open, onClose, contactToEdit, onEdit }: Props
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Contact</DialogTitle>
+          <DialogTitle>Редактировать контакт</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <Input 
-            placeholder="Full Name" 
-            value={fullName} 
-            onChange={handleInputChange} 
+          <Input
+            placeholder="Имя"
+            value={fullName}
+            onChange={handleInputChange}
           />
-          <Button onClick={handleEdit} className="w-full">Update Contact</Button>
+          <Button onClick={handleEdit} className="w-full">Сохранить</Button>
         </div>
       </DialogContent>
     </Dialog>

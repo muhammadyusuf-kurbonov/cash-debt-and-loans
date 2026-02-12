@@ -32,20 +32,20 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
     if (transaction.deletedAt) {
       return (
         <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-bold text-gray-500 uppercase">
-          Cancelled
+          Отменено
         </span>
       );
     }
     if (transaction.amount > 0) {
       return (
         <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/20 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:text-green-400 uppercase">
-          Received
+          Отправил
         </span>
       );
     }
     return (
       <span className="inline-flex items-center rounded-full bg-orange-100 dark:bg-orange-900/20 px-2 py-0.5 text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase">
-        Paid
+        Получил
       </span>
     );
   };
@@ -69,7 +69,7 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
                 : 'bg-rose-100 dark:bg-rose-900/20 text-rose-600'
             )}>
               <span className="material-symbols-outlined text-[20px]">
-                {transaction.amount > 0 ? 'south_east' : 'north_east'}
+                {transaction.amount > 0 ? 'north_east' : 'south_east'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
@@ -83,14 +83,14 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
                     autoFocus
                   />
                   <div className="flex gap-2">
-                    <Button variant="default" size="sm" onClick={() => saveNote(transaction.id)}>Save</Button>
-                    <Button variant="outline" size="sm" onClick={() => setEditingNoteId(null)}>Cancel</Button>
+                    <Button variant="default" size="sm" onClick={() => saveNote(transaction.id)}>Сохранить</Button>
+                    <Button variant="outline" size="sm" onClick={() => setEditingNoteId(null)}>Отмена</Button>
                   </div>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold truncate">{transaction.note || 'No description'}</span>
+                    <span className="text-sm font-semibold truncate">{transaction.note || 'Без описания'}</span>
                     <button
                       onClick={() => handleEditNote(transaction.id, transaction.note ?? null)}
                       className="p-0.5 text-gray-400 hover:text-primary"
@@ -124,7 +124,7 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
       {transactions.length === 0 && (
         <div className="flex flex-col items-center justify-center p-8 text-gray-400">
           <span className="material-symbols-outlined text-4xl mb-2">receipt_long</span>
-          <p>No transactions found.</p>
+          <p>Транзакции не найдены.</p>
         </div>
       )}
     </div>

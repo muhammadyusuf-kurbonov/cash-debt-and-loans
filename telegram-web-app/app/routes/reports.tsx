@@ -128,7 +128,7 @@ export default function Reports() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-2xl">analytics</span>
-            <h1 className="text-xl font-bold tracking-tight">Reports</h1>
+            <h1 className="text-xl font-bold tracking-tight">Отчёты</h1>
           </div>
         </div>
         {/* Period Tabs */}
@@ -143,7 +143,7 @@ export default function Reports() {
                   : 'text-gray-500 dark:text-gray-400'
               }`}
             >
-              {p === 'today' ? 'Today' : 'Month'}
+              {p === 'today' ? 'Сегодня' : 'Месяц'}
             </button>
           ))}
         </div>
@@ -154,7 +154,7 @@ export default function Reports() {
         <div className="space-y-3">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center">
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Owed to you</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Мне должны</p>
               <p className="text-2xl font-extrabold">
                 {owedToMe.toLocaleString('ru', { maximumFractionDigits: 2 })}
               </p>
@@ -166,7 +166,7 @@ export default function Reports() {
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center">
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">You owe</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Я должен</p>
               <p className="text-2xl font-extrabold">
                 {iOwe.toLocaleString('ru', { maximumFractionDigits: 2 })}
               </p>
@@ -178,7 +178,7 @@ export default function Reports() {
 
           <div className="bg-primary p-4 rounded-2xl shadow-lg shadow-primary/20 flex justify-between items-center">
             <div>
-              <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Net Balance</p>
+              <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Чистый баланс</p>
               <p className="text-2xl font-extrabold text-white">
                 {netBalance.toLocaleString('ru', { maximumFractionDigits: 2 })}
               </p>
@@ -192,8 +192,8 @@ export default function Reports() {
         {/* Debt Trends Chart Placeholder */}
         <section className="space-y-3">
           <div className="flex justify-between items-center px-1">
-            <h3 className="text-sm font-bold">Debt Trends</h3>
-            <span className="text-[10px] text-gray-400 font-medium">Last 30 days</span>
+            <h3 className="text-sm font-bold">Динамика долгов</h3>
+            <span className="text-[10px] text-gray-400 font-medium">За 30 дней</span>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
             <div className="w-full h-32 relative">
@@ -208,7 +208,7 @@ export default function Reports() {
                 <path d="M0,80 L50,60 L100,75 L150,40 L200,50 L250,30 L300,20 L350,45 L400,10 V100 H0 Z" fill="url(#chartGrad)" />
               </svg>
               <div className="flex justify-between mt-2 text-[8px] font-bold text-gray-400 tracking-tighter uppercase">
-                <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+                <span>Неделя 1</span><span>Неделя 2</span><span>Неделя 3</span><span>Неделя 4</span>
               </div>
             </div>
           </div>
@@ -217,11 +217,11 @@ export default function Reports() {
         {/* Top Debtors & Creditors */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <section className="space-y-3">
-            <h3 className="text-sm font-bold px-1">Top Debtors</h3>
+            <h3 className="text-sm font-bold px-1">Топ должников</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div className="divide-y divide-gray-50 dark:divide-gray-700">
                 {topDebtors.length === 0 && (
-                  <div className="p-4 text-center text-gray-400 text-sm">No debtors</div>
+                  <div className="p-4 text-center text-gray-400 text-sm">Нет должников</div>
                 )}
 {formattedTopDebtors.map((debtor, i) => (
                    <div key={i} className="flex items-center gap-3 p-3">
@@ -244,11 +244,11 @@ export default function Reports() {
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-bold px-1">Top Creditors</h3>
+            <h3 className="text-sm font-bold px-1">Топ кредиторов</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div className="divide-y divide-gray-50 dark:divide-gray-700">
                 {topCreditors.length === 0 && (
-                  <div className="p-4 text-center text-gray-400 text-sm">No creditors</div>
+                  <div className="p-4 text-center text-gray-400 text-sm">Нет кредиторов</div>
                 )}
 {formattedTopCreditors.map((creditor, i) => (
                    <div key={i} className="flex items-center gap-3 p-3">
@@ -273,10 +273,10 @@ export default function Reports() {
 
         {/* Currency Breakdown */}
         <section className="space-y-3 pb-8">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Currency Breakdown</h3>
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">По валютам</h3>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
             {currencyBreakdown.length === 0 && (
-              <div className="text-gray-400 text-sm">No data</div>
+              <div className="text-gray-400 text-sm">Нет данных</div>
             )}
 {formattedCurrencyBreakdown.map(({ symbol, net }) => (
                <div key={symbol} className="flex-shrink-0 min-w-[120px] bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
