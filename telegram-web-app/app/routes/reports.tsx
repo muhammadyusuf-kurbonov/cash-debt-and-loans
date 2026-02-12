@@ -215,7 +215,7 @@ export default function Reports() {
         </section>
 
         {/* Top Debtors & Creditors */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <section className="space-y-3">
             <h3 className="text-sm font-bold px-1">Топ должников</h3>
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -274,9 +274,9 @@ export default function Reports() {
         {/* Currency Breakdown */}
         <section className="space-y-3 pb-8">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">По валютам</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             {currencyBreakdown.length === 0 && (
-              <div className="text-gray-400 text-sm col-span-2">Нет данных</div>
+              <div className="text-gray-400 text-sm">Нет данных</div>
             )}
 {formattedCurrencyBreakdown.map(({ symbol, net }) => (
                <div key={symbol} className="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">

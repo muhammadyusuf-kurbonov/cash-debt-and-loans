@@ -90,7 +90,7 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
               ) : (
                 <>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold truncate">{transaction.note || 'Без описания'}</span>
+                    <span className="text-sm font-semibold break-words">{transaction.note || 'Без описания'}</span>
                     <button
                       onClick={() => handleEditNote(transaction.id, transaction.note ?? null)}
                       className="p-0.5 text-gray-400 hover:text-primary"
