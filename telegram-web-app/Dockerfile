@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 RUN npm install -g pnpm
 WORKDIR /app
 
