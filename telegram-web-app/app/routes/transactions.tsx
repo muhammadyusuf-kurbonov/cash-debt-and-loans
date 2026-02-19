@@ -113,11 +113,11 @@ export default function TransactionsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-[17px] font-semibold tracking-tight truncate">{contactName}</h1>
+          <h1 className="text-[17px] font-semibold tracking-tight break-words">{contactName}</h1>
         </div>
         <Button onClick={() => setShowAddModal(true)} size="sm" className="flex items-center gap-1">
           <span className="material-symbols-outlined text-lg">add</span>

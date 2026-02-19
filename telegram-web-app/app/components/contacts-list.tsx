@@ -114,11 +114,11 @@ export function ContactList({ contacts, onNewContactCreate, onContactClick, onCo
 
               {/* Name + Balance */}
               <div className="flex-1 min-w-0 overflow-hidden">
-                <h2 className="text-[15px] font-semibold truncate">{contact.name || 'Unnamed'}</h2>
+                <h2 className="text-[15px] font-semibold break-words">{contact.name || 'Unnamed'}</h2>
                 {contact.Balance.map((balance) => (
                   <div key={balance.currency?.id} className="mt-1 min-w-0">
                     <div className="flex items-center justify-between text-xs min-w-0">
-                      <Money value={balance.amount} symbol={balance.currency?.symbol} className="text-xs font-semibold truncate" />
+                      <Money value={balance.amount} symbol={balance.currency?.symbol} className="text-xs font-semibold" />
                     </div>
                     {maxBalance > 0 && (
                       <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-1">

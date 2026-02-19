@@ -210,12 +210,12 @@ export default function Home() {
                     onClick={() => navigate(`/transactions?contactId=${contact.id}&contactName=${encodeURIComponent(contact.name || 'Contact')}`)}
                     className={`flex items-center justify-between p-4 cursor-pointer active:bg-gray-50 dark:active:bg-gray-700 transition-colors ${idx < recentContacts.length - 1 ? 'border-b border-gray-50 dark:border-gray-700' : ''}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
                         {initials}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-[15px] font-semibold">{contact.name || 'Unnamed'}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[15px] font-semibold break-words">{contact.name || 'Unnamed'}</span>
                         <span className="text-[12px] text-gray-500 dark:text-gray-400">{lastUpdate}</span>
                       </div>
                     </div>

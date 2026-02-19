@@ -5,7 +5,7 @@ export function Money({ value, symbol, label, className }: { value: number, symb
   return (
     <p
       className={cn(
-        'text-sm',
+        'text-sm break-words',
         {
           'text-emerald-600 dark:text-emerald-400': value > 0,
           'text-rose-600 dark:text-rose-400': value < 0,

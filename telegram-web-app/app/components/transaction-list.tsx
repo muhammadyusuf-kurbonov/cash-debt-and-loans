@@ -105,7 +105,7 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
               )}
             </div>
           </div>
-          <div className="text-right flex flex-col items-end gap-1 shrink-0 ml-2">
+          <div className="text-right flex flex-col items-end gap-1 shrink-0 ml-2 max-w-[120px]">
             <Money value={transaction.amount} symbol={transaction.currency.symbol} className="text-sm font-bold" />
             <div className="flex items-center gap-1">
               {getStatusBadge(transaction)}
