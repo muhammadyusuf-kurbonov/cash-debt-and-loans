@@ -1,13 +1,12 @@
 # Stage 1: Build
-FROM node:24-alpine AS build
-RUN npm install -g pnpm
+FROM node:22-alpine AS build
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json ./
+RUN yarn install
 
 COPY . .
-RUN pnpm run build
+RUN yarn run build
 
 # Stage 2: Serve
 FROM nginx:alpine
