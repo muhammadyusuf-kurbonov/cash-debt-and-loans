@@ -65,7 +65,7 @@ export default function Reports() {
 
   // Use real report endpoints
   const { data: summary } = useQuery({
-    queryKey: ['reports', 'summary', period],
+    queryKey: ['reports', 'summary', period, from, to],
     queryFn: async () => {
       const response = await api.reports.reportsControllerGetSummary({ from, to });
       return response.data;
@@ -74,7 +74,7 @@ export default function Reports() {
   });
 
   const { data: trends } = useQuery({
-    queryKey: ['reports', 'trends', period],
+    queryKey: ['reports', 'trends', period, from, to],
     queryFn: async () => {
       const response = await api.reports.reportsControllerGetTrends({
         from,
