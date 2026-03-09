@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
+import { endOfDay, endOfMonth, endOfWeek, endOfYear, startOfDay, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ApiClient } from '~/lib/api-client';
@@ -12,7 +12,53 @@ export function meta() {
   ];
 }
 
-type Period = 'today' | 'month';
+type Period = 'today' | 'week' | 'month' | 'year' | 'all';
+
+const PERIOD_LABELS: Record<Period, string> = {
+  today: 'Сегодня',
+  week: 'Неделя',
+  month: 'Месяц',
+  year: 'Год',
+  all: 'Всё',
+};
+
+function getRangeParams(period: Period) {
+  const now = new Date();
+  switch (period) {
+    case 'today':
+      return {
+        from: startOfDay(now).toISOString(),
+        to: endOfDay(now).toISOString(),
+        trendPeriod: 'day' as const,
+      };
+    case 'week':
+      return {
+        from: startOfWeek(now, { weekStartsOn: 1 }).toISOString(),
+        to: endOfWeek(now, { weekStartsOn: 1 }).toISOString(),
+        trendPeriod: 'day' as const,
+      };
+    case 'month':
+      return {
+        from: startOfMonth(now).toISOString(),
+        to: endOfMonth(now).toISOString(),
+        trendPeriod: 'day' as const,
+      };
+    case 'year':
+      return {
+        from: startOfYear(now).toISOString(),
+        to: endOfYear(now).toISOString(),
+        trendPeriod: 'month' as const,
+      };
+    case 'all':
+      return {
+        from: undefined,
+        to: undefined,
+        trendPeriod: 'month' as const,
+      };
+    default:
+      return { from: undefined, to: undefined, trendPeriod: 'day' as const };
+  }
+}
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -25,32 +71,26 @@ export default function Reports() {
   const api = ApiClient.getOpenAPIClient();
 
   // Use real report endpoints
+  const { from, to, trendPeriod } = useMemo(() => getRangeParams(period), [period]);
+
+  // Use real report endpoints
   const { data: summary } = useQuery({
-    queryKey: ['reports', 'summary'],
+    queryKey: ['reports', 'summary', period],
     queryFn: async () => {
-      const query: Partial<{ from: string, to: string }> = {};
-
-      switch (period) {
-        case 'today':
-          query.from = startOfDay(new Date()).toISOString();
-          query.to = endOfDay(new Date()).toISOString();
-          break;
-        case 'month':
-          query.from = startOfMonth(new Date()).toISOString();
-          query.to = endOfMonth(new Date()).toISOString();
-          break;
-      }
-
-      const response = await api.reports.reportsControllerGetSummary(query);
+      const response = await api.reports.reportsControllerGetSummary({ from, to });
       return response.data;
     },
     initialData: { owedToMe: 0, iOwe: 0, netBalance: 0 },
   });
 
   const { data: trends } = useQuery({
-    queryKey: ['reports', 'trends'],
+    queryKey: ['reports', 'trends', period],
     queryFn: async () => {
-      const response = await api.reports.reportsControllerGetTrends();
+      const response = await api.reports.reportsControllerGetTrends({
+        from,
+        to,
+        period: trendPeriod,
+      });
       return response.data;
     },
     initialData: [],
@@ -119,7 +159,50 @@ export default function Reports() {
     }));
   }, [currencyBreakdown]);
 
-  const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
+  // Transform trends data for the chart
+  const { chartPath, chartAreaPath, chartLabels } = useMemo(() => {
+    if (!trends || trends.length === 0) {
+      return { 
+        chartPath: "M0,50 L400,50", 
+        chartAreaPath: "M0,50 L400,50 V100 H0 Z",
+        chartLabels: [] 
+      };
+    }
+
+    const maxVal = Math.max(...trends.map(t => Math.max(t.receivables, t.payables)), 1);
+    
+    const points = trends.map((t, i) => {
+      const x = (i / (trends.length - 1 || 1)) * 400;
+      // Map net balance to Y: receivables are positive, payables are negative
+      const net = t.receivables - t.payables;
+      const y = 50 - (net / maxVal) * 40; 
+      return { x, y };
+    });
+
+    const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const areaPath = `${path} V100 H0 Z`;
+
+    // Generate 4 labels based on data
+    const labels = [];
+    if (trends.length > 0) {
+      const step = Math.max(1, Math.floor(trends.length / 4));
+      for (let i = 0; i < trends.length; i += step) {
+        if (labels.length < 4) {
+          // Format date/label based on trendPeriod
+          const date = new Date(trends[i].date);
+          if (trendPeriod === 'day') {
+            labels.push(date.toLocaleDateString('ru', { day: 'numeric', month: 'short' }));
+          } else {
+            labels.push(date.toLocaleDateString('ru', { month: 'short', year: '2-digit' }));
+          }
+        }
+      }
+    }
+
+    return { chartPath: path, chartAreaPath: areaPath, chartLabels: labels };
+  }, [trends, trendPeriod]);
+
+    const getInitials = (name: string) => name.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -132,18 +215,18 @@ export default function Reports() {
           </div>
         </div>
         {/* Period Tabs */}
-        <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
-          {(['today', 'month'] as const).map((p) => (
+        <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto no-scrollbar">
+          {(['today', 'week', 'month', 'year', 'all'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+              className={`flex-1 min-w-[70px] py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
                 period === p
                   ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
-              {p === 'today' ? 'Сегодня' : 'Месяц'}
+              {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>
@@ -193,22 +276,27 @@ export default function Reports() {
         <section className="space-y-3">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-sm font-bold">Динамика долгов</h3>
-            <span className="text-[10px] text-gray-400 font-medium">За 30 дней</span>
+            <span className="text-[10px] text-gray-400 font-medium">
+              {period === 'today' ? 'За сегодня' : 
+               period === 'week' ? 'За 7 дней' :
+               period === 'month' ? 'За 30 дней' :
+               period === 'year' ? 'За год' : 'За всё время'}
+            </span>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300">
             <div className="w-full h-32 relative">
               <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 400 100">
-                <path d="M0,80 L50,60 L100,75 L150,40 L200,50 L250,30 L300,20 L350,45 L400,10" fill="none" stroke="currentColor" className="text-primary" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
+                <path d={chartPath} fill="none" stroke="currentColor" className="text-primary" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
                 <defs>
                   <linearGradient id="chartGrad" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="5%" stopColor="currentColor" className="text-primary" stopOpacity="0.15" />
-                    <stop offset="95%" stopColor="currentColor" className="text-primary" stopOpacity="0" />
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity="0.12" />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <path d="M0,80 L50,60 L100,75 L150,40 L200,50 L250,30 L300,20 L350,45 L400,10 V100 H0 Z" fill="url(#chartGrad)" />
+                <path d={chartAreaPath} fill="url(#chartGrad)" />
               </svg>
-              <div className="flex justify-between mt-2 text-[8px] font-bold text-gray-400 tracking-tighter uppercase">
-                <span>Неделя 1</span><span>Неделя 2</span><span>Неделя 3</span><span>Неделя 4</span>
+              <div className="flex justify-between mt-3 text-[8px] font-bold text-gray-400 dark:text-gray-500 tracking-tighter uppercase">
+                {chartLabels.map((l, i) => <span key={i}>{l}</span>)}
               </div>
             </div>
           </div>
@@ -278,12 +366,14 @@ export default function Reports() {
             {currencyBreakdown.length === 0 && (
               <div className="text-gray-400 text-sm">Нет данных</div>
             )}
-{formattedCurrencyBreakdown.map(({ symbol, net }) => (
-               <div key={symbol} className="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
-                 <p className="text-[10px] font-bold text-gray-500 mb-1">{symbol}</p>
-                 <p className="text-lg font-extrabold">{net.toLocaleString('ru', { maximumFractionDigits: 2 })}</p>
-               </div>
-             ))}
+            {formattedCurrencyBreakdown.map(({ symbol, net }) => (
+              <div key={symbol} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all hover:border-primary/30">
+                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1">{symbol}</p>
+                <p className={`text-xl font-extrabold ${net > 0 ? 'text-emerald-500' : net < 0 ? 'text-rose-500' : ''}`}>
+                  {net.toLocaleString('ru', { maximumFractionDigits: 2 })}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
       </main>
