@@ -12,15 +12,7 @@
 
 export type SignUpDto = object;
 
-export interface AuthResponseDto {
-  token: string;
-  user: {
-    id: number;
-    email?: string;
-    telegram_id?: string;
-    name?: string;
-  };
-}
+export type AuthResponseDto = object;
 
 export type SignInDto = object;
 
@@ -140,17 +132,17 @@ export interface ProfileDto {
    * User display name
    * @example "John Doe"
    */
-  name: string | null;
+  name: object;
   /**
    * User email address
    * @example "john@example.com"
    */
-  email: string | null;
+  email: object;
   /**
    * Telegram ID
    * @example "123456789"
    */
-  telegram_id: string | null;
+  telegram_id: object;
   /** Account verification status */
   is_verified: boolean;
   /**
@@ -165,7 +157,6 @@ export interface UpdateProfileDto {
   name?: string;
   /**
    * User email address
-   * @format email
    * @example "user@example.com"
    */
   email?: string;
@@ -176,13 +167,14 @@ export interface UpdatePasswordDto {
   currentPassword: string;
   /**
    * New password
-   * @minLength 6
    * @example "newpassword123"
    */
   newPassword: string;
 }
 
 export interface SummaryDto {
+  currencyId: number;
+  currencySymbol: string;
   owedToMe: number;
   iOwe: number;
   netBalance: number;
@@ -469,10 +461,9 @@ export class Api<
    * @request GET:/
    */
   appControllerGetHello = (params: RequestParams = {}) =>
-    this.request<string, any>({
+    this.request<void, any>({
       path: `/`,
       method: "GET",
-      format: "json",
       ...params,
     });
 
@@ -997,15 +988,41 @@ export class Api<
       query?: {
         from?: string;
         to?: string;
+        currencyId?: string;
       },
       params: RequestParams = {},
     ) =>
-      this.request<SummaryDto, any>({
+      this.request<SummaryDto[], any>({
         path: `/reports/summary`,
         method: "GET",
         query: query,
         secure: true,
         format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags reports
+     * @name ReportsControllerGetTransactions
+     * @summary Get transaction history for a period
+     * @request GET:/reports/transactions
+     * @secure
+     */
+    reportsControllerGetTransactions: (
+      query?: {
+        from?: string;
+        to?: string;
+        currencyId?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/reports/transactions`,
+        method: "GET",
+        query: query,
+        secure: true,
         ...params,
       }),
 
@@ -1023,6 +1040,7 @@ export class Api<
         period?: "day" | "week" | "month" | "year";
         from?: string;
         to?: string;
+        currencyId?: string;
       },
       params: RequestParams = {},
     ) =>

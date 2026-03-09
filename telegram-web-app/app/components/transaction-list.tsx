@@ -8,12 +8,13 @@ import { cn } from '~/lib/utils';
 import { useState } from 'react';
 
 type Props = {
-  transactions: Array<Transaction & Pick<TransactionRelations, 'currency'>>;
+  transactions: Array<Transaction & Pick<TransactionRelations, 'currency'> & { contact?: any }>;
   onDeleteTransaction: (id: number) => void;
   onEditNote: (id: number, note: string) => void;
+  showContact?: boolean;
 };
 
-export function TransactionsList({ transactions, onDeleteTransaction, onEditNote }: Props) {
+export function TransactionsList({ transactions, onDeleteTransaction, onEditNote, showContact }: Props) {
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editNoteValue, setEditNoteValue] = useState<string>('');
 
@@ -90,7 +91,12 @@ export function TransactionsList({ transactions, onDeleteTransaction, onEditNote
               ) : (
                 <>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold break-words">{transaction.note || 'Без описания'}</span>
+                    <span className="text-sm font-semibold break-words">
+                      {showContact && transaction.contact && (
+                        <span className="text-primary mr-1">{transaction.contact.name}:</span>
+                      )}
+                      {transaction.note || 'Без описания'}
+                    </span>
                     <button
                       onClick={() => handleEditNote(transaction.id, transaction.note ?? null)}
                       className="p-0.5 text-gray-400 hover:text-primary"

@@ -2,6 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SummaryDto {
   @ApiProperty()
+  currencyId: number;
+
+  @ApiProperty()
+  currencySymbol: string;
+
+  @ApiProperty()
   owedToMe: number;
 
   @ApiProperty()

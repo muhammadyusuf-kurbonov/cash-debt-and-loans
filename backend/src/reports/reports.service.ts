@@ -5,50 +5,116 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async getSummary(userId: number, from?: string, to?: string) {
+  async getSummary(userId: number, from?: string, to?: string, currencyId?: number) {
     if (from || to) {
-      return this.getSummaryFromTransactions(userId, from, to);
+      return this.getSummaryFromTransactions(userId, from, to, currencyId);
+    }
+
+    const where: any = { contact: { user_id: userId } };
+    if (currencyId) {
+      where.currency_id = currencyId;
     }
 
     const balances = await this.prisma.balance.findMany({
-      where: { contact: { user_id: userId } },
+      where,
+      include: { currency: true },
     });
 
-    let owedToMe = 0;
-    let iOwe = 0;
+    const summaryMap = new Map<number, any>();
+
     for (const b of balances) {
-      if (b.amount > 0) owedToMe += b.amount;
-      else iOwe += Math.abs(b.amount);
+      if (!summaryMap.has(b.currency_id)) {
+        summaryMap.set(b.currency_id, {
+          currencyId: b.currency_id,
+          currencySymbol: b.currency.symbol,
+          owedToMe: 0,
+          iOwe: 0,
+        });
+      }
+      const s = summaryMap.get(b.currency_id)!;
+      if (b.amount > 0) s.owedToMe += b.amount;
+      else s.iOwe += Math.abs(b.amount);
     }
 
-    return { owedToMe, iOwe, netBalance: owedToMe - iOwe };
+    return Array.from(summaryMap.values()).map(s => ({
+      ...s,
+      netBalance: s.owedToMe - s.iOwe,
+    }));
   }
 
   private async getSummaryFromTransactions(
     userId: number,
     from?: string,
     to?: string,
+    currencyId?: number,
   ) {
     const where: any = {
       user_id: userId,
       deletedAt: null,
     };
+    if (currencyId) {
+      where.currency_id = currencyId;
+    }
     if (from || to) {
       where.createdAt = {};
       if (from) where.createdAt.gte = new Date(from);
       if (to) where.createdAt.lte = new Date(to);
     }
 
-    const transactions = await this.prisma.transaction.findMany({ where });
+    const transactions = await this.prisma.transaction.findMany({ 
+      where,
+      include: { currency: true }
+    });
 
-    let owedToMe = 0;
-    let iOwe = 0;
+    const summaryMap = new Map<number, any>();
+
     for (const t of transactions) {
-      if (t.amount > 0) owedToMe += t.amount;
-      else iOwe += Math.abs(t.amount);
+      if (!summaryMap.has(t.currency_id)) {
+        summaryMap.set(t.currency_id, {
+          currencyId: t.currency_id,
+          currencySymbol: t.currency.symbol,
+          owedToMe: 0,
+          iOwe: 0,
+        });
+      }
+      const s = summaryMap.get(t.currency_id)!;
+      if (t.amount > 0) s.owedToMe += t.amount;
+      else s.iOwe += Math.abs(t.amount);
     }
 
-    return { owedToMe, iOwe, netBalance: owedToMe - iOwe };
+    return Array.from(summaryMap.values()).map(s => ({
+      ...s,
+      netBalance: s.owedToMe - s.iOwe,
+    }));
+  }
+
+  async getTransactions(
+    userId: number,
+    from?: string,
+    to?: string,
+    currencyId?: number,
+  ) {
+    const where: any = {
+      user_id: userId,
+      deletedAt: null,
+    };
+    if (currencyId) {
+      where.currency_id = currencyId;
+    }
+    if (from || to) {
+      where.createdAt = {};
+      if (from) where.createdAt.gte = new Date(from);
+      if (to) where.createdAt.lte = new Date(to);
+    }
+
+    return this.prisma.transaction.findMany({
+      where,
+      include: {
+        contact: true,
+        currency: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async getTrends(
@@ -56,11 +122,15 @@ export class ReportsService {
     period: string = 'month',
     from?: string,
     to?: string,
+    currencyId?: number,
   ) {
     const where: any = {
       user_id: userId,
       deletedAt: null,
     };
+    if (currencyId) {
+      where.currency_id = currencyId;
+    }
     if (from || to) {
       where.createdAt = {};
       if (from) where.createdAt.gte = new Date(from);

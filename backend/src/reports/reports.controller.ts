@@ -25,15 +25,41 @@ export class ReportsController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Get financial summary' })
-  @ApiResponse({ status: 200, type: SummaryDto })
+  @ApiResponse({ status: 200, type: [SummaryDto] })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'currencyId', required: false })
   getSummary(
     @Request() req: RequestWithUser,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('currencyId') currencyId?: string,
   ) {
-    return this.reportsService.getSummary(req.user.id, from, to);
+    return this.reportsService.getSummary(
+      req.user.id,
+      from,
+      to,
+      currencyId ? +currencyId : undefined,
+    );
+  }
+
+  @Get('transactions')
+  @ApiOperation({ summary: 'Get transaction history for a period' })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'currencyId', required: false })
+  getTransactions(
+    @Request() req: RequestWithUser,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('currencyId') currencyId?: string,
+  ) {
+    return this.reportsService.getTransactions(
+      req.user.id,
+      from,
+      to,
+      currencyId ? +currencyId : undefined,
+    );
   }
 
   @Get('trends')
@@ -46,13 +72,21 @@ export class ReportsController {
   })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'currencyId', required: false })
   getTrends(
     @Request() req: RequestWithUser,
     @Query('period') period?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('currencyId') currencyId?: string,
   ) {
-    return this.reportsService.getTrends(req.user.id, period, from, to);
+    return this.reportsService.getTrends(
+      req.user.id,
+      period,
+      from,
+      to,
+      currencyId ? +currencyId : undefined,
+    );
   }
 
   @Get('top-debtors')
