@@ -12,17 +12,15 @@ export function meta() {
   ];
 }
 
-type Period = 'today' | 'week' | 'month' | 'year' | 'all';
+type Period = 'today' | 'month' | 'custom';
 
 const PERIOD_LABELS: Record<Period, string> = {
   today: 'Сегодня',
-  week: 'Неделя',
   month: 'Месяц',
-  year: 'Год',
-  all: 'Всё',
+  custom: 'Свой',
 };
 
-function getRangeParams(period: Period) {
+function getRangeParams(period: Period, customRange: { from: string, to: string }) {
   const now = new Date();
   switch (period) {
     case 'today':
@@ -31,29 +29,17 @@ function getRangeParams(period: Period) {
         to: endOfDay(now).toISOString(),
         trendPeriod: 'day' as const,
       };
-    case 'week':
-      return {
-        from: startOfWeek(now, { weekStartsOn: 1 }).toISOString(),
-        to: endOfWeek(now, { weekStartsOn: 1 }).toISOString(),
-        trendPeriod: 'day' as const,
-      };
     case 'month':
       return {
         from: startOfMonth(now).toISOString(),
         to: endOfMonth(now).toISOString(),
         trendPeriod: 'day' as const,
       };
-    case 'year':
+    case 'custom':
       return {
-        from: startOfYear(now).toISOString(),
-        to: endOfYear(now).toISOString(),
-        trendPeriod: 'month' as const,
-      };
-    case 'all':
-      return {
-        from: undefined,
-        to: undefined,
-        trendPeriod: 'month' as const,
+        from: customRange.from ? startOfDay(new Date(customRange.from)).toISOString() : undefined,
+        to: customRange.to ? endOfDay(new Date(customRange.to)).toISOString() : undefined,
+        trendPeriod: 'day' as const,
       };
     default:
       return { from: undefined, to: undefined, trendPeriod: 'day' as const };
@@ -63,6 +49,10 @@ function getRangeParams(period: Period) {
 export default function Reports() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>('month');
+  const [customRange, setCustomRange] = useState({
+    from: startOfMonth(new Date()).toISOString().split('T')[0],
+    to: endOfMonth(new Date()).toISOString().split('T')[0],
+  });
 
   useEffect(() => {
     if (!isAuthenticated()) navigate('/');
@@ -71,7 +61,7 @@ export default function Reports() {
   const api = ApiClient.getOpenAPIClient();
 
   // Use real report endpoints
-  const { from, to, trendPeriod } = useMemo(() => getRangeParams(period), [period]);
+  const { from, to, trendPeriod } = useMemo(() => getRangeParams(period, customRange), [period, customRange]);
 
   // Use real report endpoints
   const { data: summary } = useQuery({
@@ -215,12 +205,12 @@ export default function Reports() {
           </div>
         </div>
         {/* Period Tabs */}
-        <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto no-scrollbar">
-          {(['today', 'week', 'month', 'year', 'all'] as const).map((p) => (
+        <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+          {(['today', 'month', 'custom'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`flex-1 min-w-[70px] py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
                 period === p
                   ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -230,6 +220,30 @@ export default function Reports() {
             </button>
           ))}
         </div>
+
+        {/* Custom Range Picker */}
+        {period === 'custom' && (
+          <div className="mt-4 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <div className="flex-1 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400 uppercase">С</span>
+              <input
+                type="date"
+                value={customRange.from}
+                onChange={(e) => setCustomRange((prev) => ({ ...prev, from: e.target.value }))}
+                className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-xs font-bold focus:outline-none focus:border-primary/50 transition-colors"
+              />
+            </div>
+            <div className="flex-1 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400 uppercase">По</span>
+              <input
+                type="date"
+                value={customRange.to}
+                onChange={(e) => setCustomRange((prev) => ({ ...prev, to: e.target.value }))}
+                className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-xs font-bold focus:outline-none focus:border-primary/50 transition-colors"
+              />
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="flex-1 px-4 py-6 space-y-6">
@@ -278,9 +292,9 @@ export default function Reports() {
             <h3 className="text-sm font-bold">Динамика долгов</h3>
             <span className="text-[10px] text-gray-400 font-medium">
               {period === 'today' ? 'За сегодня' : 
-               period === 'week' ? 'За 7 дней' :
                period === 'month' ? 'За 30 дней' :
-               period === 'year' ? 'За год' : 'За всё время'}
+               period === 'custom' ? `С ${new Date(customRange.from).toLocaleDateString('ru', { day: 'numeric', month: 'short' })} по ${new Date(customRange.to).toLocaleDateString('ru', { day: 'numeric', month: 'short' })}` :
+               ''}
             </span>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300">
