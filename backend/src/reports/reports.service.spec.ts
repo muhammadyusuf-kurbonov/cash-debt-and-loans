@@ -4,7 +4,10 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('ReportsService', () => {
   let service: ReportsService;
-  let prisma: { balance: { findMany: jest.Mock }; transaction: { findMany: jest.Mock } };
+  let prisma: {
+    balance: { findMany: jest.Mock };
+    transaction: { findMany: jest.Mock };
+  };
 
   beforeEach(async () => {
     prisma = {
@@ -13,10 +16,7 @@ describe('ReportsService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ReportsService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ReportsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<ReportsService>(ReportsService);
@@ -112,15 +112,35 @@ describe('ReportsService', () => {
   describe('getTopDebtors', () => {
     it('should return contacts with positive balances sorted desc', async () => {
       prisma.balance.findMany.mockResolvedValue([
-        { contact_id: 1, amount: 200, contact: { name: 'Alice' }, currency: { symbol: 'USD' } },
-        { contact_id: 2, amount: 100, contact: { name: 'Bob' }, currency: { symbol: 'USD' } },
+        {
+          contact_id: 1,
+          amount: 200,
+          contact: { name: 'Alice' },
+          currency: { symbol: 'USD' },
+        },
+        {
+          contact_id: 2,
+          amount: 100,
+          contact: { name: 'Bob' },
+          currency: { symbol: 'USD' },
+        },
       ]);
 
       const result = await service.getTopDebtors(1);
 
       expect(result).toEqual([
-        { contactId: 1, contactName: 'Alice', amount: 200, currencySymbol: 'USD' },
-        { contactId: 2, contactName: 'Bob', amount: 100, currencySymbol: 'USD' },
+        {
+          contactId: 1,
+          contactName: 'Alice',
+          amount: 200,
+          currencySymbol: 'USD',
+        },
+        {
+          contactId: 2,
+          contactName: 'Bob',
+          amount: 100,
+          currencySymbol: 'USD',
+        },
       ]);
     });
   });
@@ -128,13 +148,23 @@ describe('ReportsService', () => {
   describe('getTopCreditors', () => {
     it('should return absolute amounts for negative balances', async () => {
       prisma.balance.findMany.mockResolvedValue([
-        { contact_id: 1, amount: -150, contact: { name: 'Charlie' }, currency: { symbol: 'USD' } },
+        {
+          contact_id: 1,
+          amount: -150,
+          contact: { name: 'Charlie' },
+          currency: { symbol: 'USD' },
+        },
       ]);
 
       const result = await service.getTopCreditors(1);
 
       expect(result).toEqual([
-        { contactId: 1, contactName: 'Charlie', amount: 150, currencySymbol: 'USD' },
+        {
+          contactId: 1,
+          contactName: 'Charlie',
+          amount: 150,
+          currencySymbol: 'USD',
+        },
       ]);
     });
   });

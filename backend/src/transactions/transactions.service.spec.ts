@@ -8,9 +8,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
 // Mock the absolute-path import before importing the service
-jest.mock('src/contacts/contacts.service', () => ({
-  ContactsService: class MockContactsService {},
-}), { virtual: true });
+jest.mock(
+  'src/contacts/contacts.service',
+  () => ({
+    ContactsService: class MockContactsService {},
+  }),
+  { virtual: true },
+);
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { TransactionsService } = require('./transactions.service');

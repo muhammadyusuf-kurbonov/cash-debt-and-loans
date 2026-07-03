@@ -4,6 +4,7 @@ import { DEFAULT_BOT_NAME } from 'nestjs-telegraf';
 import { I18nService } from 'src/i18n/i18n.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
+import { formatCurrency } from 'src/utils';
 import { Telegraf } from 'telegraf';
 import { InlineQueryResultArticle } from 'telegraf/types';
 
@@ -46,7 +47,7 @@ export class ContactsAttachService {
           id: `accept-${contact_id}-${userTGId}`,
           title: `Пригласить`,
           input_message_content: {
-            message_text: `Прошу продвердить привязку к контакту ${contact.name}. \n\n Баланс: ${contact.Balance.map((balance) => `${balance.amount} ${balance.currency.name}`).join('\n')}`,
+            message_text: `Прошу продвердить привязку к контакту ${contact.name}. \n\n Баланс: ${contact.Balance.map((balance) => `${formatCurrency(balance.amount)} ${balance.currency.symbol}`).join('\n')}`,
           },
           reply_markup: {
             inline_keyboard: [

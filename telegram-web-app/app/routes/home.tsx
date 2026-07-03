@@ -3,6 +3,7 @@ import { init, viewport } from '@tma.js/sdk-react';
 import { max, formatDistanceToNow } from 'date-fns';
 import { useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router';
+import { Money } from '~/components/money';
 import { ApiClient } from '~/lib/api-client';
 import { isAuthenticated } from "~/lib/telegram-auth";
 import { useTelegramData } from "~/lib/useTelegramData";
@@ -108,7 +109,7 @@ export default function Home() {
             ) : (
               Object.entries(netByCurrency).map(([symbol, value]) => (
                 <h2 key={symbol} className="text-4xl font-extrabold tracking-tight">
-                  {value >= 0 ? '+' : ''}{value.toLocaleString('ru', { maximumFractionDigits: 2 })} {symbol}
+                  {value.toLocaleString('ru', { maximumFractionDigits: 2, signDisplay: 'always', useGrouping: true })} {symbol}
                 </h2>
               ))
             )}
@@ -146,7 +147,7 @@ export default function Home() {
                   {Object.entries(totals).map(([symbol, { owed }]) =>
                     owed > 0 && (
                       <p key={symbol} className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                        +{owed.toLocaleString('ru', { maximumFractionDigits: 2 })} {symbol}
+                        {owed.toLocaleString('ru', { maximumFractionDigits: 2, signDisplay: 'always', useGrouping: true })} {symbol}
                       </p>
                     )
                   )}
@@ -170,7 +171,7 @@ export default function Home() {
                   {Object.entries(totals).map(([symbol, { iOwe }]) =>
                     iOwe > 0 && (
                       <p key={symbol} className="text-lg font-bold text-rose-600 dark:text-rose-400">
-                        -{iOwe.toLocaleString('ru', { maximumFractionDigits: 2 })} {symbol}
+                        {(-iOwe).toLocaleString('ru', { maximumFractionDigits: 2, signDisplay: 'always', useGrouping: true })} {symbol}
                       </p>
                     )
                   )}
@@ -221,12 +222,9 @@ export default function Home() {
                     </div>
                     <div className="text-right">
                       {contact.Balance.map(bal => (
-                        <span
-                          key={bal.currency.id}
-                          className={`block text-[15px] font-bold ${bal.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : bal.amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500'}`}
-                        >
-                          {bal.amount >= 0 ? '+' : ''}{bal.amount.toLocaleString('ru', { maximumFractionDigits: 2 })} {bal.currency.symbol}
-                        </span>
+                        <div key={bal.currency.id}>
+                          <Money value={bal.amount} symbol={bal.currency.symbol} className="text-[15px] font-bold" />
+                        </div>
                       ))}
                     </div>
                   </div>

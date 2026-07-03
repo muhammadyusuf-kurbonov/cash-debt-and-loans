@@ -221,10 +221,13 @@ export class ContactsController {
   }
 
   @Post(':id/recalculate-balance')
-  @ApiOperation({ summary: "Recalculate balances for a contact" })
+  @ApiOperation({ summary: 'Recalculate balances for a contact' })
   @ApiResponse({ status: 200, description: 'Balances recalculated' })
   @ApiResponse({ status: 404, description: 'Contact not found' })
-  async recalculateBalance(@Request() req: RequestWithUser, @Param('id') contactId: string) {
+  async recalculateBalance(
+    @Request() req: RequestWithUser,
+    @Param('id') contactId: string,
+  ) {
     // Ensure contact belongs to user
     await this.contactsService.findOne(+contactId, req.user.id);
 

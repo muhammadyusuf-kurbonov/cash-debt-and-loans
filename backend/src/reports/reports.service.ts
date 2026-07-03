@@ -5,7 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async getSummary(userId: number, from?: string, to?: string, currencyId?: number) {
+  async getSummary(
+    userId: number,
+    from?: string,
+    to?: string,
+    currencyId?: number,
+  ) {
     if (from || to) {
       return this.getSummaryFromTransactions(userId, from, to, currencyId);
     }
@@ -36,7 +41,7 @@ export class ReportsService {
       else s.iOwe += Math.abs(b.amount);
     }
 
-    return Array.from(summaryMap.values()).map(s => ({
+    return Array.from(summaryMap.values()).map((s) => ({
       ...s,
       netBalance: s.owedToMe - s.iOwe,
     }));
@@ -61,9 +66,9 @@ export class ReportsService {
       if (to) where.createdAt.lte = new Date(to);
     }
 
-    const transactions = await this.prisma.transaction.findMany({ 
+    const transactions = await this.prisma.transaction.findMany({
       where,
-      include: { currency: true }
+      include: { currency: true },
     });
 
     const summaryMap = new Map<number, any>();
@@ -82,7 +87,7 @@ export class ReportsService {
       else s.iOwe += Math.abs(t.amount);
     }
 
-    return Array.from(summaryMap.values()).map(s => ({
+    return Array.from(summaryMap.values()).map((s) => ({
       ...s,
       netBalance: s.owedToMe - s.iOwe,
     }));

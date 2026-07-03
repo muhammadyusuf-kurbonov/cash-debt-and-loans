@@ -65,6 +65,7 @@ export default function TransactionsPage() {
   const totalBalances = useMemo(() => {
     const balances: Record<Currency['symbol'], number> = {};
     transactions?.forEach(transaction => {
+      if (transaction.deletedAt) return;
       balances[transaction.currency.symbol] = (balances[transaction.currency.symbol] || 0) + transaction.amount;
     });
     return balances;
