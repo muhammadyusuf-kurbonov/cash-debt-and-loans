@@ -32,63 +32,15 @@ export class TransactionsService {
       throw new NotFoundException(`Contact with ID ${contactId} not found`);
     }
 
-    // Create the transaction and update balance in a transaction if it's not a draft
-    const transaction = await this.prisma.$transaction(async (prisma) => {
-      // Create the main transaction
-      const transaction = await prisma.transaction.create({
-        data: {
-          contact_id: contactId || null,
-          currency_id: currencyId,
-          amount,
-          note: note || null,
-          draftId,
-          user_id: userId,
-        },
-      });
-
-      if (draftId) {
-        return;
-      }
-
-      // Only update balance if it's not a draft transaction
-      if (contactId) {
-        // Get or create balance for the main contact
-        let balance = await prisma.balance.findUnique({
-          where: {
-            currency_id_contact_id: {
-              currency_id: currencyId,
-              contact_id: contactId,
-            },
-          },
-        });
-
-        if (!balance) {
-          balance = await prisma.balance.create({
-            data: {
-              currency_id: currencyId,
-              contact_id: contactId,
-              amount: 0,
-            },
-          });
-        }
-
-        // Update balance for the main contact
-        await prisma.balance.update({
-          where: {
-            currency_id_contact_id: {
-              currency_id: currencyId,
-              contact_id: contactId,
-            },
-          },
-          data: {
-            amount: {
-              increment: amount,
-            },
-          },
-        });
-      }
-
-      return transaction;
+    const transaction = await this.prisma.transaction.create({
+      data: {
+        contact_id: contactId || null,
+        currency_id: currencyId,
+        amount,
+        note: note || null,
+        draftId,
+        user_id: userId,
+      },
     });
 
     if (draftId) {
@@ -167,44 +119,18 @@ export class TransactionsService {
       );
     }
 
-    // Create the real transaction with the contact
-    const completedTransaction = await this.prisma.$transaction(
-      async (prisma) => {
-        // Update the draft transaction to finalize it (set contact_id and isDraft to false)
-        const updatedTransaction = await prisma.transaction.update({
-          where: { draftId },
-          data: {
-            contact_id: contactId,
-            draftId: null,
-          },
-          include: {
-            currency: true,
-          },
-        });
-
-        // Get or create balance for the main contact
-        await prisma.balance.upsert({
-          where: {
-            currency_id_contact_id: {
-              currency_id: draftTransaction.currency_id,
-              contact_id: contactId,
-            },
-          },
-          update: {
-            amount: {
-              increment: draftTransaction.amount,
-            },
-          },
-          create: {
-            currency_id: draftTransaction.currency_id,
-            contact_id: contactId,
-            amount: draftTransaction.amount,
-          },
-        });
-
-        return updatedTransaction;
+    // Clear the draft marker and attach the contact in one update: the row is
+    // the only write, so there is nothing to keep atomic with.
+    const completedTransaction = await this.prisma.transaction.update({
+      where: { draftId },
+      data: {
+        contact_id: contactId,
+        draftId: null,
       },
-    );
+      include: {
+        currency: true,
+      },
+    });
 
     // Get the contact to check for ref_user_id and create reverse transaction
     const contact = await this.prisma.contact.findUnique({
@@ -277,90 +203,57 @@ export class TransactionsService {
       return;
     }
 
-    // Soft delete transaction and update balance in a transaction
-    return this.prisma.$transaction(async (prisma) => {
-      // Get the contact to check for ref_user_id
-      const contact = await prisma.contact.findUnique({
-        where: { id: contact_id },
-      });
+    // Get the contact to check for ref_user_id
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contact_id },
+    });
 
-      if (!contact) {
-        throw new NotFoundException(`Contact not found for transaction ${id}`);
-      }
+    if (!contact) {
+      throw new NotFoundException(`Contact not found for transaction ${id}`);
+    }
 
-      // Soft delete the main transaction
-      const deletedTransaction = await prisma.transaction.update({
-        where: { id },
-        data: {
-          deletedAt: new Date(),
-        },
-      });
+    // Soft delete the main transaction
+    const deletedTransaction = await this.prisma.transaction.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
 
-      // Update main balance
-      await prisma.balance.update({
+    // If contact has ref_user_id, handle reverse transaction
+    if (contact.ref_user_id) {
+      // Find reverse contact
+      const reverseContact = await this.prisma.contact.findFirst({
         where: {
-          currency_id_contact_id: {
-            currency_id: transaction.currency_id,
-            contact_id: contact_id,
-          },
-        },
-        data: {
-          amount: {
-            decrement: transaction.amount,
-          },
+          user_id: contact.ref_user_id,
+          ref_user_id: contact.user_id,
         },
       });
 
-      // If contact has ref_user_id, handle reverse transaction
-      if (contact.ref_user_id) {
-        // Find reverse contact
-        const reverseContact = await prisma.contact.findFirst({
+      if (reverseContact) {
+        // Find reverse transaction
+        const reverseTransaction = await this.prisma.transaction.findFirst({
           where: {
-            user_id: contact.ref_user_id,
-            ref_user_id: contact.user_id,
+            contact_id: reverseContact.id,
+            currency_id: transaction.currency_id,
+            amount: -transaction.amount,
+            deletedAt: null,
           },
         });
 
-        if (reverseContact) {
-          // Find reverse transaction
-          const reverseTransaction = await prisma.transaction.findFirst({
-            where: {
-              contact_id: reverseContact.id,
-              currency_id: transaction.currency_id,
-              amount: -transaction.amount,
-              deletedAt: null,
+        if (reverseTransaction) {
+          // Soft delete reverse transaction
+          await this.prisma.transaction.update({
+            where: { id: reverseTransaction.id },
+            data: {
+              deletedAt: new Date(),
             },
           });
-
-          if (reverseTransaction) {
-            // Soft delete reverse transaction
-            await prisma.transaction.update({
-              where: { id: reverseTransaction.id },
-              data: {
-                deletedAt: new Date(),
-              },
-            });
-
-            // Update reverse balance
-            await prisma.balance.update({
-              where: {
-                currency_id_contact_id: {
-                  currency_id: transaction.currency_id,
-                  contact_id: reverseContact.id,
-                },
-              },
-              data: {
-                amount: {
-                  increment: -transaction.amount, // Add back the negative amount
-                },
-              },
-            });
-          }
         }
       }
+    }
 
-      return deletedTransaction;
-    });
+    return deletedTransaction;
   }
 
   /**
@@ -437,77 +330,6 @@ export class TransactionsService {
       orderBy: {
         updatedAt: 'desc',
       },
-    });
-  }
-
-  /**
-   * Recalculate balances for a contact based on non-deleted transactions.
-   * This will set each `Balance.amount` to the sum of transactions for that currency
-   * and contact. Balances without transactions will be set to 0.
-   */
-  async recalculateBalancesForContact(contact_id: number) {
-    return this.prisma.$transaction(async (prisma) => {
-      // Sum transactions per currency for the contact
-      const sums = await prisma.transaction.groupBy({
-        by: ['currency_id'],
-        _sum: {
-          amount: true,
-        },
-        where: {
-          contact_id,
-          deletedAt: null,
-        },
-      });
-
-      // Build map of currency_id -> sum
-      const sumMap = new Map<number, number>();
-      for (const s of sums) {
-        sumMap.set(s.currency_id, s._sum.amount ?? 0);
-      }
-
-      // Fetch existing balances for contact
-      const existingBalances = await prisma.balance.findMany({
-        where: { contact_id },
-      });
-
-      // Update or create balances for currencies present in sums
-      for (const [currency_id, amount] of sumMap.entries()) {
-        await prisma.balance.upsert({
-          where: {
-            currency_id_contact_id: {
-              currency_id,
-              contact_id,
-            },
-          },
-          create: {
-            currency_id,
-            contact_id,
-            amount,
-          },
-          update: {
-            amount,
-          },
-        });
-      }
-
-      // For any existing balance without a corresponding transactions sum, set to 0
-      for (const b of existingBalances) {
-        if (!sumMap.has(b.currency_id)) {
-          await prisma.balance.update({
-            where: {
-              currency_id_contact_id: {
-                currency_id: b.currency_id,
-                contact_id,
-              },
-            },
-            data: {
-              amount: 0,
-            },
-          });
-        }
-      }
-
-      return true;
     });
   }
 
