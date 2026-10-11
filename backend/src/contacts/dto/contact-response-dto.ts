@@ -1,14 +1,27 @@
-import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger';
-import { Balance } from 'src/types/prisma/balance';
-import { BalanceRelations } from 'src/types/prisma/balance_relations';
+import { ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import { ContactBalance } from 'src/contacts/contacts.service';
 import { Contact } from 'src/types/prisma/contact';
+import { Currency } from 'src/types/prisma/currency';
 
-// Use inheritance to get all properties from BaseContactDto
+/**
+ * A contact with its computed balances attached. `Balance` is no longer a
+ * Prisma relation, so the shape is declared inline here instead of composed
+ * from `Balance` + `BalanceRelations`. Field names and the property name are
+ * unchanged from the previous contract.
+ */
 export class ContactResponseDto extends Contact {
   @ApiProperty({
-    type: () => [
-      IntersectionType(Balance, PickType(BalanceRelations, ['currency'])),
-    ],
-  }) // **This is how you define an array of complex/nested DTOs**
-  Balance: Array<Balance & Pick<BalanceRelations, 'currency'>>;
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        currency_id: { type: 'integer' },
+        contact_id: { type: 'integer' },
+        amount: { type: 'number' },
+        updatedAt: { type: 'string', format: 'date-time' },
+        currency: { $ref: getSchemaPath(Currency) },
+      },
+    },
+  })
+  Balance: ContactBalance[];
 }

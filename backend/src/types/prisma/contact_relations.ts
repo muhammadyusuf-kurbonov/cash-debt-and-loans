@@ -3,7 +3,6 @@ import {
   Transaction,
   type Transaction as TransactionAsType,
 } from './transaction';
-import { Balance, type Balance as BalanceAsType } from './balance';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ContactRelations {
@@ -15,7 +14,4 @@ export class ContactRelations {
 
   @ApiProperty({ isArray: true, type: () => Transaction })
   Transaction: TransactionAsType[];
-
-  @ApiProperty({ isArray: true, type: () => Balance })
-  Balance: BalanceAsType[];
 }

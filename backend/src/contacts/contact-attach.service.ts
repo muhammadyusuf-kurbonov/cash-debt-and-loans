@@ -7,6 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { formatCurrency } from 'src/utils';
 import { Telegraf } from 'telegraf';
 import { InlineQueryResultArticle } from 'telegraf/types';
+import { ContactsService } from './contacts.service';
 
 @Injectable()
 export class ContactsAttachService {
@@ -15,22 +16,11 @@ export class ContactsAttachService {
     private moduleRef: ModuleRef,
     private i18nService: I18nService,
     private usersService: UsersService,
+    private contactsService: ContactsService,
   ) {}
 
   async requestInvite(contact_id: number, user_id: number, userTGId: number) {
-    const contact = await this.prisma.contact.findFirstOrThrow({
-      where: {
-        id: contact_id,
-        user_id,
-      },
-      include: {
-        Balance: {
-          include: {
-            currency: true,
-          },
-        },
-      },
-    });
+    const contact = await this.contactsService.findOne(contact_id, user_id);
 
     const bot: Telegraf = this.moduleRef.get(DEFAULT_BOT_NAME, {
       strict: false,
