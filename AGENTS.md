@@ -35,30 +35,37 @@ npx prisma generate                        # regenerate generated/prisma (gitign
 npx prisma migrate dev
 TELEGRAM_DISABLED=true npm run generate:swagger   # writes backend/swagger.json
 
-# Frontend — all from telegram-web-app/
-npm run dev          # :5173
-npm run dev:mock     # VITE_MOCK=true — MSW + fake JWT, no backend needed (see TEST.md)
-npm run typecheck    # react-router typegen && tsc
-npm run build
-npm run generate:api-client
+# Frontend — all from telegram-web-app/ (yarn v1)
+yarn dev          # :5173
+yarn dev:mock     # VITE_MOCK=true — MSW + fake JWT, no backend needed (see TEST.md)
+yarn typecheck    # react-router typegen && tsc
+yarn build
+yarn generate:api-client
 ```
 
 There is **no** `backend/jest.config.js` — jest config lives inline in `backend/package.json`
 (`rootDir: src`, `testRegex: .*\.spec\.ts$`). `npm run test -- backend/jest.config.js` does not work.
 
-## Baseline is currently RED (on `main`, verified)
+## Baseline (re-measured on `3a6dcd0`, 2026-10-11)
 
-Do not assume you broke these — but do fix them if your change touches them.
+Do not assume you broke the backend entries — but do fix them if your change touches them.
+The frontend is **green**; it was not, until `9c1b425` fixed three Swagger decorator defects
+that had been publishing a wrong API contract into the generated client.
 
-| Command | State on `main` |
+| Command | State on `3a6dcd0` |
 |---|---|
 | `backend/ npm test` | **9 failed / 5 passed.** `reports.service.spec.ts`, `transactions.service.spec.ts` fail |
-| `backend/ npm run lint` | **45 errors / 2 warnings** (mostly `no-unsafe-member-access`; `no-namespace` on generated `src/types/prisma/index.ts`) |
-| `fe npm run typecheck` | **9 errors** (`app/mocks/data.ts`, `routes/profile.tsx`, `routes/reports.tsx`, `routes/welcome.tsx`) |
+| `backend/ npm run lint` | **48 errors / 2 warnings** (mostly `no-unsafe-member-access`; `no-namespace` on generated `src/types/prisma/index.ts`) |
+| `fe yarn typecheck` | **exit 0** |
 | `backend/ npm run build` | passes |
-| `fe npm run build` | passes — Vite/esbuild does **not** typecheck, so a green build hides type errors |
+| `fe yarn build` | passes — Vite/esbuild does **not** typecheck, so a green build hides type errors |
 
-**Always run `npm run typecheck` in `telegram-web-app/`** — `npm run build` will not catch type errors.
+The lint count is 48, not the 45 this file previously claimed. The +3 is not a regression: a fresh
+`npm install` resolves `^` ranges to newer packages (ESLint 9.39.5), which report more
+`no-unsafe-member-access` hits on the same source.
+
+**Always run `yarn typecheck` in `telegram-web-app/`** — `yarn build` will not catch type errors.
+There is no frontend test framework, so `typecheck` + `build` *is* the entire frontend baseline.
 
 ## Backend architecture
 
@@ -122,8 +129,27 @@ shadcn/ui (`app/components/ui/`, new-york). Path alias `~/` → `./app/`.
 - Auth: JWT in `sessionStorage` under `dl_auth_token` (`app/lib/telegram-auth.ts`). `isAuthenticated()`
   decodes and checks `exp`/`nbf` client-side. `app/routes/welcome.tsx` auto-signs-in via Telegram `initDataRaw`.
 - `VITE_MOCK=true` starts MSW (`app/mocks/`) **and injects a fake JWT** so you land on `/home` with no backend.
-- `npm run dev:mock` is the fastest way to iterate on UI. `telegram-web-app/TEST.md` documents the mock layer.
+- `yarn dev:mock` is the fastest way to iterate on UI. `telegram-web-app/TEST.md` documents the mock layer.
 - No test framework, no ESLint config on the frontend.
+- **`@tma.js/sdk` is pinned to 2.x on purpose. Do not upgrade to 3.x.** v3 is a rewrite, not a version bump:
+  `retrieveLaunchParams()` stops returning a plain object (the basis of `app/lib/useTelegramData.ts`'s graceful
+  non-Telegram fallback, which is what keeps `dev:mock` and browser preview working), `init()` is replaced by an
+  explicit `mount()` lifecycle, and `shareMessage.isAvailable` becomes a signal. With no frontend tests and a
+  build that does not typecheck, a mistake here breaks login *only* inside the real Telegram client.
+- **`yarn start` is broken.** It serves `./build/server/index.js`, which SPA mode deletes at the end of every
+  build. Serve `build/client/` statically instead.
+
+### Known stale areas
+
+- **Orphaned reports endpoints.** `/reports/trends`, `/top-debtors`, `/top-creditors`, `/currency-breakdown` were
+  removed from the UI in `551abde`, but the backend still implements them, `app/mocks/data.ts` still imports
+  `TrendItemDto`/`DebtorCreditorDto`/`CurrencyBreakdownDto`, and `app/mocks/handlers.ts` still mocks
+  `/reports/trends`. Either wire them back up or delete them end-to-end.
+- **Unconfirmed security finding.** `getAllTransactionsOfContact` is called from `contacts.controller.ts:209`
+  with only `+contactId` and no ownership check; `getDraft`/`deleteDraft`/`finalizeDraft` likewise take no
+  `userId`. Not confirmed exploitable end-to-end — verify before treating as a bug report.
+- `docker-compose.override.yml` exists locally but is gitignored via the user's **global** `~/.gitignore`, so
+  other clones never see the `db` service. Not a repo bug, but it will confuse anyone cloning fresh.
 
 ### Deployment gotcha
 

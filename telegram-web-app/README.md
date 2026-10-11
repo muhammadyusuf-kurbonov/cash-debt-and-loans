@@ -68,15 +68,18 @@ The containerized application can be deployed to any platform that supports Dock
 
 If you're familiar with deploying Node applications, the built-in app server is production-ready.
 
-Make sure to deploy the output of `npm run build`
+Make sure to deploy the output of `yarn build`
 
 ```
 ├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
+├── yarn.lock
 ├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+│   └── client/    # Static assets (SPA mode — there is no build/server/)
 ```
+
+This app runs in SPA mode (`ssr: false` in `react-router.config.ts`), so the build emits
+`build/client/` only. Serve that directory from any static file server; do not run
+`yarn start`, which expects a `build/server/` output that is deleted at the end of every build.
 
 ## Styling
 

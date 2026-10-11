@@ -5,7 +5,7 @@ Preview all UI pages with realistic dummy data, no backend needed.
 
 ## Install
 ```bash
-pnpm add -D msw
+yarn add -D msw
 npx msw init public/
 ```
 
@@ -167,10 +167,10 @@ VITE_MOCK=true
 ## How to Use
 ```bash
 # With mocks (UI preview)
-VITE_MOCK=true pnpm run dev
+yarn dev:mock
 
 # Without mocks (real API)
-pnpm run dev
+yarn dev
 ```
 
 ## API Endpoints Used in the App
