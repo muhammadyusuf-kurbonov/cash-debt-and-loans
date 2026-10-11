@@ -9,9 +9,9 @@ export type Language = 'en' | 'ru' | 'uz';
 @Injectable()
 export class I18nService {
   private readonly translations: Record<Language, object> = {
-    en: enTranslations as object,
-    ru: ruTranslations as object,
-    uz: uzTranslations as object,
+    en: enTranslations,
+    ru: ruTranslations,
+    uz: uzTranslations,
   };
 
   getTranslation(key: string, lang: Language = 'ru'): string {
