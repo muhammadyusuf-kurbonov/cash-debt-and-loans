@@ -2,6 +2,16 @@
 .env
 /node_modules/
 
+# Yarn 4 (Modern). `.yarn/releases/` is the yarnPath pinned in .yarnrc.yml and
+# MUST stay committed — it is how builds get yarn 4 without corepack.
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/versions
+.yarn/install-state.gz
+.pnp.*
+
 # React Router
 /.react-router/
 /build/

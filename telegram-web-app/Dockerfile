@@ -2,8 +2,13 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-COPY package.json ./
-RUN yarn install
+# Yarn 4 (Modern) is pinned through .yarnrc.yml -> yarnPath, and the lockfile is
+# in berry format, so the release and the lockfile must be in place before the
+# install. Copying only package.json here used to resolve fresh versions on
+# every build, which made the image non-reproducible.
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn/releases ./.yarn/releases
+RUN yarn install --immutable
 
 COPY . .
 RUN yarn run build

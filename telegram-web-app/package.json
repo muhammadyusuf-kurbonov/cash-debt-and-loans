@@ -2,6 +2,7 @@
   "name": "telegram-web-app",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@4.9.1",
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",

@@ -11,7 +11,17 @@ deliberately **no root `package.json` and no monorepo tooling**:
 | Directory | Package manager | Lockfile | Docker |
 |---|---|---|---|
 | `backend/` | **npm** | `package-lock.json` | `npm ci` |
-| `telegram-web-app/` | **yarn v1** | `yarn.lock` | `yarn install` |
+| `telegram-web-app/` | **Yarn 4 (Modern)** | `yarn.lock` (berry, `__metadata` v8) | `yarn install --immutable` |
+
+The Mini App uses Yarn 4, pinned by `packageManager` in `package.json` **and** by `yarnPath` in
+`.yarnrc.yml` → `.yarn/releases/yarn-4.9.1.cjs`. The committed release is what makes `yarn` resolve to
+4.9.1 on machines without corepack — keep it in git. `.yarnrc.yml` sets `nodeLinker: node-modules`;
+without that Yarn 4 defaults to Plug'n'Play and Vite/@react-router/dev fail.
+
+Cloudflare Pages builds this package with its bundled yarn, and that build image sets `CI=true`, which
+makes yarn implicitly `--immutable`. If the lockfile is out of sync with `package.json`, the build dies
+with `YN0028: The lockfile would have been modified by this install`. That is the expected failure for a
+stale lockfile, not a flake — run `yarn install` locally and commit the result.
 
 Both are built from separate Docker contexts in `docker-compose.yml`. Do **not** reintroduce a root
 workspace, and do not run either package manager from the repo root — there is nothing there to install.
@@ -35,7 +45,7 @@ npx prisma generate                        # regenerate generated/prisma (gitign
 npx prisma migrate dev
 TELEGRAM_DISABLED=true npm run generate:swagger   # writes backend/swagger.json
 
-# Frontend — all from telegram-web-app/ (yarn v1)
+# Frontend — all from telegram-web-app/ (Yarn 4)
 yarn dev          # :5173
 yarn dev:mock     # VITE_MOCK=true — MSW + fake JWT, no backend needed (see TEST.md)
 yarn typecheck    # react-router typegen && tsc

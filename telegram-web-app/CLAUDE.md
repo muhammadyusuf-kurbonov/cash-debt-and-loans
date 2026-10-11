@@ -8,7 +8,12 @@ Telegram Mini App for managing cash, debts, and loans. React frontend that pairs
 
 ## Commands
 
-This package uses **yarn v1** (`yarn.lock` is the only lockfile). Do not use pnpm or npm here.
+This package uses **Yarn 4 (Modern)** (`yarn.lock` is the only lockfile, berry format). Do not use pnpm or npm here.
+
+Yarn 4 is pinned twice: `packageManager` in `package.json`, and `yarnPath` in `.yarnrc.yml` pointing at
+the committed `.yarn/releases/yarn-4.9.1.cjs`. That second pin is what lets `yarn` work without corepack
+installed — keep the release file in git. `.yarnrc.yml` also sets `nodeLinker: node-modules`; Yarn 4 would
+otherwise default to Plug'n'Play, which Vite and `@react-router/dev` do not support here.
 
 ```bash
 yarn dev                 # Dev server at http://localhost:5173
@@ -17,6 +22,9 @@ yarn build               # Production build
 yarn typecheck           # Type checking (runs react-router typegen first)
 yarn generate:api-client # Regenerate API client from app/api/swagger.json
 ```
+
+Installs are immutable in CI. Cloudflare Pages sets `CI=true`, so yarn implicitly runs `--immutable` and
+fails with `YN0028` if `yarn.lock` disagrees with `package.json`. Regenerate and commit the lockfile.
 
 No test framework is configured, so the verification baseline is `yarn typecheck` **and** `yarn build`.
 A green build alone is not sufficient — Vite/esbuild does not typecheck.
