@@ -363,6 +363,33 @@ export class TransactionsService {
     });
   }
 
+  /**
+   * Per-currency NET across all a user's contacts. Grouped by currency only —
+   * a negative and a positive in the same currency cancel, which is the point:
+   * this is what the user is owed overall, not per contact. Compare
+   * `ReportsService.getSummary`, which classifies each contact's net before
+   * folding into currency totals.
+   */
+  async getNetBalanceOfUser(userId: number) {
+    const rows = await this.prisma.$queryRaw<
+      Array<{ currency_id: number; amount: number | null }>
+    >(Prisma.sql`
+      SELECT t."currency_id",
+             SUM(t."amount")::float8 AS "amount"
+        FROM "Transaction" t
+       WHERE t."user_id" = ${userId}
+         AND t."contact_id" IS NOT NULL
+         AND t."deletedAt" IS NULL
+       GROUP BY t."currency_id"
+       ORDER BY t."currency_id"
+    `);
+
+    return rows.map((row) => ({
+      currency_id: row.currency_id,
+      amount: row.amount ?? 0,
+    }));
+  }
+
   async getRecentOperations(
     contactId: number,
     userId: number,

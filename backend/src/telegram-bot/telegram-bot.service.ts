@@ -214,7 +214,7 @@ export class TelegramBotService {
 
   async getBalancesTotal(userTGId: number): Promise<Text> {
     const user = await this.usersService.getUserByTGId(userTGId);
-    const netBalances = await this.usersService.getNetBalanceOfUser(user.id);
+    const netBalances = await this.transactionsService.getNetBalanceOfUser(user.id);
     const withCurrnecy = await Promise.all(
       netBalances.map(async (balance) => ({
         ...balance,

@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { UsersService } from './users.service';
+import { TransactionsService } from '../transactions/transactions.service';
+import type { ContactsService } from '../contacts/contacts.service';
 import type { PrismaService } from '../prisma/prisma.service';
 
 type Row = { currency_id: number; amount: number | null };
 
-describe('UsersService.getNetBalanceOfUser', () => {
+describe('TransactionsService.getNetBalanceOfUser', () => {
   let queryRaw: Mock;
-  let service: UsersService;
+  let service: TransactionsService;
 
   const row = (over: Partial<Row> = {}): Row => ({
     currency_id: 1,
@@ -24,9 +25,13 @@ describe('UsersService.getNetBalanceOfUser', () => {
 
     const prisma = { $queryRaw: queryRaw };
 
-    // Partial double: only $queryRaw is read by this method.
+    // Partial doubles: only $queryRaw is read by this method, and
+    // ContactsService is unused here but required by the constructor.
     // @ts-expect-error partial PrismaService double
-    service = new UsersService(prisma as PrismaService);
+    service = new TransactionsService(
+      prisma as PrismaService,
+      {} as ContactsService,
+    );
   });
 
   it('aggregates from transactions, not a balance table', async () => {

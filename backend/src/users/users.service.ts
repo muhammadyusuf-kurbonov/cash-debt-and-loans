@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { Prisma, User } from 'src/generated/prisma/client';
+import { User } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { ProfileDto } from './dto/profile.dto';
@@ -43,29 +43,6 @@ export class UsersService {
     });
 
     return user;
-  }
-
-  async getNetBalanceOfUser(userId: number) {
-    // Per-currency NET across all the user's contacts. Grouped by currency
-    // only — a negative and a positive for the same currency cancel, which is
-    // the point: this is what the user is owed overall, not per contact.
-    const rows = await this.prisma.$queryRaw<
-      Array<{ currency_id: number; amount: number | null }>
-    >(Prisma.sql`
-      SELECT t."currency_id",
-             SUM(t."amount")::float8 AS "amount"
-        FROM "Transaction" t
-       WHERE t."user_id" = ${userId}
-         AND t."contact_id" IS NOT NULL
-         AND t."deletedAt" IS NULL
-       GROUP BY t."currency_id"
-       ORDER BY t."currency_id"
-    `);
-
-    return rows.map((row) => ({
-      currency_id: row.currency_id,
-      amount: row.amount ?? 0,
-    }));
   }
 
   async getProfile(userId: number) {
