@@ -230,7 +230,7 @@ export class TelegramBotService {
           sep: '\n',
           items: withCurrnecy.map(
             (balance) =>
-              `${formatCurrency(balance._sum.amount ?? 0)} ${balance.currency?.symbol}`,
+              `${formatCurrency(balance.amount)} ${balance.currency?.symbol}`,
           ),
         }),
       ],
