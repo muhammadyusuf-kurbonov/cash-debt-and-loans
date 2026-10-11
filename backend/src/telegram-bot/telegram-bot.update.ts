@@ -162,13 +162,14 @@ export class TelegramBotUpdate {
       const absAmount = Math.abs(transaction.amount || 0);
       const formattedAmount = formatCurrency(absAmount);
 
-      const balances = await this.contactsService.getBalance(
+      const contact = await this.contactsService.findOne(
         transaction.contact_id ?? 0,
         transaction.user_id,
-        transaction.currency_id,
       );
-      const currentBalance =
-        balances && balances.length ? balances[0].amount : 0;
+      const balances = contact.Balance.filter(
+        (balance) => balance.currency_id === transaction.currency_id,
+      );
+      const currentBalance = balances.length ? balances[0].amount : 0;
       const formattedCurrentBalance = formatCurrency(currentBalance);
 
       await context.editMessageText(
@@ -269,17 +270,16 @@ export class TelegramBotUpdate {
         ownerUser.id,
       );
 
-      const balances = await this.contactsService.getBalance(
+      const withBalance = await this.contactsService.findOne(
         contact.id,
         ownerUser.id,
-        currencyId,
+      );
+      const balances = withBalance.Balance.filter(
+        (balance) => balance.currency_id === currencyId,
       );
 
-      const amount = balances && balances.length ? balances[0].amount : 0;
-      let symbol = '';
-      if (balances && balances.length) {
-        symbol = balances[0].currency.symbol;
-      }
+      const amount = balances.length ? balances[0].amount : 0;
+      const symbol = balances.length ? balances[0].currency.symbol : '';
       const formatted = formatCurrency(amount);
 
       await context.answerCbQuery();

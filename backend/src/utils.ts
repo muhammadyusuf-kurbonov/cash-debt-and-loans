@@ -1,5 +1,3 @@
-import { Balance, Currency } from 'src/generated/prisma/client';
-
 export function formatCurrency(number: number): string {
   return number.toLocaleString('ru', {
     style: 'decimal',
@@ -9,6 +7,13 @@ export function formatCurrency(number: number): string {
   });
 }
 
-export function formatBalance(balance: Balance & { currency: Currency }) {
+/**
+ * Structural, so it accepts a balance computed on read (see
+ * `ContactBalance`) without importing the service layer.
+ */
+export function formatBalance(balance: {
+  amount: number;
+  currency: { symbol: string };
+}) {
   return `${formatCurrency(balance.amount)} ${balance.currency.symbol}`;
 }

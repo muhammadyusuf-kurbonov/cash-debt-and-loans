@@ -21,8 +21,6 @@ import {
   PickType,
 } from '@nestjs/swagger';
 import { TransactionsService } from 'src/transactions/transactions.service';
-import { Balance } from 'src/types/prisma/balance';
-import { BalanceRelations } from 'src/types/prisma/balance_relations';
 import { Contact } from 'src/types/prisma/contact';
 import { Transaction } from 'src/types/prisma/transaction';
 import { TransactionRelations } from 'src/types/prisma/transaction_relations';
@@ -123,32 +121,6 @@ export class ContactsController {
   @ApiResponse({ status: 404, description: 'Contact not found' })
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.contactsService.remove(+id, req.user.id);
-  }
-
-  @Get(':id/balance')
-  @ApiOperation({ summary: 'Get balances for a specific contact' })
-  @ApiResponse({
-    status: 200,
-    description: 'Contact balances per currency',
-    type: [IntersectionType(Balance, PickType(BalanceRelations, ['currency']))],
-  })
-  @ApiResponse({ status: 404, description: 'Contact not found' })
-  @ApiQuery({
-    name: 'currencyId',
-    required: false,
-    description: 'Optional currency ID to filter balances',
-  })
-  async getBalance(
-    @Request() req: RequestWithUser,
-    @Param('id') contactId: string,
-    @Query('currencyId') currencyId?: string,
-  ) {
-    const balances = await this.contactsService.getBalance(
-      +contactId,
-      req.user.id,
-      currencyId ? +currencyId : undefined,
-    );
-    return balances;
   }
 
   @Get(':id/prepare-invite')
