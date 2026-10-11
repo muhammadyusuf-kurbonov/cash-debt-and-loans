@@ -12,12 +12,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestWithUser } from '../types/request';
 import { Transaction } from '../types/prisma/transaction';
 import { TransactionRelations } from '../types/prisma/transaction_relations';
-import {
-  CurrencyBreakdownDto,
-  DebtorCreditorDto,
-  SummaryDto,
-  TrendItemDto,
-} from './dto/report-response.dto';
+import { SummaryDto, TrendItemDto } from './dto/report-response.dto';
 import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
@@ -100,40 +95,5 @@ export class ReportsController {
       to,
       currencyId ? +currencyId : undefined,
     );
-  }
-
-  @Get('top-debtors')
-  @ApiOperation({ summary: 'Get contacts who owe you the most' })
-  @ApiResponse({ status: 200, type: [DebtorCreditorDto] })
-  @ApiQuery({ name: 'limit', required: false })
-  getTopDebtors(
-    @Request() req: RequestWithUser,
-    @Query('limit') limit?: string,
-  ) {
-    return this.reportsService.getTopDebtors(
-      req.user.id,
-      limit ? +limit : undefined,
-    );
-  }
-
-  @Get('top-creditors')
-  @ApiOperation({ summary: 'Get contacts you owe the most' })
-  @ApiResponse({ status: 200, type: [DebtorCreditorDto] })
-  @ApiQuery({ name: 'limit', required: false })
-  getTopCreditors(
-    @Request() req: RequestWithUser,
-    @Query('limit') limit?: string,
-  ) {
-    return this.reportsService.getTopCreditors(
-      req.user.id,
-      limit ? +limit : undefined,
-    );
-  }
-
-  @Get('currency-breakdown')
-  @ApiOperation({ summary: 'Get balance breakdown by currency' })
-  @ApiResponse({ status: 200, type: [CurrencyBreakdownDto] })
-  getCurrencyBreakdown(@Request() req: RequestWithUser) {
-    return this.reportsService.getCurrencyBreakdown(req.user.id);
   }
 }

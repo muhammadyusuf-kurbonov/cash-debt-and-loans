@@ -1,172 +1,251 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { ReportsService } from './reports.service';
-import { PrismaService } from '../prisma/prisma.service';
+import type { PrismaService } from '../prisma/prisma.service';
 
-describe('ReportsService', () => {
+/** A per-contact, per-currency aggregate row from the summary query. */
+type Row = {
+  contact_id: number | null;
+  currency_id: number;
+  amount: number | null;
+  currency_name: string;
+  currency_symbol: string;
+};
+
+describe('ReportsService.getSummary', () => {
+  let queryRaw: Mock;
+  let transactionFindMany: Mock;
   let service: ReportsService;
-  let prisma: {
-    balance: { findMany: Mock };
-    transaction: { findMany: Mock };
-  };
 
-  beforeEach(async () => {
-    prisma = {
-      balance: { findMany: vi.fn() },
-      transaction: { findMany: vi.fn() },
-    };
+  const usd = { name: 'USD', symbol: '$' };
+  const eur = { name: 'EUR', symbol: '€' };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ReportsService, { provide: PrismaService, useValue: prisma }],
-    }).compile();
-
-    service = module.get<ReportsService>(ReportsService);
+  const row = (over: Partial<Row> = {}): Row => ({
+    contact_id: 1,
+    currency_id: 1,
+    amount: 100,
+    currency_name: usd.name,
+    currency_symbol: usd.symbol,
+    ...over,
   });
 
-  describe('getSummary', () => {
-    it('should sum positive balances as owedToMe and negative as iOwe', async () => {
-      prisma.balance.findMany.mockResolvedValue([
-        { amount: 100 },
-        { amount: 50 },
-        { amount: -30 },
-        { amount: -20 },
-      ]);
+  const sqlOf = (call = 0): string =>
+    (queryRaw.mock.calls[call][0] as { sql: string }).sql;
+  const valuesOf = (call = 0): unknown[] =>
+    (queryRaw.mock.calls[call][0] as { values: unknown[] }).values;
 
-      const result = await service.getSummary(1);
+  beforeEach(() => {
+    queryRaw = vi.fn().mockResolvedValue([]);
+    transactionFindMany = vi.fn().mockResolvedValue([]);
 
-      expect(result).toEqual({
-        owedToMe: 150,
-        iOwe: 50,
-        netBalance: 100,
-      });
+    const prisma = {
+      $queryRaw: queryRaw,
+      transaction: { findMany: transactionFindMany, groupBy: vi.fn() },
+    };
+
+    // Partial double: only the methods getSummary reads are stubbed.
+    // @ts-expect-error partial PrismaService double
+    service = new ReportsService(prisma as PrismaService);
+  });
+
+  describe('aggregate query', () => {
+    it('reads balances from transactions, not a balance table', async () => {
+      await service.getSummary(1);
+
+      expect(queryRaw).toHaveBeenCalledTimes(1);
+      expect(sqlOf()).toContain('FROM "Transaction"');
     });
 
-    it('should return zeros when no balances exist', async () => {
-      prisma.balance.findMany.mockResolvedValue([]);
+    it('excludes drafts and soft-deleted rows', async () => {
+      await service.getSummary(1);
 
-      const result = await service.getSummary(1);
-
-      expect(result).toEqual({ owedToMe: 0, iOwe: 0, netBalance: 0 });
+      expect(sqlOf()).toMatch(/contact_id" IS NOT NULL/i);
+      expect(sqlOf()).toMatch(/deletedAt" IS NULL/i);
     });
 
-    it('should handle only negative balances', async () => {
-      prisma.balance.findMany.mockResolvedValue([
-        { amount: -100 },
-        { amount: -50 },
-      ]);
+    it('scopes by Transaction.user_id as a bound parameter', async () => {
+      await service.getSummary(1);
 
-      const result = await service.getSummary(1);
-
-      expect(result).toEqual({ owedToMe: 0, iOwe: 150, netBalance: -150 });
+      expect(sqlOf()).toMatch(/user_id" = \?/);
+      expect(valuesOf()).toContain(1);
     });
 
-    it('should ignore zero balances (neither owed nor owing)', async () => {
-      prisma.balance.findMany.mockResolvedValue([
-        { amount: 0 },
-        { amount: 100 },
-      ]);
+    it('groups by contact before currency', async () => {
+      await service.getSummary(1);
 
-      const result = await service.getSummary(1);
-
-      expect(result).toEqual({ owedToMe: 100, iOwe: 0, netBalance: 100 });
+      expect(sqlOf()).toMatch(/GROUP BY[\s\S]*contact_id[\s\S]*currency_id/i);
     });
 
-    it('should use transactions when date range is provided', async () => {
-      prisma.transaction.findMany.mockResolvedValue([
-        { amount: 200 },
-        { amount: -80 },
+    it('adds a currency filter only when one is supplied', async () => {
+      await service.getSummary(1, undefined, undefined, 7);
+
+      expect(sqlOf()).toMatch(/currency_id" = \?/);
+      expect(valuesOf()).toContain(7);
+    });
+
+    it('omits the currency filter when none is supplied', async () => {
+      await service.getSummary(1);
+
+      expect(sqlOf()).not.toMatch(/currency_id" = \?/);
+    });
+  });
+
+  describe('contact-then-currency folding', () => {
+    it('splits signs per contact before folding into per-currency totals', async () => {
+      queryRaw.mockResolvedValue([
+        row({ contact_id: 1, amount: 100 }),
+        row({ contact_id: 2, amount: -30 }),
       ]);
 
-      const result = await service.getSummary(1, '2024-01-01', '2024-12-31');
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 30, netBalance: 70 },
+      ]);
+    });
 
-      expect(result).toEqual({ owedToMe: 200, iOwe: 80, netBalance: 120 });
-      expect(prisma.transaction.findMany).toHaveBeenCalledWith({
+    it('sums positive balances as owedToMe', async () => {
+      queryRaw.mockResolvedValue([
+        row({ contact_id: 1, amount: 200 }),
+        row({ contact_id: 2, amount: 50 }),
+      ]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 250, iOwe: 0, netBalance: 250 },
+      ]);
+    });
+
+    it('sums negative balances as iOwe by absolute value', async () => {
+      queryRaw.mockResolvedValue([
+        row({ contact_id: 1, amount: -80 }),
+        row({ contact_id: 2, amount: -70 }),
+      ]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 0, iOwe: 150, netBalance: -150 },
+      ]);
+    });
+
+    it('treats a zero balance as neither owed nor owing', async () => {
+      queryRaw.mockResolvedValue([
+        row({ contact_id: 1, amount: 0 }),
+        row({ contact_id: 2, amount: 100 }),
+      ]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 0, netBalance: 100 },
+      ]);
+    });
+
+    it('returns a zero-net entry for a currency whose contacts cancel out', async () => {
+      queryRaw.mockResolvedValue([
+        row({ contact_id: 1, amount: 60 }),
+        row({ contact_id: 2, amount: -60 }),
+      ]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 60, iOwe: 60, netBalance: 0 },
+      ]);
+    });
+
+    it('coalesces a null SUM to 0', async () => {
+      queryRaw.mockResolvedValue([row({ amount: null })]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 0, iOwe: 0, netBalance: 0 },
+      ]);
+    });
+
+    it('ignores a row whose contact_id is null', async () => {
+      queryRaw.mockResolvedValue([
+        row({ contact_id: null, amount: 500 }),
+        row({ contact_id: 1, amount: 100 }),
+      ]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 0, netBalance: 100 },
+      ]);
+    });
+
+    it('keeps currencies separate', async () => {
+      queryRaw.mockResolvedValue([
+        row({ currency_id: 1, contact_id: 1, amount: 100, currency_symbol: usd.symbol }),
+        row({
+          currency_id: 2,
+          contact_id: 1,
+          amount: 40,
+          currency_name: eur.name,
+          currency_symbol: eur.symbol,
+        }),
+      ]);
+
+      expect(await service.getSummary(1)).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 0, netBalance: 100 },
+        { currencyId: 2, currencySymbol: '€', owedToMe: 40, iOwe: 0, netBalance: 40 },
+      ]);
+    });
+
+    it('returns an empty array when the user has no transactions', async () => {
+      queryRaw.mockResolvedValue([]);
+
+      expect(await service.getSummary(1)).toEqual([]);
+    });
+  });
+
+  describe('date range', () => {
+    it('uses the transaction range query when from and to are given', async () => {
+      transactionFindMany.mockResolvedValue([]);
+
+      await service.getSummary(1, '2024-01-01', '2024-12-31');
+
+      expect(transactionFindMany).toHaveBeenCalledWith({
         where: {
           user_id: 1,
           deletedAt: null,
           createdAt: {
-            gte: expect.any(Date),
-            lte: expect.any(Date),
+            gte: new Date('2024-01-01'),
+            lte: new Date('2024-12-31'),
           },
         },
+        include: { currency: true },
       });
+      expect(queryRaw).not.toHaveBeenCalled();
     });
-  });
 
-  describe('getCurrencyBreakdown', () => {
-    it('should group balances by currency', async () => {
-      prisma.balance.findMany.mockResolvedValue([
-        { currency_id: 1, amount: 100, currency: { symbol: 'USD' } },
-        { currency_id: 1, amount: -30, currency: { symbol: 'USD' } },
-        { currency_id: 2, amount: 50, currency: { symbol: 'EUR' } },
+    it('folds a ranged result by sign', async () => {
+      transactionFindMany.mockResolvedValue([
+        { amount: 200, currency_id: 1, currency: { symbol: '$' } },
+        { amount: -80, currency_id: 1, currency: { symbol: '$' } },
       ]);
 
-      const result = await service.getCurrencyBreakdown(1);
-
-      expect(result).toEqual([
-        { currencyId: 1, symbol: 'USD', owed: 100, iOwe: 30, net: 70 },
-        { currencyId: 2, symbol: 'EUR', owed: 50, iOwe: 0, net: 50 },
+      expect(await service.getSummary(1, '2024-01-01', '2024-12-31')).toEqual([
+        { currencyId: 1, currencySymbol: '$', owedToMe: 200, iOwe: 80, netBalance: 120 },
       ]);
     });
-  });
 
-  describe('getTopDebtors', () => {
-    it('should return contacts with positive balances sorted desc', async () => {
-      prisma.balance.findMany.mockResolvedValue([
-        {
-          contact_id: 1,
-          amount: 200,
-          contact: { name: 'Alice' },
-          currency: { symbol: 'USD' },
-        },
-        {
-          contact_id: 2,
-          amount: 100,
-          contact: { name: 'Bob' },
-          currency: { symbol: 'USD' },
-        },
-      ]);
+    it('honours a currency filter on the ranged path', async () => {
+      transactionFindMany.mockResolvedValue([]);
 
-      const result = await service.getTopDebtors(1);
+      await service.getSummary(1, '2024-01-01', '2024-12-31', 7);
 
-      expect(result).toEqual([
-        {
-          contactId: 1,
-          contactName: 'Alice',
-          amount: 200,
-          currencySymbol: 'USD',
-        },
-        {
-          contactId: 2,
-          contactName: 'Bob',
-          amount: 100,
-          currencySymbol: 'USD',
-        },
-      ]);
+      expect(transactionFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ currency_id: 7 }),
+        }),
+      );
     });
-  });
 
-  describe('getTopCreditors', () => {
-    it('should return absolute amounts for negative balances', async () => {
-      prisma.balance.findMany.mockResolvedValue([
-        {
-          contact_id: 1,
-          amount: -150,
-          contact: { name: 'Charlie' },
-          currency: { symbol: 'USD' },
-        },
-      ]);
+    it('uses the ranged query when only from is given', async () => {
+      transactionFindMany.mockResolvedValue([]);
 
-      const result = await service.getTopCreditors(1);
+      await service.getSummary(1, '2024-01-01');
 
-      expect(result).toEqual([
-        {
-          contactId: 1,
-          contactName: 'Charlie',
-          amount: 150,
-          currencySymbol: 'USD',
-        },
-      ]);
+      // Any date bound selects the ranged path; only the fully unbounded
+      // call takes the aggregate.
+      expect(transactionFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: { gte: new Date('2024-01-01') },
+          }),
+        }),
+      );
     });
   });
 });

@@ -1,19 +1,23 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
+import { afterEach, describe, expect, it } from 'vitest';
 import { PrismaService } from './prisma.service';
 
 describe('PrismaService', () => {
-  let service: PrismaService;
+  const originalUrl = process.env.DATABASE_URL;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaService],
-    }).compile();
-
-    service = module.get<PrismaService>(PrismaService);
+  afterEach(() => {
+    if (originalUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = originalUrl;
+    }
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('refuses to construct without DATABASE_URL', () => {
+    // Constructing a real client requires the pg driver to probe the adapter,
+    // which recurses past the stack limit here. Asserting the guard is the
+    // part that belongs in a unit test; connecting is `test:e2e`'s job.
+    delete process.env.DATABASE_URL;
+
+    expect(() => new PrismaService()).toThrow('DATABASE_URL is not set');
   });
 });

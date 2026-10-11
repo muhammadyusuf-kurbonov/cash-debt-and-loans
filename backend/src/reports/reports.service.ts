@@ -1,5 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+type SummaryEntry = {
+  currencyId: number;
+  currencySymbol: string;
+  owedToMe: number;
+  iOwe: number;
+};
 
 @Injectable()
 export class ReportsService {
@@ -15,30 +23,54 @@ export class ReportsService {
       return this.getSummaryFromTransactions(userId, from, to, currencyId);
     }
 
-    const where: any = { contact: { user_id: userId } };
-    if (currencyId) {
-      where.currency_id = currencyId;
-    }
+    const currencyFilter = currencyId ? Prisma.sql`AND t."currency_id" = ${currencyId}` : Prisma.empty;
 
-    const balances = await this.prisma.balance.findMany({
-      where,
-      include: { currency: true },
-    });
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        contact_id: number | null;
+        currency_id: number;
+        amount: number | null;
+        currency_name: string;
+        currency_symbol: string;
+      }>
+    >(Prisma.sql`
+      SELECT t."contact_id",
+             t."currency_id",
+             SUM(t."amount")::float8    AS "amount",
+             c."name"                   AS "currency_name",
+             c."symbol"                 AS "currency_symbol"
+        FROM "Transaction" t
+        JOIN "Currency" c ON c."id" = t."currency_id"
+       WHERE t."user_id" = ${userId}
+         AND t."contact_id" IS NOT NULL
+         AND t."deletedAt" IS NULL
+       ${currencyFilter}
+       GROUP BY t."contact_id", t."currency_id", c."name", c."symbol"
+       ORDER BY t."currency_id", t."contact_id"
+    `);
 
-    const summaryMap = new Map<number, any>();
+    const summaryMap = new Map<number, SummaryEntry>();
 
-    for (const b of balances) {
-      if (!summaryMap.has(b.currency_id)) {
-        summaryMap.set(b.currency_id, {
-          currencyId: b.currency_id,
-          currencySymbol: b.currency.symbol,
+    // Fold per CONTACT, never per currency: a contact's net is classified
+    // before it is added to its currency's totals. Summing first would turn
+    // (+100, -30) into a single +70 and report owedToMe: 70 instead of 100.
+    for (const row of rows) {
+      if (row.contact_id === null) continue;
+
+      const amount = row.amount ?? 0;
+      let entry = summaryMap.get(row.currency_id);
+      if (!entry) {
+        entry = {
+          currencyId: row.currency_id,
+          currencySymbol: row.currency_symbol,
           owedToMe: 0,
           iOwe: 0,
-        });
+        };
+        summaryMap.set(row.currency_id, entry);
       }
-      const s = summaryMap.get(b.currency_id)!;
-      if (b.amount > 0) s.owedToMe += b.amount;
-      else s.iOwe += Math.abs(b.amount);
+
+      if (amount > 0) entry.owedToMe += amount;
+      else entry.iOwe += Math.abs(amount);
     }
 
     return Array.from(summaryMap.values()).map((s) => ({
@@ -163,81 +195,6 @@ export class ReportsService {
     return Array.from(buckets.entries()).map(([date, data]) => ({
       date,
       ...data,
-    }));
-  }
-
-  async getTopDebtors(userId: number, limit: number = 5) {
-    const balances = await this.prisma.balance.findMany({
-      where: {
-        contact: { user_id: userId },
-        amount: { gt: 0 },
-      },
-      include: {
-        contact: true,
-        currency: true,
-      },
-      orderBy: { amount: 'desc' },
-      take: limit,
-    });
-
-    return balances.map((b) => ({
-      contactId: b.contact_id,
-      contactName: b.contact.name ?? '',
-      amount: b.amount,
-      currencySymbol: b.currency.symbol,
-    }));
-  }
-
-  async getTopCreditors(userId: number, limit: number = 5) {
-    const balances = await this.prisma.balance.findMany({
-      where: {
-        contact: { user_id: userId },
-        amount: { lt: 0 },
-      },
-      include: {
-        contact: true,
-        currency: true,
-      },
-      orderBy: { amount: 'asc' },
-      take: limit,
-    });
-
-    return balances.map((b) => ({
-      contactId: b.contact_id,
-      contactName: b.contact.name ?? '',
-      amount: Math.abs(b.amount),
-      currencySymbol: b.currency.symbol,
-    }));
-  }
-
-  async getCurrencyBreakdown(userId: number) {
-    const balances = await this.prisma.balance.findMany({
-      where: { contact: { user_id: userId } },
-      include: { currency: true },
-    });
-
-    const map = new Map<
-      number,
-      { symbol: string; owed: number; iOwe: number }
-    >();
-
-    for (const b of balances) {
-      if (!map.has(b.currency_id)) {
-        map.set(b.currency_id, {
-          symbol: b.currency.symbol,
-          owed: 0,
-          iOwe: 0,
-        });
-      }
-      const entry = map.get(b.currency_id)!;
-      if (b.amount > 0) entry.owed += b.amount;
-      else entry.iOwe += Math.abs(b.amount);
-    }
-
-    return Array.from(map.entries()).map(([currencyId, data]) => ({
-      currencyId,
-      ...data,
-      net: data.owed - data.iOwe,
     }));
   }
 

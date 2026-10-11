@@ -27,34 +27,3 @@ export class TrendItemDto {
   @ApiProperty()
   payables: number;
 }
-
-export class DebtorCreditorDto {
-  @ApiProperty()
-  contactId: number;
-
-  @ApiProperty()
-  contactName: string;
-
-  @ApiProperty()
-  amount: number;
-
-  @ApiProperty()
-  currencySymbol: string;
-}
-
-export class CurrencyBreakdownDto {
-  @ApiProperty()
-  currencyId: number;
-
-  @ApiProperty()
-  symbol: string;
-
-  @ApiProperty()
-  owed: number;
-
-  @ApiProperty()
-  iOwe: number;
-
-  @ApiProperty()
-  net: number;
-}
