@@ -61,35 +61,32 @@ export interface Contact {
   ref_user_id?: number;
 }
 
+export interface ContactResponseDto {
+  id: number;
+  user_id: number;
+  name?: string;
+  ref_user_id?: number;
+  Balance: {
+    currency_id: number;
+    contact_id: number;
+    amount: number;
+    /** @format date-time */
+    updatedAt: string;
+    currency: Currency;
+  }[];
+}
+
+export interface UpdateContactDto {
+  name?: string;
+  ref_user_id?: number;
+}
+
 export interface Currency {
   id: number;
   name: string;
   symbol: string;
   /** @format date-time */
   createdAt: string;
-}
-
-export interface IntersectionBalancePickBalanceRelationsCurrency {
-  currency_id: number;
-  /** @example 0 */
-  amount: number;
-  contact_id: number;
-  /** @format date-time */
-  updatedAt: string;
-  currency: Currency;
-}
-
-export interface ContactResponseDto {
-  id: number;
-  user_id: number;
-  name?: string;
-  ref_user_id?: number;
-  Balance: IntersectionBalancePickBalanceRelationsCurrency[];
-}
-
-export interface UpdateContactDto {
-  name?: string;
-  ref_user_id?: number;
 }
 
 export interface IntersectionTransactionPickTransactionRelationsCurrency {
@@ -215,21 +212,6 @@ export interface TrendItemDto {
   payables: number;
 }
 
-export interface DebtorCreditorDto {
-  contactId: number;
-  contactName: string;
-  amount: number;
-  currencySymbol: string;
-}
-
-export interface CurrencyBreakdownDto {
-  currencyId: number;
-  symbol: string;
-  owed: number;
-  iOwe: number;
-  net: number;
-}
-
 export interface Transaction {
   id: number;
   contact_id?: number;
@@ -252,23 +234,8 @@ export interface UserRelations {
   isContactFor: Contact[];
 }
 
-export interface Balance {
-  currency_id: number;
-  /** @example 0 */
-  amount: number;
-  contact_id: number;
-  /** @format date-time */
-  updatedAt: string;
-}
-
 export interface CurrencyRelations {
-  balances: Balance[];
   transactions: Transaction[];
-}
-
-export interface BalanceRelations {
-  currency: Currency;
-  contact: Contact;
 }
 
 export interface User {
@@ -296,7 +263,6 @@ export interface ContactRelations {
   user: User;
   ref_user?: User;
   Transaction: Transaction[];
-  Balance: Balance[];
 }
 
 import type {
@@ -763,32 +729,6 @@ export class Api<
      * No description
      *
      * @tags contacts
-     * @name ContactsControllerGetBalance
-     * @summary Get balances for a specific contact
-     * @request GET:/contacts/{id}/balance
-     * @secure
-     */
-    contactsControllerGetBalance: (
-      id: string,
-      query?: {
-        /** Optional currency ID to filter balances */
-        currencyId?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<IntersectionBalancePickBalanceRelationsCurrency[], void>({
-        path: `/contacts/${id}/balance`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags contacts
      * @name ContactsControllerPrepareInvite
      * @summary Prepare an invite message with inline button for Telegram
      * @request GET:/contacts/{id}/prepare-invite
@@ -831,26 +771,6 @@ export class Api<
         query: query,
         secure: true,
         format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags contacts
-     * @name ContactsControllerRecalculateBalance
-     * @summary Recalculate balances for a contact
-     * @request POST:/contacts/{id}/recalculate-balance
-     * @secure
-     */
-    contactsControllerRecalculateBalance: (
-      id: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<void, void>({
-        path: `/contacts/${id}/recalculate-balance`,
-        method: "POST",
-        secure: true,
         ...params,
       }),
   };
@@ -1086,72 +1006,6 @@ export class Api<
         path: `/reports/trends`,
         method: "GET",
         query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags reports
-     * @name ReportsControllerGetTopDebtors
-     * @summary Get contacts who owe you the most
-     * @request GET:/reports/top-debtors
-     * @secure
-     */
-    reportsControllerGetTopDebtors: (
-      query?: {
-        limit?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<DebtorCreditorDto[], any>({
-        path: `/reports/top-debtors`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags reports
-     * @name ReportsControllerGetTopCreditors
-     * @summary Get contacts you owe the most
-     * @request GET:/reports/top-creditors
-     * @secure
-     */
-    reportsControllerGetTopCreditors: (
-      query?: {
-        limit?: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<DebtorCreditorDto[], any>({
-        path: `/reports/top-creditors`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags reports
-     * @name ReportsControllerGetCurrencyBreakdown
-     * @summary Get balance breakdown by currency
-     * @request GET:/reports/currency-breakdown
-     * @secure
-     */
-    reportsControllerGetCurrencyBreakdown: (params: RequestParams = {}) =>
-      this.request<CurrencyBreakdownDto[], any>({
-        path: `/reports/currency-breakdown`,
-        method: "GET",
         secure: true,
         format: "json",
         ...params,

@@ -14,6 +14,16 @@ export class ContactResponseDto extends Contact {
     type: 'array',
     items: {
       type: 'object',
+      // Without an explicit `required`, swagger-typescript-api emits every
+      // field as optional, and the Mini App reads `balance.amount` and
+      // `balance.updatedAt` unguarded.
+      required: [
+        'currency_id',
+        'contact_id',
+        'amount',
+        'updatedAt',
+        'currency',
+      ],
       properties: {
         currency_id: { type: 'integer' },
         contact_id: { type: 'integer' },
