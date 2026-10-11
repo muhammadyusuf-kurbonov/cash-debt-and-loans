@@ -35,12 +35,13 @@ To regenerate the API contract across both:
 
 ```bash
 # Backend — all from backend/
-npm test                                   # jest (config is inline in package.json, rootDir=src)
-npx jest transactions.service              # single file (regex on path)
-npm test -t "should create"                # single test by name — NO `--` before -t
+npm test                                   # vitest run
+npx vitest run transactions.service        # single file (regex on path)
+npx vitest run -t "should create"          # single test by name
 npm run lint                               # eslint --fix; auto-rewrites files
+npx eslint "src/**/*.ts" "test/**/*.ts" --no-fix   # report only, no rewrite
 npm run build
-npm run test:e2e                           # test/jest-e2e.json, matches *.e2e-spec.ts
+npm run test:e2e                           # vitest.e2e.config.ts, matches *.e2e-spec.ts
 npx prisma generate                        # regenerate generated/prisma (gitignored)
 npx prisma migrate dev
 TELEGRAM_DISABLED=true npm run generate:swagger   # writes backend/swagger.json
@@ -53,19 +54,24 @@ yarn build
 yarn generate:api-client
 ```
 
-There is **no** `backend/jest.config.js` — jest config lives inline in `backend/package.json`
-(`rootDir: src`, `testRegex: .*\.spec\.ts$`). `npm run test -- backend/jest.config.js` does not work.
+Tests run on **Vitest** (`vitest.config.ts`; e2e in `vitest.e2e.config.ts`). It resolves the `src/...`
+aliases natively via `resolve.tsconfigPaths`, which Jest never did. `resolve.tsconfigPaths` is native in
+Vite — do not reinstall `vite-tsconfig-paths` for it.
 
-## Baseline (re-measured on `3a6dcd0`, 2026-10-11)
+**`npm run lint` is `eslint --fix` and rewrites files.** It is the reason `no-unsafe-member-access`
+counts drift between installs, and it will silently reformat unrelated work-in-progress in your tree.
+Prefer `npx eslint "src/**/*.ts" "test/**/*.ts" --no-fix` when you only need a count.
+
+## Baseline (re-measured on `db374c5`, 2026-10-11)
 
 Do not assume you broke the backend entries — but do fix them if your change touches them.
 The frontend is **green**; it was not, until `9c1b425` fixed three Swagger decorator defects
 that had been publishing a wrong API contract into the generated client.
 
-| Command | State on `3a6dcd0` |
+| Command | State on `db374c5` |
 |---|---|
-| `backend/ npm test` | **9 failed / 5 passed.** `reports.service.spec.ts`, `transactions.service.spec.ts` fail |
-| `backend/ npm run lint` | **48 errors / 2 warnings** (mostly `no-unsafe-member-access`; `no-namespace` on generated `src/types/prisma/index.ts`) |
+| `backend/ npm test` (vitest) | **62 passed / 0 failed** across 5 files |
+| `backend/ npx eslint "src/**/*.ts" "test/**/*.ts" --no-fix` | **32 errors / 1 warning** (22 in `reports.service.ts`, 5 in its spec — mostly `no-unsafe-member-access` from the pre-existing `any`-typed report rows; `no-namespace` on generated `src/types/prisma/index.ts`) |
 | `fe yarn typecheck` | **exit 0** |
 | `backend/ npm run build` | passes |
 | `fe yarn build` | passes — Vite/esbuild does **not** typecheck, so a green build hides type errors |
@@ -100,12 +106,21 @@ src/<feature>/
 - `generated/prisma` is gitignored (run `npx prisma generate`). `src/types/prisma/` **is committed** —
   it is `prisma-class-generator` output and is what Swagger uses for `extraModels`.
 - Datasource is **PostgreSQL only**. `backend/prisma/dev.db` is a stale SQLite leftover.
-- Balance model: `Balance` is a denormalized table keyed `(currency_id, contact_id)`, kept in sync inside
-  `prisma.$transaction`. `TransactionsService.recalculateBalancesForContact` recomputes from transactions.
+- Balance model: there is **no `Balance` table**. A balance is computed on read as
+  `SUM(amount) GROUP BY (contact_id, currency_id)` over transactions where
+  `deletedAt IS NULL AND contact_id IS NOT NULL`. That `contact_id IS NOT NULL` predicate *is* the
+  draft model: `createDraft` writes a null `contact_id` and `finalizeDraft` sets it.
+  Each reader owns its own aggregate in a single `$queryRaw` that joins `Currency`:
+  `ContactsService.attachBalances` (per contact, plus `MAX(updatedAt)` as `Balance.updatedAt`),
+  `ReportsService.getSummary` (folds per contact, never pre-sums per currency), and
+  `TransactionsService.getNetBalanceOfUser` (per-currency net across all contacts).
+  `Transaction` is indexed `[user_id, contact_id, currency_id]` and `[contact_id, currency_id]` to
+  serve them. `amount` is `Float`, so a computed sum can differ in the last digit from the old
+  incremental counter — do not use a recomputed balance as a data audit.
 - Bidirectional debt: a `Contact.ref_user_id` causes `create`/`finalizeDraft` to recursively create a
   mirrored transaction with negated `amount` for the referenced user. Soft delete via `deletedAt`.
-- Drafts: `createDraft` stores a transaction with `draftId` and **no** balance update;
-  `finalizeDraft` attaches `contact_id`, nulls `draftId`, and applies the balance.
+- Drafts: `createDraft` stores a transaction with `draftId` and **no** `contact_id`;
+  `finalizeDraft` attaches `contact_id` and nulls `draftId`. Neither touches a balance.
 - `main.ts` listens on `process.env.PORT ?? 3000` (`.env` sets 3001); Swagger UI at `/api`.
 - Telegram bot is conditionally registered: `TelegramBotModule.register(!process.env.TELEGRAM_DISABLED)`.
   Any non-empty `TELEGRAM_DISABLED` disables it — this is what makes swagger generation work offline.
@@ -151,10 +166,10 @@ shadcn/ui (`app/components/ui/`, new-york). Path alias `~/` → `./app/`.
 
 ### Known stale areas
 
-- **Orphaned reports endpoints.** `/reports/trends`, `/top-debtors`, `/top-creditors`, `/currency-breakdown` were
-  removed from the UI in `551abde`, but the backend still implements them, `app/mocks/data.ts` still imports
-  `TrendItemDto`/`DebtorCreditorDto`/`CurrencyBreakdownDto`, and `app/mocks/handlers.ts` still mocks
-  `/reports/trends`. Either wire them back up or delete them end-to-end.
+- **Orphaned reports endpoints.** `/reports/trends` was removed from the UI in `551abde` and is still
+  implemented by the backend and mocked in `app/mocks/handlers.ts`. Wire it back up or delete it.
+  (`/top-debtors`, `/top-creditors`, `/currency-breakdown` and `GET /contacts/:id/balance` were deleted
+  end-to-end by the balance refactor, along with `DebtorCreditorDto`/`CurrencyBreakdownDto`.)
 - **Unconfirmed security finding.** `getAllTransactionsOfContact` is called from `contacts.controller.ts:209`
   with only `+contactId` and no ownership check; `getDraft`/`deleteDraft`/`finalizeDraft` likewise take no
   `userId`. Not confirmed exploitable end-to-end — verify before treating as a bug report.
