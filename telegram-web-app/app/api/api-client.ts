@@ -12,7 +12,17 @@
 
 export type SignUpDto = object;
 
-export type AuthResponseDto = object;
+export interface AuthUserDto {
+  id: number;
+  email?: string;
+  telegram_id?: string;
+  name?: string;
+}
+
+export interface AuthResponseDto {
+  token: string;
+  user: AuthUserDto;
+}
 
 export type SignInDto = object;
 
@@ -132,17 +142,17 @@ export interface ProfileDto {
    * User display name
    * @example "John Doe"
    */
-  name: object;
+  name: string | null;
   /**
    * User email address
    * @example "john@example.com"
    */
-  email: object;
+  email: string | null;
   /**
    * Telegram ID
    * @example "123456789"
    */
-  telegram_id: object;
+  telegram_id: string | null;
   /** Account verification status */
   is_verified: boolean;
   /**
@@ -178,6 +188,24 @@ export interface SummaryDto {
   owedToMe: number;
   iOwe: number;
   netBalance: number;
+}
+
+export interface IntersectionTransactionPickTransactionRelationsCurrencyContact {
+  id: number;
+  contact_id?: number;
+  currency_id: number;
+  user_id: number;
+  amount: number;
+  note?: string;
+  draftId?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  updatedAt: string;
+  /** @format date-time */
+  deletedAt?: string;
+  contact?: Contact;
+  currency: Currency;
 }
 
 export interface TrendItemDto {
@@ -1021,11 +1049,15 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<void, any>({
+      this.request<
+        IntersectionTransactionPickTransactionRelationsCurrencyContact[],
+        any
+      >({
         path: `/reports/transactions`,
         method: "GET",
         query: query,
         secure: true,
+        format: "json",
         ...params,
       }),
 

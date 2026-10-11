@@ -64,11 +64,11 @@ export const mockTransactions: IntersectionTransactionPickTransactionRelationsCu
   { id: 4, contact_id: 1, currency_id: 1, user_id: 1, amount: 300000, note: 'Такси', createdAt: '2025-03-15T10:00:00Z', updatedAt: '2025-03-15T10:00:00Z', currency: mockCurrencies[0] },
 ];
 
-export const mockSummary: SummaryDto = {
-  owedToMe: 1600000,
-  iOwe: 250000,
-  netBalance: 1350000,
-};
+// GET /reports/summary returns one entry per currency.
+export const mockSummary: SummaryDto[] = [
+  { currencyId: 1, currencySymbol: 'UZS', owedToMe: 1500000, iOwe: 200000, netBalance: 1300000 },
+  { currencyId: 2, currencySymbol: 'USD', owedToMe: 100, iOwe: 50, netBalance: 50 },
+];
 
 export const mockTrends: TrendItemDto[] = [
   { date: '2025-01', receivables: 300000, payables: 50000 },

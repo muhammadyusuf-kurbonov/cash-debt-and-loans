@@ -5,9 +5,13 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  IntersectionType,
+  PickType,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestWithUser } from '../types/request';
+import { Transaction } from '../types/prisma/transaction';
+import { TransactionRelations } from '../types/prisma/transaction_relations';
 import {
   CurrencyBreakdownDto,
   DebtorCreditorDto,
@@ -45,6 +49,15 @@ export class ReportsController {
 
   @Get('transactions')
   @ApiOperation({ summary: 'Get transaction history for a period' })
+  @ApiResponse({
+    status: 200,
+    type: [
+      IntersectionType(
+        Transaction,
+        PickType(TransactionRelations, ['currency', 'contact'] as const),
+      ),
+    ],
+  })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
   @ApiQuery({ name: 'currencyId', required: false })
