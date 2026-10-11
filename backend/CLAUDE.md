@@ -5,14 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Commands
 
 ```bash
-pnpm install              # Install dependencies
-pnpm start:dev            # Run dev server with watch mode (port 3001)
-pnpm build                # Compile (nest build)
-pnpm lint                 # ESLint with auto-fix
-pnpm test                 # Unit tests (Jest)
-pnpm test -- --testPathPattern=<pattern>  # Run a single test
-pnpm test:e2e             # E2E tests
-pnpm generate:swagger     # Generate swagger.json (disables Telegram bot)
+npm install               # Install dependencies
+npm run start:dev         # Run dev server with watch mode (port 3001)
+npm run build             # Compile (nest build)
+npm run lint              # ESLint with auto-fix
+npm test                  # Unit tests (Jest)
+npx jest <pattern>        # Run a single test file by path-regex
+npm run test:e2e          # E2E tests
+npm run generate:swagger  # Generate swagger.json (disables Telegram bot)
 ```
 
 Prisma commands:

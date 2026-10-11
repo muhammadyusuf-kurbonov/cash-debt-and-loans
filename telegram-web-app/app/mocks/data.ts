@@ -2,7 +2,7 @@ import type {
   ProfileDto,
   CurrencyResponseDto,
   ContactResponseDto,
-  IntersectionTransactionPickTypeClass,
+  IntersectionTransactionPickTransactionRelationsCurrency,
   SummaryDto,
   TrendItemDto,
   DebtorCreditorDto,
@@ -57,7 +57,7 @@ export const mockContacts: ContactResponseDto[] = [
   },
 ];
 
-export const mockTransactions: IntersectionTransactionPickTypeClass[] = [
+export const mockTransactions: IntersectionTransactionPickTransactionRelationsCurrency[] = [
   { id: 1, contact_id: 1, currency_id: 1, user_id: 1, amount: 500000, note: 'За обед', createdAt: '2025-05-01T10:00:00Z', updatedAt: '2025-05-01T10:00:00Z', currency: mockCurrencies[0] },
   { id: 2, contact_id: 1, currency_id: 2, user_id: 1, amount: 100, note: 'Книга', createdAt: '2025-04-20T10:00:00Z', updatedAt: '2025-04-20T10:00:00Z', currency: mockCurrencies[1] },
   { id: 3, contact_id: 1, currency_id: 1, user_id: 1, amount: -200000, note: 'Частичный возврат', createdAt: '2025-04-18T10:00:00Z', updatedAt: '2025-04-18T10:00:00Z', currency: mockCurrencies[0] },

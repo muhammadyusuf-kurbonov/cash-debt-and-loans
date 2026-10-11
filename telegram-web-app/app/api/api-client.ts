@@ -59,7 +59,7 @@ export interface Currency {
   createdAt: string;
 }
 
-export interface IntersectionBalancePickTypeClass {
+export interface IntersectionBalancePickBalanceRelationsCurrency {
   currency_id: number;
   amount: number;
   contact_id: number;
@@ -73,7 +73,7 @@ export interface ContactResponseDto {
   user_id: number;
   name?: string;
   ref_user_id?: number;
-  Balance: IntersectionBalancePickTypeClass[];
+  Balance: IntersectionBalancePickBalanceRelationsCurrency[];
 }
 
 export interface UpdateContactDto {
@@ -81,7 +81,7 @@ export interface UpdateContactDto {
   ref_user_id?: number;
 }
 
-export interface IntersectionTransactionPickTypeClass {
+export interface IntersectionTransactionPickTransactionRelationsCurrency {
   id: number;
   contact_id?: number;
   currency_id: number;
@@ -745,7 +745,7 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<IntersectionBalancePickTypeClass[], void>({
+      this.request<IntersectionBalancePickBalanceRelationsCurrency[], void>({
         path: `/contacts/${id}/balance`,
         method: "GET",
         query: query,
@@ -791,7 +791,10 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<IntersectionTransactionPickTypeClass[], void>({
+      this.request<
+        IntersectionTransactionPickTransactionRelationsCurrency[],
+        void
+      >({
         path: `/contacts/${id}/transactions`,
         method: "GET",
         query: query,

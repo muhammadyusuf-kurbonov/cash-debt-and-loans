@@ -1,17 +1,14 @@
-# Use a Node.js image suitable for pnpm and building
+# Use a Node.js image suitable for building
 FROM node:20-alpine
-
-# Install pnpm globally
-RUN npm install -g pnpm
 
 # Set working directory
 WORKDIR /app
 
 # Copy dependency files
-COPY package.json pnpm-* ./
+COPY package.json package-lock.json ./
 
 # Install all dependencies (for build + runtime)
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
 # Copy Prisma schema first (for generate)
 COPY prisma ./prisma
@@ -20,10 +17,10 @@ COPY prisma ./prisma
 COPY . .
 
 # Generate Prisma client
-RUN pnpm prisma generate
+RUN npx prisma generate
 
 # Build NestJS application
-RUN pnpm run build
+RUN npm run build
 
 # Expose port
 EXPOSE 3001

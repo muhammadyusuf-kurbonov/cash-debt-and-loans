@@ -1,239 +1,157 @@
-# AGENTS.md — Agentic Coding Agent Rules for cash-debt-and-loans
+# AGENTS.md — cash-debt-and-loans (Qarz.uz)
 
-## 1. Build & Test Commands
+Debt/loan tracker. NestJS API + Telegram bot in `backend/`, Telegram Mini App in `telegram-web-app/`.
 
-### Backend (NestJS)
+## Two independent packages, no root workspace
+
+The backend and the Mini App share **no dependencies** and neither imports the other. The only thing
+passing between them is `swagger.json` (generated → copied → compiled into an API client). So there is
+deliberately **no root `package.json` and no monorepo tooling**:
+
+| Directory | Package manager | Lockfile | Docker |
+|---|---|---|---|
+| `backend/` | **npm** | `package-lock.json` | `npm ci` |
+| `telegram-web-app/` | **yarn v1** | `yarn.lock` | `yarn install` |
+
+Both are built from separate Docker contexts in `docker-compose.yml`. Do **not** reintroduce a root
+workspace, and do not run either package manager from the repo root — there is nothing there to install.
+
+To regenerate the API contract across both:
+```bash
+./scripts/update-swagger.sh
+```
+
+## Commands
 
 ```bash
-pnpm install                    # Install dependencies
-pnpm build                      # Compile TypeScript to dist/
-pnpm start:dev                  # Run dev server with watch mode (port 3001)
-pnpm lint                       # ESLint auto-fix on src/**/*.ts, test/**/*.ts
-npm run test                   # Unit tests using Jest
-npm run test -- <test-path>    # Run single test or regex pattern
-npm run test:cov               # Tests with coverage report
-npm run build                  # Production build output to dist/
+# Backend — all from backend/
+npm test                                   # jest (config is inline in package.json, rootDir=src)
+npx jest transactions.service              # single file (regex on path)
+npm test -t "should create"                # single test by name — NO `--` before -t
+npm run lint                               # eslint --fix; auto-rewrites files
+npm run build
+npm run test:e2e                           # test/jest-e2e.json, matches *.e2e-spec.ts
+npx prisma generate                        # regenerate generated/prisma (gitignored)
+npx prisma migrate dev
+TELEGRAM_DISABLED=true npm run generate:swagger   # writes backend/swagger.json
+
+# Frontend — all from telegram-web-app/
+npm run dev          # :5173
+npm run dev:mock     # VITE_MOCK=true — MSW + fake JWT, no backend needed (see TEST.md)
+npm run typecheck    # react-router typegen && tsc
+npm run build
+npm run generate:api-client
 ```
 
-### Run Single Test (Backend)
+There is **no** `backend/jest.config.js` — jest config lives inline in `backend/package.json`
+(`rootDir: src`, `testRegex: .*\.spec\.ts$`). `npm run test -- backend/jest.config.js` does not work.
 
-Use Jest's test path pattern:
+## Baseline is currently RED (on `main`, verified)
+
+Do not assume you broke these — but do fix them if your change touches them.
+
+| Command | State on `main` |
+|---|---|
+| `backend/ npm test` | **9 failed / 5 passed.** `reports.service.spec.ts`, `transactions.service.spec.ts` fail |
+| `backend/ npm run lint` | **45 errors / 2 warnings** (mostly `no-unsafe-member-access`; `no-namespace` on generated `src/types/prisma/index.ts`) |
+| `fe npm run typecheck` | **9 errors** (`app/mocks/data.ts`, `routes/profile.tsx`, `routes/reports.tsx`, `routes/welcome.tsx`) |
+| `backend/ npm run build` | passes |
+| `fe npm run build` | passes — Vite/esbuild does **not** typecheck, so a green build hides type errors |
+
+**Always run `npm run typecheck` in `telegram-web-app/`** — `npm run build` will not catch type errors.
+
+## Backend architecture
+
+Feature folders under `backend/src/`, flat (no `services/`, `providers/`, `exceptions/`, `index.ts`):
+
+```
+src/<feature>/
+  <feature>.controller.ts   @ApiTags/@ApiOperation/@ApiResponse decorators
+  <feature>.service.ts
+  <feature>.module.ts
+  dto/                      response + input DTOs
+```
+
+`auth/` (JWT + Telegram init-data), `contacts/`, `currency/`, `transactions/`, `reports/`, `users/`,
+`prisma/` (global), `i18n/`, `telegram-bot/`, `types/`.
+
+- **Imports are ambiguous on purpose**: `baseUrl: "./"` in tsconfig, so `src/prisma/prisma.service`,
+  `generated/prisma`, and relative `../prisma/prisma.service` all resolve. Match the neighbouring file's style.
+- **Prisma columns are snake_case in TS** (`currency_id`, `user_id`, `ref_user_id`, `deletedAt` aside);
+  DTOs and API responses are camelCase. Controllers return raw Prisma objects, so the API is snake_case
+  for those fields. Don't "fix" this.
+- `generated/prisma` is gitignored (run `npx prisma generate`). `src/types/prisma/` **is committed** —
+  it is `prisma-class-generator` output and is what Swagger uses for `extraModels`.
+- Datasource is **PostgreSQL only**. `backend/prisma/dev.db` is a stale SQLite leftover.
+- Balance model: `Balance` is a denormalized table keyed `(currency_id, contact_id)`, kept in sync inside
+  `prisma.$transaction`. `TransactionsService.recalculateBalancesForContact` recomputes from transactions.
+- Bidirectional debt: a `Contact.ref_user_id` causes `create`/`finalizeDraft` to recursively create a
+  mirrored transaction with negated `amount` for the referenced user. Soft delete via `deletedAt`.
+- Drafts: `createDraft` stores a transaction with `draftId` and **no** balance update;
+  `finalizeDraft` attaches `contact_id`, nulls `draftId`, and applies the balance.
+- `main.ts` listens on `process.env.PORT ?? 3000` (`.env` sets 3001); Swagger UI at `/api`.
+- Telegram bot is conditionally registered: `TelegramBotModule.register(!process.env.TELEGRAM_DISABLED)`.
+  Any non-empty `TELEGRAM_DISABLED` disables it — this is what makes swagger generation work offline.
+
+**There is no global exception filter and no `ValidationErrorException`.** Services throw Nest built-ins
+(`NotFoundException`, `BadRequestException`, `ForbiddenException`); `main.ts` only sets a `ValidationPipe`.
+
+## API contract is generated and committed — keep it in sync
+
+`backend/swagger.json` and `telegram-web-app/app/api/swagger.json` are **committed and byte-identical**,
+and `telegram-web-app/app/api/api-client.ts` is generated from the latter by `swagger-typescript-api`.
+
+After any backend API change:
 
 ```bash
-pnpm test -- backend/jest.config.js -t "<test-description>"
+./scripts/update-swagger.sh
 ```
 
-Or with Jest CLI directly:
+That runs `generate:swagger` (npm, in `backend/`), copies the contract, then `generate:api-client`
+(yarn, in `telegram-web-app/`). `nest-cli.json` enables the `@nestjs/swagger` plugin, so DTO type changes
+silently change the generated client. **Never hand-edit `api-client.ts`.**
 
-```bash
-npx jest backend/jest.config.js -t "<test-description>"
-```
+## Frontend architecture
 
-Example:
-```bash
-pnpm test -- backend/jest.config.js -t "should create user"
-```
+React 19 + React Router 7 **SPA mode** (`react-router.config.ts` → `ssr: false`) + Vite 7 + Tailwind 4 +
+shadcn/ui (`app/components/ui/`, new-york). Path alias `~/` → `./app/`.
 
-### E2E Tests (Backend)
+- Routes are file-config based (`app/routes.ts`), not filesystem routing. Adding a route = edit `routes.ts`.
+- Server state: TanStack React Query. Access the client via `useAPI()` (`app/api/use-api.ts`) or
+  `ApiClient.getOpenAPIClient()` (`app/lib/api-client.ts`). Mutate with `useMutation` + `queryClient.invalidateQueries`.
+- Auth: JWT in `sessionStorage` under `dl_auth_token` (`app/lib/telegram-auth.ts`). `isAuthenticated()`
+  decodes and checks `exp`/`nbf` client-side. `app/routes/welcome.tsx` auto-signs-in via Telegram `initDataRaw`.
+- `VITE_MOCK=true` starts MSW (`app/mocks/`) **and injects a fake JWT** so you land on `/home` with no backend.
+- `npm run dev:mock` is the fastest way to iterate on UI. `telegram-web-app/TEST.md` documents the mock layer.
+- No test framework, no ESLint config on the frontend.
 
-```bash
-pnpm test:e2e                           # Run end-to-end tests
-pnpm test:e2e -c ./test/jest-e2e.json
-npx jest -c ./test/jest-e2e.json
-```
+### Deployment gotcha
 
-### Frontend (Telegram Web App)
+`VITE_BACKEND_URL` is inlined at **build** time (`app/lib/api-client.ts`). The `docker-compose.yml`
+`frontend` service passes it as a **runtime** env var to the nginx container, which serves prebuilt
+assets — so it has no effect there. Changing the backend URL requires a frontend rebuild.
 
-```bash
-npm run dev                            # Start dev server
-npm run build                          # Production build to dist/
-npm run lint                           # ESLint auto-fix
-```
+## Money formatting — one convention, three places
 
-### TypeScript Compiler Flags (Backend)
+`backend/src/utils.ts` (`formatCurrency`, `formatBalance`), `telegram-web-app/app/components/money.tsx`,
+and the bot's `text-format.ts` all use `toLocaleString('ru', { signDisplay: 'always' })`.
+Positive = they owe you, negative = you owe them. Match this when adding amounts.
 
-```json
-{
-  "strictNullChecks": true,
-  "noImplicitAny": false,
-  "sourceMap": true,
-  "module": "commonjs"
-}
-```
+`I18nService` (`backend/src/i18n/{en,ru,uz}.json`) is used by the **bot only**; the web app hardcodes Russian UI strings.
 
-## 2. Code Style Guidelines
+## Env
 
-### Import Organization
+- `backend/.env` — gitignored, holds `DATABASE_URL`, `PORT`, `TELEGRAM_BOT_API_KEY` (contains a live bot token —
+  don't echo it into logs or commit it anywhere new).
+- `telegram-web-app/.env` — **committed**; `VITE_BACKEND_URL=https://senafa.kurbonov.net.uz`.
+- `.env.example` is the template for deploy. `dokploy.config.json` drives Dokploy from `docker-compose.yml`.
 
-**Within package**:
-```ts
-import { CreateUserDto } from './create-user.dto';
-import { UserService } from './user.service';
-```
+`docker-compose.override.yml` (postgres 16 + port mappings) exists locally but is **gitignored** via the
+user's global `~/.gitignore` — other clones get only the base compose file, which has no `db` service.
 
-**Different modules/packages in same project**:
-```ts
-import { JwtService } from '@nestjs/passport'; // NestJS packages
-import { PrismaService } from 'prisma-client'; // Third-party libraries
-```
+## Style
 
-**Types only**, not needed at runtime:
-```ts
-import { UserDto } from 'src/user/dto';  // Not valid - types can't be imported!
-```
-
-Use type-only imports for types not otherwise used:
-```ts
-type MyType = string;
-declare const x: MyType;                 // Valid - TypeScript uses the type only
-```
-
-### File Structure (Backend Modules)
-
-Standard NestJS module structure under `src/<feature>/`:
-
-```
-src/auth/
-├── dto/              # DTO files for input validation
-├── guards/           # Authentication decorators/guards
-├── interceptors/     # Response transformation, error formatting
-├── module.ts         # Module registration & configuration
-├── services/         # Business logic with dependencies from ./providers
-├── utils/            # Shared utilities & helper functions
-├── providers/        # Domain-specific business logic (optional)
-├── exceptions/       # Custom exception handlers
-└── index.ts          # Re-export module exports
-```
-
-### Error Handling Patterns
-
-- **Custom exceptions**: Extend `HttpException`, not plain Errors. Include `{ message, statusCode }` at minimum plus `status`.
-- **Validation**: Use `class-validator` decorators (`@MinLength`, `@IsEmail`). Invalid data throws `ValidationErrorException`.
-- **Async errors**: Always await promises; use `@Catch(exception)` for global handlers:
-  ```ts
-  @Catch(Exception)
-  public handleAllExceptions(@Catch() exception: Exception) {
-    return this.exceptionFilter.process(exception, this.request);
-  }
-  ```
-
-### Formatting & Style Rules
-
-**Prettier**:
-```json
-{ "singleQuote": true, "trailingComma": "all" }
-```
-
-**ESLint**:
-- `@typescript-eslint/no-explicit-any` OFF in project (any type allowed but discouraged)
-- `@typescript-eslint/no-floating-promises` WARN
-- Floating promises should be handled: await or use Promise.all()
-- `@typescript-eslint/no-unsafe-argument` and `@typescript-eslint/no-unsafe-call` warnings for unsafe arguments/calls
-
-### Type Usage Patterns
-
-```ts
-interface UserDto {
-  id: number;
-  email: string;
-}
-
-// Explicit typing with interfaces/types
-const createUser: (data: CreateUserDto) => Promise<User> = async (dto) => { /* ... */ };
-
-// TypeScript uses explicit typing over 'any' by default when possible
-```
-
-### Naming Conventions
-
-| Component          | Convention         | Example                      |
-| ------------------ | ------------------ |------------------------------|
-| Files/Modules      | kebab-case         | `auth.module.ts`             |
-| Classes            | PascalCase        | `UserService`, `AuthGuard`   |
-| Constants/functions| camelCase          | `maxAge`, `calculateTotal()` |
-| Variables          | camelCase          | `userCount`, `isActive`      |
-| Type parameters    | CamelCase/PascalCase | `T`, `ItemDto`               |
-| Test names         | camelCase + verb   | `shouldCreateUserWithValidData()` |
-
-### Prisma Client Usage
-
-**Import paths**:
-```ts
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-```
-
-**Use typed client methods and DTO interfaces**:
-```ts
-// Using generated types from PRISMA_CLASS_GENERATOR
-import { CreateUserDto } from 'generated/prisma/index.js';
-```
-
-### Database Transactions (Backend)
-
-Atomic multi-update using Prisma `prisma$transaction`:
-```ts
-@PrismaService()
-export class Wallet {
-  async topup(userId: string, amount: number): Promise<void> {
-    await this.prisma.$transaction([
-      // Update wallet balance and other entities atomically
-      this.wallet.updateMany({
-        where: { userId },
-        data: { balance: Increment(amount) }
-      }),
-      // ... more operations
-    ]);
-  }
-}
-```
-
-### Telegram Web App Integration (Frontend)
-
-**Init Data Access**: Use `@tma.js/init-data-node` for Telegram Web App session data.
-```ts
-import tma from 'telegraf';
-import { InitDataService } from '@tma.js/init-data-node';
-```
-
-**Handle Telegram session errors gracefully**, with fallback:
-```ts
-try {
-  const initData = await InitDataService.initData();
-} catch (error) {
-  // Return sensible defaults if init data unavailable
-}
-```
-
-## 3. CI & Validation Scripts
-
-### Repository-wide validation:
-
-```bash
-# Run backend tests only
-cd backend && pnpm test
-
-# Run frontend build and lint
-cd telegram-web-app && npm run lint && npm run build
-
-# Full validation:
-pnpm install && cd backend && pnpm lint && pnpm build
-```
-
-## 4. Repository Layout Reference
-
-**Root**:
-- `backend/` — NestJS backend API
-- `telegram-web-app/` — Telegram Web App client
-
-**Backend Architecture**:
-- Module structure: `src/<feature>/module.ts`
-- Global modules: `prisma.module.ts`, `i18n.module.ts`, `auth.module.ts`
-- Generated types: `generated/prisma/index.js`
-
-## 5. Common Pitfalls to Avoid
-
-1. **Importing types only** doesn't work when you need the type at runtime. Use type-only imports with `import type { MyType } from '...'` if needed.
-2. **Never throw generic Errors**. Extend custom exceptions and include `{ message, statusCode }`.
-3. **Don't forget to await promises**. Floating unresolved promises are violations unless intentional async operations documented.
-4. **Avoid hardcoding database types** from Prisma client — use generated DTO interfaces.
+Prettier (`backend/.prettierrc`): `singleQuote: true`, `trailingComma: "all"`. Backend uses single quotes;
+the frontend mixes single and double — match the file you're editing.
+Backend tsconfig: `strictNullChecks: true`, `noImplicitAny: false`. ESLint turns off `no-explicit-any`,
+warns on floating promises / unsafe arguments.
