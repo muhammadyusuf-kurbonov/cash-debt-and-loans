@@ -25,6 +25,6 @@ export class User {
   @ApiPropertyOptional({ type: String })
   verification_code: string | null;
 
-  @ApiProperty({ type: Boolean })
-  is_verified: boolean;
+  @ApiProperty({ type: Boolean, example: false })
+  is_verified: boolean = false;
 }

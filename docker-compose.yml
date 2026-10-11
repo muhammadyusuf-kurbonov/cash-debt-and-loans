@@ -6,7 +6,10 @@ services:
     container_name: qarzuz_backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=${DATABASE_URL:-file:./dev.db}
+      # Prisma 7 is PostgreSQL-only and fails hard on a missing URL. Drop the old
+      # `file:./dev.db` fallback, but leave it unset here so `docker compose build`
+      # still works without a populated .env — the app throws a clear error on boot.
+      - DATABASE_URL=${DATABASE_URL}
       - PORT=${PORT:-3001}
       - JWT_SECRET=${JWT_SECRET:-default_secret_key}
       - TELEGRAM_BOT_API_KEY=${TELEGRAM_BOT_API_KEY}

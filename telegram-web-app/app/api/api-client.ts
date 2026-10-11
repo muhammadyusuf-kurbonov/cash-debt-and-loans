@@ -71,6 +71,7 @@ export interface Currency {
 
 export interface IntersectionBalancePickBalanceRelationsCurrency {
   currency_id: number;
+  /** @example 0 */
   amount: number;
   contact_id: number;
   /** @format date-time */
@@ -253,6 +254,7 @@ export interface UserRelations {
 
 export interface Balance {
   currency_id: number;
+  /** @example 0 */
   amount: number;
   contact_id: number;
   /** @format date-time */
@@ -280,6 +282,7 @@ export interface User {
   updatedAt: string;
   telegram_id?: string;
   verification_code?: string;
+  /** @example false */
   is_verified: boolean;
 }
 

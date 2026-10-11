@@ -1,5 +1,6 @@
-# Use a Node.js image suitable for building
-FROM node:20-alpine
+# Use a Node.js image suitable for building. Matches the local toolchain (Node 26),
+# so the container and local runs resolve the same dependency tree.
+FROM node:26-alpine
 
 # Set working directory
 WORKDIR /app
@@ -10,13 +11,11 @@ COPY package.json package-lock.json ./
 # Install all dependencies (for build + runtime)
 RUN npm ci
 
-# Copy Prisma schema first (for generate)
-COPY prisma ./prisma
-
 # Copy the rest of the application
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client. Prisma 7 emits plain TypeScript into src/generated, which
+# `nest build` below must compile — so generate after the full copy, before the build.
 RUN npx prisma generate
 
 # Build NestJS application

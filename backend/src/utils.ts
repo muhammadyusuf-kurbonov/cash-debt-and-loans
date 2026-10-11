@@ -1,4 +1,4 @@
-import { Balance, Currency } from 'generated/prisma';
+import { Balance, Currency } from 'src/generated/prisma/client';
 
 export function formatCurrency(number: number): string {
   return number.toLocaleString('ru', {

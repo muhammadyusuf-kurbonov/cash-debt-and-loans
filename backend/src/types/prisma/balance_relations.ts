@@ -1,11 +1,11 @@
-import { Currency } from './currency';
-import { Contact } from './contact';
+import { Currency, type Currency as CurrencyAsType } from './currency';
+import { Contact, type Contact as ContactAsType } from './contact';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class BalanceRelations {
   @ApiProperty({ type: () => Currency })
-  currency: Currency;
+  currency: CurrencyAsType;
 
   @ApiProperty({ type: () => Contact })
-  contact: Contact;
+  contact: ContactAsType;
 }

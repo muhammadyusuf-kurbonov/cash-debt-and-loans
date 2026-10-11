@@ -1,14 +1,17 @@
-import { Contact } from './contact';
-import { Transaction } from './transaction';
+import { Contact, type Contact as ContactAsType } from './contact';
+import {
+  Transaction,
+  type Transaction as TransactionAsType,
+} from './transaction';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserRelations {
   @ApiProperty({ isArray: true, type: () => Contact })
-  contacts: Contact[];
+  contacts: ContactAsType[];
 
   @ApiProperty({ isArray: true, type: () => Transaction })
-  transactions: Transaction[];
+  transactions: TransactionAsType[];
 
   @ApiProperty({ isArray: true, type: () => Contact })
-  isContactFor: Contact[];
+  isContactFor: ContactAsType[];
 }
