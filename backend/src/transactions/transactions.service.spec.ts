@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { TransactionsService } from '../transactions/transactions.service';
+import { TransactionsService } from './transactions.service';
 import type { ContactsService } from '../contacts/contacts.service';
 import type { PrismaService } from '../prisma/prisma.service';
 
