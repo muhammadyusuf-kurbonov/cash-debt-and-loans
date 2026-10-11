@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReportsService } from './reports.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -5,14 +6,14 @@ import { PrismaService } from '../prisma/prisma.service';
 describe('ReportsService', () => {
   let service: ReportsService;
   let prisma: {
-    balance: { findMany: jest.Mock };
-    transaction: { findMany: jest.Mock };
+    balance: { findMany: Mock };
+    transaction: { findMany: Mock };
   };
 
   beforeEach(async () => {
     prisma = {
-      balance: { findMany: jest.fn() },
-      transaction: { findMany: jest.fn() },
+      balance: { findMany: vi.fn() },
+      transaction: { findMany: vi.fn() },
     };
 
     const module: TestingModule = await Test.createTestingModule({
