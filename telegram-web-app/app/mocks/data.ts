@@ -5,8 +5,6 @@ import type {
   IntersectionTransactionPickTransactionRelationsCurrency,
   SummaryDto,
   TrendItemDto,
-  DebtorCreditorDto,
-  CurrencyBreakdownDto,
 } from '~/api/api-client';
 
 export const mockCurrencies: CurrencyResponseDto[] = [
@@ -78,19 +76,4 @@ export const mockTrends: TrendItemDto[] = [
   { date: '2025-05', receivables: 1600000, payables: 250000 },
 ];
 
-export const mockTopDebtors: DebtorCreditorDto[] = [
-  { contactId: 4, contactName: 'Елена Новикова', amount: 1000000, currencySymbol: 'UZS' },
-  { contactId: 1, contactName: 'Алексей Петров', amount: 500000, currencySymbol: 'UZS' },
-  { contactId: 1, contactName: 'Алексей Петров', amount: 100, currencySymbol: 'USD' },
-];
 
-export const mockTopCreditors: DebtorCreditorDto[] = [
-  { contactId: 2, contactName: 'Мария Сидорова', amount: 200000, currencySymbol: 'UZS' },
-  { contactId: 3, contactName: 'Дмитрий Козлов', amount: 50, currencySymbol: 'USD' },
-];
-
-export const mockCurrencyBreakdown: CurrencyBreakdownDto[] = [
-  { currencyId: 1, symbol: 'UZS', owed: 1500000, iOwe: 200000, net: 1300000 },
-  { currencyId: 2, symbol: 'USD', owed: 100, iOwe: 50, net: 50 },
-  { currencyId: 3, symbol: 'RUB', owed: 5000, iOwe: 0, net: 5000 },
-];

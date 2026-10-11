@@ -71,20 +71,6 @@ export default function TransactionsPage() {
     return balances;
   }, [transactions]);
 
-  const handleRecalculate = useCallback(async () => {
-    if (!contactId) return;
-
-    try {
-      await api.contacts.contactsControllerRecalculateBalance(contactId);
-
-      // Refresh transactions and contacts list
-      queryClient.invalidateQueries({ queryKey: ['contact-transactions', contactId] });
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
-    } catch (err) {
-      console.error('Error recalculating balances', err);
-    }
-  }, [contactId, queryClient]);
-
   const handleAddNewTransaction = useCallback(async (newData: { amount: number; description: string; cancelled: boolean; currencyId: number; createdAt: Date }) => {
     if (!contactId) return;
     try {
@@ -155,9 +141,6 @@ export default function TransactionsPage() {
                 <div className="text-right">
                   {Object.entries(totalBalances).map(([symbol, value]) => (<Money value={value} symbol={symbol} key={symbol} />))}
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={handleRecalculate}>Пересчитать</Button>
               </div>
             </div>
           </StickyFooter>

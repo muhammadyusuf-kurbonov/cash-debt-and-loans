@@ -6,9 +6,6 @@ import {
   mockCurrencies,
   mockSummary,
   mockTrends,
-  mockTopDebtors,
-  mockTopCreditors,
-  mockCurrencyBreakdown,
 } from './data';
 
 const BASE = import.meta.env.VITE_BACKEND_URL || 'https://senafa.kurbonov.net.uz';
@@ -50,16 +47,9 @@ export const handlers = [
   }),
   http.delete(`${BASE}/contacts/:id`, () => HttpResponse.json(null, { status: 200 })),
 
-  // Contact balance & transactions
-  http.get(`${BASE}/contacts/:id/balance`, ({ params }) => {
-    const contact = mockContacts.find(c => c.id === Number(params.id));
-    return HttpResponse.json(contact?.Balance ?? []);
-  }),
+  // Contact transactions — balances ride along on the contact itself, so
+  // there is no /balance endpoint to mock.
   http.get(`${BASE}/contacts/:id/transactions`, () => HttpResponse.json(mockTransactions)),
-  http.post(`${BASE}/contacts/:id/recalculate-balance`, ({ params }) => {
-    const contact = mockContacts.find(c => c.id === Number(params.id));
-    return HttpResponse.json(contact?.Balance ?? []);
-  }),
   http.get(`${BASE}/contacts/:id/prepare-invite`, () => HttpResponse.json('https://t.me/qarzuz_bot?start=invite_abc123')),
 
   // Transactions
@@ -95,9 +85,6 @@ export const handlers = [
   // Reports
   http.get(`${BASE}/reports/summary`, () => HttpResponse.json(mockSummary)),
   http.get(`${BASE}/reports/trends`, () => HttpResponse.json(mockTrends)),
-  http.get(`${BASE}/reports/top-debtors`, () => HttpResponse.json(mockTopDebtors)),
-  http.get(`${BASE}/reports/top-creditors`, () => HttpResponse.json(mockTopCreditors)),
-  http.get(`${BASE}/reports/currency-breakdown`, () => HttpResponse.json(mockCurrencyBreakdown)),
 
   // Root health check
   http.get(`${BASE}/`, () => HttpResponse.json('OK')),
