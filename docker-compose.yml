@@ -12,15 +12,3 @@ services:
       - TELEGRAM_BOT_API_KEY=${TELEGRAM_BOT_API_KEY}
     volumes:
       - ./backend/uploads:/app/uploads
-
-  frontend:
-    build:
-      context: ./telegram-web-app
-      dockerfile: Dockerfile
-    container_name: qarzuz_frontend
-    restart: unless-stopped
-    environment:
-      - VITE_BACKEND_URL=${BACKEND_URL:-http://backend:3001}
-      - NODE_ENV=production
-    depends_on:
-      - backend
