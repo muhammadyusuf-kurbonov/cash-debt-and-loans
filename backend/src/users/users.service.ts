@@ -8,33 +8,18 @@ import { ProfileDto } from './dto/profile.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserByTGId(telegram_id: number, name?: string): Promise<User> {
-    let user = await this.prisma.user.findFirst({
+  async assertUserByTGId(telegram_id: number, name?: string): Promise<User> {
+    return await this.prisma.user.upsert({
       where: { telegram_id: telegram_id.toString() },
+      create: {
+        telegram_id: telegram_id.toString(),
+        name,
+      },
+      update: {
+        telegram_id: telegram_id.toString(),
+        name,
+      },
     });
-
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          telegram_id: telegram_id.toString(),
-          name,
-        },
-      });
-    }
-
-    if (!user.name) {
-      user = await this.prisma.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          telegram_id: telegram_id.toString(),
-          name,
-        },
-      });
-    }
-
-    return user;
   }
 
   async getUserById(user_id: number): Promise<User | null> {

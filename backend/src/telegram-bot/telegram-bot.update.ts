@@ -261,8 +261,9 @@ export class TelegramBotUpdate {
       }
 
       // Map telegram ids to internal user ids
-      const ownerUser = await this.usersService.getUserByTGId(ownerTgId);
-      const contactUser = await this.usersService.getUserByTGId(requesterTgId);
+      const ownerUser = await this.usersService.assertUserByTGId(ownerTgId);
+      const contactUser =
+        await this.usersService.assertUserByTGId(requesterTgId);
 
       // Ensure contact exists (creates if needed)
       const contact = await this.contactsService.getContactForUserId(

@@ -78,7 +78,7 @@ export class ContactsAttachService {
       throw new NotFoundException('Original contact not found');
     }
 
-    const newUser = await this.usersService.getUserByTGId(invitedUserTGId);
+    const newUser = await this.usersService.assertUserByTGId(invitedUserTGId);
 
     // Create or update the contact for the invited user with the ref_user_id
     const contact = await this.prisma.contact.update({

@@ -60,7 +60,7 @@ export class TelegramBotService {
       currencies.push(defaultCurrency);
     }
 
-    await this.usersService.getUserByTGId(
+    await this.usersService.assertUserByTGId(
       author.id,
       `${author.first_name} ${author.last_name ?? ''}`,
     );
@@ -180,7 +180,7 @@ export class TelegramBotService {
       inlineQueryId,
       currency_id,
       type === 'topup' ? -amount : amount,
-      (await this.usersService.getUserByTGId(authorTgId)).id,
+      (await this.usersService.assertUserByTGId(authorTgId)).id,
       comment,
     );
   }
@@ -192,7 +192,7 @@ export class TelegramBotService {
       throw new BadRequestException('draft not found');
     }
 
-    const confirmedUser = await this.usersService.getUserByTGId(userTGId);
+    const confirmedUser = await this.usersService.assertUserByTGId(userTGId);
 
     if (confirmedUser.id === transaction.user_id) {
       throw new ForbiddenException('You can not confirm your transaction');
@@ -213,8 +213,10 @@ export class TelegramBotService {
   }
 
   async getBalancesTotal(userTGId: number): Promise<Text> {
-    const user = await this.usersService.getUserByTGId(userTGId);
-    const netBalances = await this.transactionsService.getNetBalanceOfUser(user.id);
+    const user = await this.usersService.assertUserByTGId(userTGId);
+    const netBalances = await this.transactionsService.getNetBalanceOfUser(
+      user.id,
+    );
     const withCurrnecy = await Promise.all(
       netBalances.map(async (balance) => ({
         ...balance,
@@ -270,7 +272,7 @@ export class TelegramBotService {
     userTGId: number,
     contactName: string,
   ): Promise<Text> {
-    const user = await this.usersService.getUserByTGId(userTGId);
+    const user = await this.usersService.assertUserByTGId(userTGId);
     const contact = await this.contactsService.getContactByName(
       user.id,
       contactName,
@@ -290,7 +292,7 @@ export class TelegramBotService {
     userTGId: number,
     contactId: number,
   ): Promise<Text> {
-    const user = await this.usersService.getUserByTGId(userTGId);
+    const user = await this.usersService.assertUserByTGId(userTGId);
     const contact = await this.contactsService.findOne(contactId, user.id);
 
     const lang = this.i18nService.getUserLanguage(userTGId);
