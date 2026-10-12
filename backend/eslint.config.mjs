@@ -31,4 +31,14 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
     },
   },
+  {
+    // Test doubles are referenced as values, never called in place: the Vitest
+    // idiom is `expect(prisma.contact.findMany)`. Against a typed delegate like
+    // `mockDeep<PrismaService>()`, those read as unbound method references.
+    files: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+    },
+  },
 );

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { ContactsService } from './contacts.service';
-import type { PrismaService } from '../prisma/prisma.service';
+import { createMockPrismaService } from '../../test/factories/prisma-factory';
 
 /**
  * A row from the single aggregate query: the grouped sum, the newest live
@@ -47,20 +47,17 @@ describe('ContactsService balance aggregation', () => {
     contactFindFirst = vi.fn().mockResolvedValue(null);
     transactionFindMany = vi.fn().mockResolvedValue([]);
 
-    const prisma = {
-      $queryRaw: queryRaw,
-      contact: { findMany: contactFindMany, findFirst: contactFindFirst },
-      transaction: { findMany: transactionFindMany },
-      user: { findFirst: vi.fn() },
-    };
-
-    // Partial double. Only the methods `ContactsService` calls are stubbed;
-    // anything else throws "is not a function" instead of silently returning
-    // undefined. Suppressed rather than typed, because `PrismaService extends
-    // PrismaClient` — spelling out its ~200 models to satisfy the compiler
-    // would drown the test in noise it does not care about.
-    // @ts-expect-error partial PrismaService double
-    service = new ContactsService(prisma as PrismaService);
+    // Only the methods `ContactsService` calls are stubbed. Unstubbed delegates
+    // resolve to `undefined` rather than throwing, so a mistyped delegate is
+    // caught by the compiler instead.
+    service = new ContactsService(
+      createMockPrismaService({
+        $queryRaw: queryRaw,
+        contact: { findMany: contactFindMany, findFirst: contactFindFirst },
+        transaction: { findMany: transactionFindMany },
+        user: { findFirst: vi.fn() },
+      }),
+    );
   });
 
   describe('query shape', () => {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { ReportsService } from './reports.service';
-import type { PrismaService } from '../prisma/prisma.service';
+import { createMockPrismaService } from '../../test/factories/prisma-factory';
 
 /** A per-contact, per-currency aggregate row from the summary query. */
 type Row = {
@@ -37,14 +37,13 @@ describe('ReportsService.getSummary', () => {
     queryRaw = vi.fn().mockResolvedValue([]);
     transactionFindMany = vi.fn().mockResolvedValue([]);
 
-    const prisma = {
-      $queryRaw: queryRaw,
-      transaction: { findMany: transactionFindMany, groupBy: vi.fn() },
-    };
-
-    // Partial double: only the methods getSummary reads are stubbed.
-    // @ts-expect-error partial PrismaService double
-    service = new ReportsService(prisma as PrismaService);
+    // Only the methods getSummary reads are stubbed.
+    service = new ReportsService(
+      createMockPrismaService({
+        $queryRaw: queryRaw,
+        transaction: { findMany: transactionFindMany, groupBy: vi.fn() },
+      }),
+    );
   });
 
   describe('aggregate query', () => {
@@ -97,7 +96,13 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 30, netBalance: 70 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 100,
+          iOwe: 30,
+          netBalance: 70,
+        },
       ]);
     });
 
@@ -108,7 +113,13 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 250, iOwe: 0, netBalance: 250 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 250,
+          iOwe: 0,
+          netBalance: 250,
+        },
       ]);
     });
 
@@ -119,7 +130,13 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 0, iOwe: 150, netBalance: -150 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 0,
+          iOwe: 150,
+          netBalance: -150,
+        },
       ]);
     });
 
@@ -130,7 +147,13 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 0, netBalance: 100 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 100,
+          iOwe: 0,
+          netBalance: 100,
+        },
       ]);
     });
 
@@ -141,7 +164,13 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 60, iOwe: 60, netBalance: 0 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 60,
+          iOwe: 60,
+          netBalance: 0,
+        },
       ]);
     });
 
@@ -149,7 +178,13 @@ describe('ReportsService.getSummary', () => {
       queryRaw.mockResolvedValue([row({ amount: null })]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 0, iOwe: 0, netBalance: 0 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 0,
+          iOwe: 0,
+          netBalance: 0,
+        },
       ]);
     });
 
@@ -160,13 +195,24 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 0, netBalance: 100 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 100,
+          iOwe: 0,
+          netBalance: 100,
+        },
       ]);
     });
 
     it('keeps currencies separate', async () => {
       queryRaw.mockResolvedValue([
-        row({ currency_id: 1, contact_id: 1, amount: 100, currency_symbol: usd.symbol }),
+        row({
+          currency_id: 1,
+          contact_id: 1,
+          amount: 100,
+          currency_symbol: usd.symbol,
+        }),
         row({
           currency_id: 2,
           contact_id: 1,
@@ -177,8 +223,20 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1)).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 100, iOwe: 0, netBalance: 100 },
-        { currencyId: 2, currencySymbol: '€', owedToMe: 40, iOwe: 0, netBalance: 40 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 100,
+          iOwe: 0,
+          netBalance: 100,
+        },
+        {
+          currencyId: 2,
+          currencySymbol: '€',
+          owedToMe: 40,
+          iOwe: 0,
+          netBalance: 40,
+        },
       ]);
     });
 
@@ -216,7 +274,13 @@ describe('ReportsService.getSummary', () => {
       ]);
 
       expect(await service.getSummary(1, '2024-01-01', '2024-12-31')).toEqual([
-        { currencyId: 1, currencySymbol: '$', owedToMe: 200, iOwe: 80, netBalance: 120 },
+        {
+          currencyId: 1,
+          currencySymbol: '$',
+          owedToMe: 200,
+          iOwe: 80,
+          netBalance: 120,
+        },
       ]);
     });
 

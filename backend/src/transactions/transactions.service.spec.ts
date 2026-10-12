@@ -1,7 +1,20 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { TransactionsService } from './transactions.service';
 import type { ContactsService } from '../contacts/contacts.service';
-import type { PrismaService } from '../prisma/prisma.service';
+import { mock, type MockProxy } from 'vitest-mock-extended';
+import {
+  buildContact,
+  buildTransaction,
+  createMockPrismaService,
+  type MockPrismaService,
+} from '../../test/factories/prisma-factory';
+
+/** A row from the per-currency net aggregate: one net `SUM(amount)` per currency. */
+type Row = {
+  currency_id: number;
+  amount: number | null;
+};
+
 describe('TransactionsService.getNetBalanceOfUser', () => {
   let queryRaw: Mock;
   let service: TransactionsService;
@@ -20,13 +33,10 @@ describe('TransactionsService.getNetBalanceOfUser', () => {
   beforeEach(() => {
     queryRaw = vi.fn().mockResolvedValue([]);
 
-    const prisma = { $queryRaw: queryRaw };
-
-    // Partial doubles: only $queryRaw is read by this method, and
-    // ContactsService is unused here but required by the constructor.
-    // @ts-expect-error partial PrismaService double
+    // Only $queryRaw is read by this method; ContactsService is unused here but
+    // required by the constructor.
     service = new TransactionsService(
-      prisma as PrismaService,
+      createMockPrismaService({ $queryRaw: queryRaw }),
       {} as ContactsService,
     );
   });
@@ -87,24 +97,17 @@ describe('TransactionsService.getNetBalanceOfUser', () => {
  * The write path, after the Balance table was dropped.
  *
  * These tests pin two things: the transaction row is still written correctly,
- * and NO balance bookkeeping happens anywhere — `prisma.balance` does not
- * exist any more, so a stray call would throw at runtime, not just drift.
+ * and NO balance bookkeeping happens anywhere. `Balance` is no longer a Prisma
+ * model, so `prisma.balance` is a compile error rather than a runtime throw —
+ * the guard survives the migration, and as a type rather than an omission.
  */
 describe('TransactionsService write path', () => {
-  let prisma: {
-    transaction: {
-      create: Mock;
-      update: Mock;
-      findFirst: Mock;
-      findUnique: Mock;
-    };
-    contact: { findUnique: Mock; findFirst: Mock };
-  };
-  let contacts: { getContactForUserId: Mock };
+  let prisma: MockPrismaService;
+  let contacts: MockProxy<ContactsService> & ContactsService;
   let service: TransactionsService;
 
   beforeEach(() => {
-    prisma = {
+    prisma = createMockPrismaService({
       transaction: {
         create: vi.fn().mockResolvedValue({ id: 10 }),
         update: vi.fn().mockResolvedValue({ id: 10 }),
@@ -115,29 +118,18 @@ describe('TransactionsService write path', () => {
         findUnique: vi.fn().mockResolvedValue(null),
         findFirst: vi.fn().mockResolvedValue(null),
       },
-      // `balance` is deliberately absent: any surviving balance write throws
-      // "Cannot read properties of undefined" and fails loudly.
-    };
+    });
 
-    contacts = {
+    contacts = mock<ContactsService>({
       getContactForUserId: vi.fn().mockResolvedValue({ id: 99 }),
-    };
+    });
 
-    service = new TransactionsService(
-      // @ts-expect-error partial PrismaService double — `balance` deliberately absent
-      prisma as PrismaService,
-      // @ts-expect-error partial PrismaService double — `balance` deliberately absent
-      contacts as ContactsService,
-    );
+    service = new TransactionsService(prisma, contacts);
   });
 
   describe('create', () => {
     it('writes the transaction row without any balance bookkeeping', async () => {
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: null,
-      });
+      prisma.contact.findUnique.mockResolvedValue(buildContact({ id: 5 }));
 
       await service.create(5, 1, 100, 'lunch', null, 1);
 
@@ -154,25 +146,19 @@ describe('TransactionsService write path', () => {
     });
 
     it('writes exactly one row when the contact is not mirrored', async () => {
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: null,
-      });
+      prisma.contact.findUnique.mockResolvedValue(buildContact({ id: 5 }));
 
       await service.create(5, 1, 100, null, null, 1);
 
       expect(prisma.transaction.create).toHaveBeenCalledTimes(1);
     });
 
-    it('normalises a null note to null', async () => {
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: null,
-      });
+    it('normalises a falsy note to null', async () => {
+      prisma.contact.findUnique.mockResolvedValue(buildContact({ id: 5 }));
 
-      await service.create(5, 1, 50, undefined, null, 1);
+      // Empty string, not null: a null input is already null, so it cannot
+      // distinguish `note || null` from a bare passthrough.
+      await service.create(5, 1, 50, '', null, 1);
 
       expect(prisma.transaction.create.mock.calls[0][0].data.note).toBeNull();
     });
@@ -193,11 +179,9 @@ describe('TransactionsService write path', () => {
     });
 
     it('creates a mirrored transaction when the contact references a user', async () => {
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: 2,
-      });
+      prisma.contact.findUnique.mockResolvedValue(
+        buildContact({ id: 5, ref_user_id: 2 }),
+      );
 
       await service.create(5, 1, 100, null, null, 1);
 
@@ -227,21 +211,17 @@ describe('TransactionsService write path', () => {
   });
 
   describe('finalizeDraft', () => {
-    const draft = {
+    const draft = buildTransaction({
       id: 7,
       currency_id: 1,
       amount: 100,
       note: 'draft note',
       draftId: 'draft-1',
-    };
+    });
 
     beforeEach(() => {
       prisma.transaction.findUnique.mockResolvedValue(draft);
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: null,
-      });
+      prisma.contact.findUnique.mockResolvedValue(buildContact({ id: 5 }));
     });
 
     it('throws when the draft does not exist', async () => {
@@ -269,11 +249,9 @@ describe('TransactionsService write path', () => {
     });
 
     it('mirrors the finalized amount to the referenced user', async () => {
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: 2,
-      });
+      prisma.contact.findUnique.mockResolvedValue(
+        buildContact({ id: 5, ref_user_id: 2 }),
+      );
 
       await service.finalizeDraft('draft-1', 5);
 
@@ -291,15 +269,16 @@ describe('TransactionsService write path', () => {
   });
 
   describe('remove', () => {
-    const owned = { id: 10, contact_id: 5, currency_id: 1, amount: 100 };
+    const owned = buildTransaction({
+      id: 10,
+      contact_id: 5,
+      currency_id: 1,
+      amount: 100,
+    });
 
     beforeEach(() => {
       prisma.transaction.findFirst.mockResolvedValue(owned);
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: null,
-      });
+      prisma.contact.findUnique.mockResolvedValue(buildContact({ id: 5 }));
     });
 
     it('soft-deletes the transaction', async () => {
@@ -328,13 +307,11 @@ describe('TransactionsService write path', () => {
     it('soft-deletes the mirrored transaction when one matches', async () => {
       prisma.transaction.findFirst
         .mockResolvedValueOnce(owned)
-        .mockResolvedValueOnce({ id: 11 });
-      prisma.contact.findUnique.mockResolvedValue({
-        id: 5,
-        user_id: 1,
-        ref_user_id: 2,
-      });
-      prisma.contact.findFirst.mockResolvedValue({ id: 99 });
+        .mockResolvedValueOnce(buildTransaction({ id: 11 }));
+      prisma.contact.findUnique.mockResolvedValue(
+        buildContact({ id: 5, ref_user_id: 2 }),
+      );
+      prisma.contact.findFirst.mockResolvedValue(buildContact({ id: 99 }));
 
       await service.remove(10, 1);
 
