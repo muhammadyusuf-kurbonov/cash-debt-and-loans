@@ -13,10 +13,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     super({
       adapter: new PrismaPg({
         connectionString,
-        // Prisma 7 uses node-pg and rejects invalid SSL certificates by default;
-        // v6 ignored them. This keeps the previous behaviour. To tighten later,
-        // remove this option and supply NODE_EXTRA_CA_CERTS instead.
-        ssl: { rejectUnauthorized: false },
+        // Do not set `ssl` here. In node-pg a truthy `ssl` means TLS is
+        // *required*, and there is no fallback to plaintext — so hardcoding
+        // `{ rejectUnauthorized: false }` broke every query against a server
+        // with `ssl = off` (e.g. the `postgres:16` service) with
+        // "The server does not support SSL connections".
+        //
+        // Left unset, `pg` derives TLS from `sslmode` in the connection string:
+        // absent or `sslmode=disable` -> plaintext, `sslmode=require` ->
+        // verified TLS, `sslmode=no-verify` -> TLS without cert checks. That
+        // covers plain and TLS-only hosts without hardcoding either.
       }),
     });
   }
