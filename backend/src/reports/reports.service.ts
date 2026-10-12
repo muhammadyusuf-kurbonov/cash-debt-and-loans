@@ -23,7 +23,9 @@ export class ReportsService {
       return this.getSummaryFromTransactions(userId, from, to, currencyId);
     }
 
-    const currencyFilter = currencyId ? Prisma.sql`AND t."currency_id" = ${currencyId}` : Prisma.empty;
+    const currencyFilter = currencyId
+      ? Prisma.sql`AND t."currency_id" = ${currencyId}`
+      : Prisma.empty;
 
     const rows = await this.prisma.$queryRaw<
       Array<{

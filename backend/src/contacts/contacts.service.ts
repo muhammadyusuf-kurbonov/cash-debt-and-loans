@@ -246,7 +246,9 @@ export class ContactsService {
     return this.attachBalances(
       transactions
         .map((item) => item.contact)
-        .filter((contact): contact is NonNullable<typeof contact> => contact !== null),
+        .filter(
+          (contact): contact is NonNullable<typeof contact> => contact !== null,
+        ),
       userId,
     );
   }
