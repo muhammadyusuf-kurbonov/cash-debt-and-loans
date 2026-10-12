@@ -62,26 +62,8 @@ Vite — do not reinstall `vite-tsconfig-paths` for it.
 counts drift between installs, and it will silently reformat unrelated work-in-progress in your tree.
 Prefer `npx eslint "src/**/*.ts" "test/**/*.ts" --no-fix` when you only need a count.
 
-## Baseline (re-measured on `db374c5`, 2026-10-11)
-
-Do not assume you broke the backend entries — but do fix them if your change touches them.
-The frontend is **green**; it was not, until `9c1b425` fixed three Swagger decorator defects
-that had been publishing a wrong API contract into the generated client.
-
-| Command | State on `db374c5` |
-|---|---|
-| `backend/ npm test` (vitest) | **62 passed / 0 failed** across 5 files |
-| `backend/ npx eslint "src/**/*.ts" "test/**/*.ts" --no-fix` | **32 errors / 1 warning** (22 in `reports.service.ts`, 5 in its spec — mostly `no-unsafe-member-access` from the pre-existing `any`-typed report rows; `no-namespace` on generated `src/types/prisma/index.ts`) |
-| `fe yarn typecheck` | **exit 0** |
-| `backend/ npm run build` | passes |
-| `fe yarn build` | passes — Vite/esbuild does **not** typecheck, so a green build hides type errors |
-
-The lint count is 48, not the 45 this file previously claimed. The +3 is not a regression: a fresh
-`npm install` resolves `^` ranges to newer packages (ESLint 9.39.5), which report more
-`no-unsafe-member-access` hits on the same source.
-
 **Always run `yarn typecheck` in `telegram-web-app/`** — `yarn build` will not catch type errors.
-There is no frontend test framework, so `typecheck` + `build` *is* the entire frontend baseline.
+There is no frontend test framework, so `typecheck` + `build` *is* the entire frontend verification.
 
 ## Backend architecture
 
