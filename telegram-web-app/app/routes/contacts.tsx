@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { init, viewport } from '@tma.js/sdk-react';
+import { viewport } from '@tma.js/sdk-react';
 import { max } from 'date-fns';
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from 'react-router';
@@ -8,6 +8,7 @@ import { AddTransactionModal } from "~/components/add-transaction-modal";
 import { ContactList } from "~/components/contacts-list";
 import { ApiClient } from '~/lib/api-client';
 import { isAuthenticated, TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
+import { ensureTelegramInitialised } from "~/lib/telegram-init";
 import { useTelegramData } from "~/lib/useTelegramData";
 
 export function meta() {
@@ -15,15 +16,6 @@ export function meta() {
     { title: "Contacts - Qarz.uz" },
     { name: "description", content: "Manage your contacts" },
   ];
-}
-
-// `init()` attaches the Telegram WebApp script and is not idempotent.
-let telegramInitialised = false;
-
-function ensureTelegramInitialised() {
-  if (telegramInitialised) return;
-  telegramInitialised = true;
-  init();
 }
 
 export default function Contacts() {

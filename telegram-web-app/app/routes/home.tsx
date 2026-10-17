@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { init, viewport } from '@tma.js/sdk-react';
+import { viewport } from '@tma.js/sdk-react';
 import { max, formatDistanceToNow } from 'date-fns';
 import { useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router';
 import { Money } from '~/components/money';
 import { ApiClient } from '~/lib/api-client';
 import { isAuthenticated } from "~/lib/telegram-auth";
+import { ensureTelegramInitialised } from "~/lib/telegram-init";
 import { useTelegramData } from "~/lib/useTelegramData";
 import type { Route } from "./+types/home";
 
@@ -14,16 +15,6 @@ export function meta({ }: Route.MetaArgs) {
     { title: "Qarz.uz" },
     { name: "description", content: "Track your debts and loans efficiently" },
   ];
-}
-
-// `init()` attaches the Telegram WebApp script and is not idempotent; running it
-// on every render is pure overhead.
-let telegramInitialised = false;
-
-function ensureTelegramInitialised() {
-  if (telegramInitialised) return;
-  telegramInitialised = true;
-  init();
 }
 
 export default function Home() {

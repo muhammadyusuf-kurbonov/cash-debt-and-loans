@@ -1,8 +1,9 @@
-import { init, shareMessage } from '@tma.js/sdk-react';
+import { shareMessage } from '@tma.js/sdk-react';
 import { Link } from 'lucide-react';
 import React, { type MouseEventHandler } from 'react';
 import { toast } from "sonner";
 import { useAPI } from '~/api/use-api';
+import { ensureTelegramInitialised } from '~/lib/telegram-init';
 import { Button } from './ui/button';
 
 interface TelegramLinkButtonProps {
@@ -28,7 +29,7 @@ export const TelegramLinkButton: React.FC<TelegramLinkButtonProps> = ({
 
       if (response.status === 200) {
         toast(`Sending message of id ${response.data}`);
-        init();
+        ensureTelegramInitialised();
         shareMessage(response.data);
       } else {
         toast('Can\'t get link to invite');
