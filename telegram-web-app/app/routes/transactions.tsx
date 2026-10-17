@@ -36,7 +36,7 @@ export default function TransactionsPage() {
     enabled: !!contactId,
   });
 
-  const cancel = useMutation({
+  const { mutate: cancelTransaction } = useMutation({
     mutationKey: ['cancel-contact-transactions'],
     mutationFn: async (transactionId: Transaction['id']) => {
       const response = await api.transactions.transactionsControllerCancel(transactionId.toString());
@@ -49,7 +49,7 @@ export default function TransactionsPage() {
     }
   })
 
-  const updateNote = useMutation({
+  const { mutate: updateTransactionNote } = useMutation({
     mutationKey: ['update-transaction-note'],
     mutationFn: async ({ transactionId, note }: { transactionId: Transaction['id']; note: string }) => {
       const response = await api.transactions.transactionsControllerUpdate(transactionId.toString(), { note });
@@ -129,8 +129,8 @@ export default function TransactionsPage() {
             <div className="space-y-3">
               <TransactionsList 
                 transactions={transactions} 
-                onDeleteTransaction={cancel.mutate} 
-                onEditNote={(id, note) => updateNote.mutate({ transactionId: id, note })} 
+                onDeleteTransaction={cancelTransaction} 
+                onEditNote={(id, note) => updateTransactionNote({ transactionId: id, note })} 
               />
             </div>
           </ScrollArea>

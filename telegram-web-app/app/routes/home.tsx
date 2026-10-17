@@ -16,6 +16,16 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
+// `init()` attaches the Telegram WebApp script and is not idempotent; running it
+// on every render is pure overhead.
+let telegramInitialised = false;
+
+function ensureTelegramInitialised() {
+  if (telegramInitialised) return;
+  telegramInitialised = true;
+  init();
+}
+
 export default function Home() {
   const { isTelegram } = useTelegramData();
   const navigate = useNavigate();
@@ -28,11 +38,11 @@ export default function Home() {
 
   useEffect(() => {
     if (!isTelegram) return;
-    init();
+    ensureTelegramInitialised();
     if (viewport.requestFullscreen.isAvailable()) {
       viewport.requestFullscreen().then(() => viewport.expand());
     }
-  }, []);
+  }, [isTelegram]);
 
   const api = ApiClient.getOpenAPIClient();
 

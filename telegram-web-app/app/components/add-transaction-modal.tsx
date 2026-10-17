@@ -35,6 +35,14 @@ export function AddTransactionModal({ open, onClose, onAdd, contactId }: Props) 
   const [transactionDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [selectedContactId, setSelectedContactId] = useState<number | undefined>(contactId);
 
+  // Mirror the prop when the modal is reused for a different contact, otherwise
+  // it keeps pointing at whichever contact was passed on first mount.
+  const [lastContactId, setLastContactId] = useState(contactId);
+  if (contactId !== lastContactId) {
+    setLastContactId(contactId);
+    setSelectedContactId(contactId);
+  }
+
   const api = ApiClient.getOpenAPIClient();
 
   const { data: contacts = [], isLoading: loadingContacts } = useQuery<ContactResponseDto[]>({

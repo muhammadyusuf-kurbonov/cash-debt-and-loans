@@ -7,7 +7,7 @@ import { type CreateContactDto, type UpdateContactDto } from "~/api/api-client";
 import { AddTransactionModal } from "~/components/add-transaction-modal";
 import { ContactList } from "~/components/contacts-list";
 import { ApiClient } from '~/lib/api-client';
-import { isAuthenticated } from "~/lib/telegram-auth";
+import { isAuthenticated, TOKEN_STORAGE_KEY } from "~/lib/telegram-auth";
 import { useTelegramData } from "~/lib/useTelegramData";
 
 export function meta() {
@@ -15,6 +15,15 @@ export function meta() {
     { title: "Contacts - Qarz.uz" },
     { name: "description", content: "Manage your contacts" },
   ];
+}
+
+// `init()` attaches the Telegram WebApp script and is not idempotent.
+let telegramInitialised = false;
+
+function ensureTelegramInitialised() {
+  if (telegramInitialised) return;
+  telegramInitialised = true;
+  init();
 }
 
 export default function Contacts() {
@@ -30,11 +39,11 @@ export default function Contacts() {
 
   useEffect(() => {
     if (!isTelegram) return;
-    init();
+    ensureTelegramInitialised();
     if (viewport.requestFullscreen.isAvailable()) {
       viewport.requestFullscreen().then(() => viewport.expand());
     }
-  }, []);
+  }, [isTelegram]);
 
   const api = ApiClient.getOpenAPIClient();
   const queryClient = useQueryClient();
@@ -52,7 +61,7 @@ export default function Contacts() {
     initialData: [],
   });
 
-  const saveNewContact = useMutation({
+  const { mutate: createContact } = useMutation({
     mutationKey: ['new_contact'],
     mutationFn: async (newContact: CreateContactDto) => {
       return await api.contacts.contactsControllerCreate(newContact);
@@ -63,7 +72,10 @@ export default function Contacts() {
   });
 
   useEffect(() => {
-    const token = sessionStorage.getItem('token');
+    // Read the real key — this looked for 'token', which is never written, so the
+    // Authorization header was never set here. The api-client's securityWorker
+    // attaches the token per request anyway, so no setSecurityData is needed.
+    const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
     if (token) {
       api.setSecurityData(`Bearer ${token}`);
     }
@@ -111,7 +123,7 @@ export default function Contacts() {
       <ContactList
         contacts={contacts}
         loading={loading}
-        onNewContactCreate={saveNewContact.mutate}
+        onNewContactCreate={createContact}
         onContactClick={(contact) => setActiveContact(contact.id)}
         onContactEdit={handleEditContact}
       />

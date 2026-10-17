@@ -46,27 +46,29 @@ export function CurrenciesModal({
   const [editSymbolValue, setEditSymbolValue] = useState('')
 
   const queryClient = useQueryClient();
-  const saveNewCurrency = useMutation<void, Error, CreateCurrencyDto>({
+  const { mutateAsync: createCurrency } = useMutation<void, Error, CreateCurrencyDto>({
     mutationFn: async (newCurrency) => {
-      api?.currencies.currencyControllerCreate(newCurrency);
+      // `await` is required: these mutations were resolving before the request
+      // was even sent, so onSuccess refetched stale data and errors were swallowed.
+      await api?.currencies.currencyControllerCreate(newCurrency);
     },
     onSuccess: () => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['currencies'] })
     },
   });
-  const deleteCurrencyMutation = useMutation<void, Error, number>({
+  const { mutateAsync: removeCurrency } = useMutation<void, Error, number>({
     mutationFn: async (newCurrencyId) => {
-      api?.currencies.currencyControllerRemove(newCurrencyId.toString());
+      await api?.currencies.currencyControllerRemove(newCurrencyId.toString());
     },
     onSuccess: () => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['currencies'] })
     },
   });
-  const saveEditCurrency = useMutation<void, Error, UpdateCurrencyDto>({
+  const { mutateAsync: editCurrency } = useMutation<void, Error, UpdateCurrencyDto>({
     mutationFn: async (newCurrency) => {
-      api?.currencies.currencyControllerUpdate(editId!.toString(), newCurrency);
+      await api?.currencies.currencyControllerUpdate(editId!.toString(), newCurrency);
     },
     onSuccess: () => {
       // Invalidate and refetch
@@ -87,13 +89,13 @@ export function CurrenciesModal({
       symbol: symbol,
     };
 
-    await saveNewCurrency.mutateAsync(newCurrency);
+    await createCurrency(newCurrency);
     setNewCurrencyName('');
     setNewCurrencySymbol('');
   }
 
   const deleteCurrency = async (id: number) => {
-    await deleteCurrencyMutation.mutateAsync(id);
+    await removeCurrency(id);
     if (editId === id) {
       setEditId(null);
       setEditValue('');
@@ -110,9 +112,9 @@ export function CurrenciesModal({
     }
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editId !== null) {
-      saveEditCurrency.mutateAsync({name: editValue.trim(), symbol: editSymbolValue.trim()});
+      await editCurrency({name: editValue.trim(), symbol: editSymbolValue.trim()});
       setEditId(null);
       setEditValue('');
       setEditSymbolValue('');

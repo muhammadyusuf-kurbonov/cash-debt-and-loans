@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import TelegramLoginButton from "~/components/telegram-login-button";
 import { Button } from "~/components/ui/button";
@@ -23,8 +23,12 @@ export default function WelcomePage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { initDataRaw } = useTelegramData();
+  const autoAuthStarted = useRef(false);
 
-  const telegramSignInMutation = useMutation({
+  // `useMutation` returns a fresh object on every render, so it must never be a
+  // dependency — that re-ran the effect (and mutate) on every render. `mutate`
+  // itself is useCallback-stable on the observer.
+  const { mutate: telegramSignIn, isPending: telegramSignInPending } = useMutation({
     mutationFn: async (initData: string) => {
       const response = await ApiClient.getOpenAPIClient().auth.authControllerTelegramSignUp({
         initData,
@@ -63,13 +67,20 @@ export default function WelcomePage() {
       console.log('No init data');
       return;
     }
+    // Guard against a second sign-in request: StrictMode double-invokes effects
+    // in dev, and a retry after an error would otherwise post initData again.
+    if (autoAuthStarted.current) {
+      return;
+    }
+    autoAuthStarted.current = true;
+
     setAuthenticating(true);
     setAuthError(null);
     
-    telegramSignInMutation.mutate(initDataRaw);
-  }, [telegramSignInMutation, initDataRaw]);
+    telegramSignIn(initDataRaw);
+  }, [initDataRaw, telegramSignIn]);
 
-  const signInMutation = useMutation({
+  const { mutate: signIn, isPending: signInPending } = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const api = ApiClient.getOpenAPIClient();
       const response = await api.auth.authControllerSignIn({
@@ -96,7 +107,7 @@ export default function WelcomePage() {
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    signInMutation.mutate({ email, password });
+    signIn({ email, password });
   };
 
   if (isAuthenticated()) {
@@ -155,8 +166,8 @@ export default function WelcomePage() {
                 </div>
               </div>
               <TelegramLoginButton 
-                handleAuthClick={() => telegramSignInMutation.mutate(initDataRaw!)}
-                isLoading={telegramSignInMutation.isPending}
+                handleAuthClick={() => telegramSignIn(initDataRaw!)}
+                isLoading={telegramSignInPending}
               />
             </div>
 
@@ -202,9 +213,9 @@ export default function WelcomePage() {
                 <Button 
                   type="submit" 
                   className="w-full h-12 rounded-xl text-base font-semibold"
-                  disabled={signInMutation.isPending}
+                  disabled={signInPending}
                 >
-                  {signInMutation.isPending ? (
+                  {signInPending ? (
                     <span className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       Вход...

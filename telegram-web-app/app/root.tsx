@@ -29,7 +29,9 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
+    // icon_names keeps the woff2 at ~10 KB instead of 1.14 MB. Every icon in
+    // app/ must be listed here or it renders as its literal ligature name.
+    href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap&icon_names=account_balance_wallet,add,add_circle,analytics,chevron_right,close,currency_exchange,dashboard,edit,error,group,group_add,inbox,login,north_east,open_in_new,payments,person_add,receipt_long,send,settings,smart_toy,south_east,warning",
   },
 ];
 const queryClient = new QueryClient();

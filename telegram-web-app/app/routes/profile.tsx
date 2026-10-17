@@ -29,8 +29,9 @@ export default function Profile() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Update profile mutation
-  const updateProfileMutation = useMutation({
+  // Update profile mutation. `useMutation` returns a fresh object every render, so
+  // it must never reach a dependency array — only its `mutate`/`isPending` members.
+  const { mutate: updateProfile, isPending: profilePending } = useMutation({
     mutationFn: async ({ name, email }: { name?: string; email?: string }) => {
       const response = await api.users.usersControllerUpdateProfile({
         name,
@@ -49,7 +50,7 @@ export default function Profile() {
   });
 
   // Update password mutation
-  const updatePasswordMutation = useMutation({
+  const { mutate: updatePassword, isPending: passwordPending } = useMutation({
     mutationFn: async ({ currentPassword, newPassword }: { currentPassword?: string; newPassword: string }) => {
       const response = await api.users.usersControllerUpdatePassword({
         currentPassword: currentPassword || '', // For users without a password
@@ -84,8 +85,8 @@ export default function Profile() {
 
   const handleProfileSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    updateProfileMutation.mutate({ name, email });
-  }, [name, email, updateProfileMutation]);
+    updateProfile({ name, email });
+  }, [name, email, updateProfile]);
 
   const navigate = useNavigate();
 
@@ -102,7 +103,7 @@ export default function Profile() {
       return;
     }
 
-    updatePasswordMutation.mutate({ 
+    updatePassword({ 
       currentPassword: currentPassword || undefined, 
       newPassword 
     });
@@ -111,7 +112,7 @@ export default function Profile() {
     setCurrentPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
-  }, [currentPassword, newPassword, confirmNewPassword, updatePasswordMutation]);
+  }, [currentPassword, newPassword, confirmNewPassword, updatePassword]);
 
   if (isLoading) {
     return (
@@ -176,9 +177,9 @@ export default function Profile() {
                 <Button
                   type="submit"
                   className="w-full h-12 rounded-xl"
-                  disabled={updateProfileMutation.isPending}
+                  disabled={profilePending}
                 >
-                  {updateProfileMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+                  {profilePending ? 'Сохранение...' : 'Сохранить'}
                 </Button>
               </div>
             </form>
@@ -231,9 +232,9 @@ export default function Profile() {
                 <Button
                   type="submit"
                   className="w-full h-12 rounded-xl"
-                  disabled={updatePasswordMutation.isPending}
+                  disabled={passwordPending}
                 >
-                  {updatePasswordMutation.isPending ? 'Сохранение...' : 'Сменить пароль'}
+                  {passwordPending ? 'Сохранение...' : 'Сменить пароль'}
                 </Button>
               </div>
             </form>
