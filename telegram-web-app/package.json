@@ -8,7 +8,8 @@
     "dev": "react-router dev",
     "dev:mock": "VITE_MOCK=true react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc",
+    "typecheck": "react-router typegen && tsc && yarn check:icons",
+    "check:icons": "node scripts/check-icons.mjs",
     "generate:api-client": "npx swagger-typescript-api generate --axios --path ./app/api/swagger.json -o app/api -n api-client.ts"
   },
   "dependencies": {
