@@ -13,6 +13,7 @@ import { Pencil, Trash2, Check, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAPI } from '~/api/use-api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import type { CreateCurrencyDto, CurrencyResponseDto, UpdateCurrencyDto } from '~/api/api-client'
 
 type Currency = {
@@ -56,6 +57,10 @@ export function CurrenciesModal({
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['currencies'] })
     },
+    onError: (error) => {
+      console.error('Error creating currency:', error);
+      toast.error('Не удалось добавить валюту');
+    },
   });
   const { mutateAsync: removeCurrency } = useMutation<void, Error, number>({
     mutationFn: async (newCurrencyId) => {
@@ -65,6 +70,10 @@ export function CurrenciesModal({
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['currencies'] })
     },
+    onError: (error) => {
+      console.error('Error deleting currency:', error);
+      toast.error('Не удалось удалить валюту');
+    },
   });
   const { mutateAsync: editCurrency } = useMutation<void, Error, UpdateCurrencyDto>({
     mutationFn: async (newCurrency) => {
@@ -73,6 +82,10 @@ export function CurrenciesModal({
     onSuccess: () => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['currencies'] })
+    },
+    onError: (error) => {
+      console.error('Error updating currency:', error);
+      toast.error('Не удалось обновить валюту');
     },
   });
 
@@ -89,13 +102,23 @@ export function CurrenciesModal({
       symbol: symbol,
     };
 
-    await createCurrency(newCurrency);
+    try {
+      await createCurrency(newCurrency);
+    } catch {
+      // `onError` already surfaced it; keep the typed name/symbol for a retry.
+      return;
+    }
     setNewCurrencyName('');
     setNewCurrencySymbol('');
   }
 
   const deleteCurrency = async (id: number) => {
-    await removeCurrency(id);
+    try {
+      await removeCurrency(id);
+    } catch {
+      // `onError` already surfaced it; leave the row in its editing state.
+      return;
+    }
     if (editId === id) {
       setEditId(null);
       setEditValue('');
@@ -114,7 +137,12 @@ export function CurrenciesModal({
 
   const saveEdit = async () => {
     if (editId !== null) {
-      await editCurrency({name: editValue.trim(), symbol: editSymbolValue.trim()});
+      try {
+        await editCurrency({name: editValue.trim(), symbol: editSymbolValue.trim()});
+      } catch {
+        // `onError` already surfaced it; stay in the edit row so the user can retry.
+        return;
+      }
       setEditId(null);
       setEditValue('');
       setEditSymbolValue('');
